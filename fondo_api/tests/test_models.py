@@ -1,8 +1,7 @@
 from django.test import TestCase
 from django.db import IntegrityError
-from django.utils import timezone
 from ..models import User,UserAuth,UserFinance,Loan
-from datetime import datetime, date, time
+from datetime import date
 
 class UserTest(TestCase):
 
@@ -66,13 +65,12 @@ class LoanTest(TestCase):
 			identification = 1234567890
 		)
 		foo_date = date(2017, 12, 9)
-		foo_time = time(12, 0, 0, tzinfo=timezone.get_current_timezone())
-		aware_datetime = datetime.combine(foo_date, foo_time)
 		Loan.objects.create(
 			value = 0,
 			fee = 1,
-			timelimit = aware_datetime,
-			disbursement_date = aware_datetime,
+			timelimit = 5,
+			disbursement_date = foo_date,
+			rate = 0.004,
 			user = user
 		)
 
@@ -80,15 +78,13 @@ class LoanTest(TestCase):
 		user = User.objects.get(identification = 1234567890)
 		loan = Loan.objects.get(user_id = user.id)
 		foo_date = date(2017, 12, 9)
-		foo_time = time(12, 0, 0, tzinfo=timezone.get_current_timezone())
-		aware_datetime = datetime.combine(foo_date, foo_time)
 
 		self.assertEqual(loan.value,0)
 		self.assertEqual(loan.fee,1)
 		self.assertEqual(loan.get_fee_display(),'UNIQUE')
-		self.assertIsNotNone(loan.timelimit)
+		self.assertEqual(loan.timelimit,5)
 		self.assertIsNotNone(loan.disbursement_date)
-		self.assertEqual(loan.disbursement_date,aware_datetime)
+		self.assertEqual(loan.disbursement_date,foo_date)
 		self.assertIsNotNone(loan.created_at)
 		self.assertEqual(loan.state,0)
 		self.assertEqual(loan.get_state_display(),'WAITING_APPROVAL')
@@ -96,18 +92,17 @@ class LoanTest(TestCase):
 	def test_many_loans(self):
 		user = User.objects.get(identification = 1234567890)
 		foo_date = date(2016, 12, 9)
-		foo_time = time(12, 0, 0, tzinfo=timezone.get_current_timezone())
-		aware_datetime = datetime.combine(foo_date, foo_time)
 		Loan.objects.create(
 			value = 1000,
 			fee = 0,
-			timelimit = aware_datetime,
-			disbursement_date = aware_datetime,
+			timelimit = 5,
+			rate = 0.004,
+			disbursement_date = foo_date,
 			user = user
 		)
 
 		loans = Loan.objects.filter(user_id = user.id)
 		self.assertEqual(len(loans),2)
 
-		loans = Loan.objects.filter(timelimit__year = 2016)
+		loans = Loan.objects.filter(disbursement_date__year = 2016)
 		self.assertEqual(len(loans),1)

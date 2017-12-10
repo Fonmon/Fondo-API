@@ -2,34 +2,51 @@ from rest_framework.decorators import api_view,permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from .logic.user_logic import *
-from .models import Loan as LoanModel
-from .serializers import *
+from .logic.loan_logic import *
 
-import json
-
-@api_view(['GET'])
-def get_loans(request,pk):
-	try:
-		loans = LoanModel.objects.filter(user_id = pk)
-	except LoanModel.DoesNotExist:
-		return Response(status = status.HTTP_404_NOT_FOUND)
-
-	if request.method == 'GET':
-		return Response({'loans':len(loans)})
-
-@api_view(['POST'])
-def post_loan(request):
-	if request.method == 'POST':
-		return Response({})
+@api_view(['PATCH'])
+def view_update_loan(request,id):
+	if request.method == 'PATCH':
+		new_state = int(request.data['state'])
+		if new_state <= 3:
+			state, msg = update_loan(id,new_state)
+			if state:
+				return Response(status=status.HTTP_200_OK)
+			return Response({'message':msg},status.HTTP_404_NOT_FOUND)
+		return Response({'message':'State must be less or equal than 3'},status = status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET','POST'])
-def get_post_user(request):
-	if request.method =='POST':
-		body_content = json.loads(request.body)
-		state, msg = create_user(body_content)
+def view_get_post_loans(request):
+	user_auth = request.user
+	if request.method == 'POST':
+		state, msg = create_loan(user_auth.user_id,request.data)
 		if state:
 			return Response(status = status.HTTP_201_CREATED)
-		return Response({'message':msg},status = status.HTTP_409_CONFLICT);
+		return Response({'message':msg},status = status.HTTP_406_NOT_ACCEPTABLE)
+	if request.method == 'GET':
+		all_loans = (request.query_params.get('all_loans') == 'true')
+		if user_auth.role <= 2:
+			return Response(get_loans(user_auth.user_id,all_loans),status.HTTP_200_OK)
+		return Response(get_loans(user_auth.user_id),status.HTTP_200_OK)
+
+# TODO: pagination
+@api_view(['GET','POST'])
+def view_get_post_users(request):
+	if request.method =='POST':
+		state, msg = create_user(request.data)
+		if state:
+			return Response(status = status.HTTP_201_CREATED)
+		return Response({'message':msg},status = status.HTTP_409_CONFLICT)
+	if request.method == 'GET':
+		return Response(get_users(),status = status.HTTP_200_OK)
+
+@api_view(['GET','PATCH','DELETE'])
+def view_get_update_delete_user(request,id):
+	if request.method == 'GET':
+		state, data = get_user(id)
+		if state:
+			return Response(data,status = status.HTTP_200_OK)
+		return Response(status = status.HTTP_404_NOT_FOUND)
 
 
 #http://blog.apcelent.com/django-json-web-token-authentication-backend.html

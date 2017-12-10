@@ -7,18 +7,25 @@ class UserSerializer(serializers.ModelSerializer):
 		fields = ('full_name', 'identification')
 
 class UserAuthSerializer(serializers.ModelSerializer):
+	identification = serializers.CharField(source='user.identification')
+	full_name = serializers.CharField(source='user.full_name')
+	role = serializers.CharField(source='get_role_display')
+	id = serializers.CharField(source='user.id')
 	class Meta:
 		model = UserAuth
-		fields = ('email','role','active','user_id')
+		fields = ('email','role','id','identification','full_name')
 
-class UserFinance(serializers.ModelSerializer):
+class UserFinanceSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = UserFinance
 		fields = ('contributions','balance_contributions',
 			'total_quota','available_quota','user_id')
 
-class Loan(serializers.ModelSerializer):
+class LoanSerializer(serializers.ModelSerializer):
+	user_name = serializers.CharField(source='user.full_name')
+	state = serializers.CharField(source='get_state_display')
+	fee = serializers.CharField(source='get_fee_display')
 	class Meta:
 		model = Loan
 		fields = ('value','timelimit','disbursement_date',
-			'created_at','fee','state','user_id')
+			'created_at','fee','state','user_name','id','rate')
