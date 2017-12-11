@@ -6,7 +6,7 @@ services:
   - postgresql
 before_script:
   - psql -c "CREATE DATABASE test_fondo_api;" -U postgres
-  - python3 manage.py makemigrations && python3 manage.py migrate
+  - python3 manage.py makemigrations fondo_api && python3 manage.py migrate
 env:
   matrix:
     - POSTGRES_DATABASE=test_fondo_api POSTGRES_USER=postgres POSTGRES_HOST=localhost POSTGRES_PASSWORD= POSTGRES_PORT=5432
