@@ -3,7 +3,7 @@ python:
   - 3.6
 install:
   - pip install -r requirements.txt
-  - python3 manage.py makemigrations & python3 manage.py migrate
+  - python3 manage.py makemigrations && python3 manage.py migrate
 services:
   - postgresql
 before_script:
