@@ -1,67 +1,58 @@
 from django.test import TestCase
 from django.db import IntegrityError
-from ..models import User,UserAuth,UserFinance,Loan
+from ..models import UserProfile,UserFinance,Loan
 from datetime import date
 
-class UserTest(TestCase):
+class UserProfileTest(TestCase):
 
 	def setUp(self):
-		User.objects.create(
-			full_name = 'Foo Full Name',
+		UserProfile.objects.create(
+			first_name = 'Foo Name',
+			last_name = 'Foo Last Name',
+			username = 'username',
 			identification = 1234567890
 		)
 
 	def test_unique_identification(self):
 		#Repeated identification
 		try:
-			User.objects.create(
-				full_name = 'Foo Full Name 2',
+			UserProfile.objects.create(
+				first_name = 'Foo Name',
+				last_name = 'Foo Last Name',
+				username = 'username2',
 				identification = 1234567890
 			)
 			self.fail('identification must be unique')
 		except IntegrityError:
 			pass
 
-class UserAuthTest(TestCase):
-
-	def setUp(self):
-		user = User.objects.create(
-			full_name = 'Foo Full Name',
-			identification = 1234567890
-		)
-		UserAuth.objects.create(
-			email = "mail@email.com",
-			user = user
-		)
-
-	def test_default_values(self):
-		user = User.objects.get(identification = 1234567890)
-		userAuth = UserAuth.objects.get(user_id = user.id)
-		self.assertEqual(userAuth.role,3)
-		self.assertEqual(userAuth.get_role_display(),'MEMBER')
-		self.assertEqual(userAuth.is_active,False)
-		self.assertEqual(userAuth.is_authenticated,True)
-		self.assertEqual(userAuth.password,'')
-
-	def test_unique_email(self):
-		user = User.objects.create(
-			full_name = 'Foo Full Name 2',
-			identification = 123450
-		)
+	# Username acts as email 
+	def test_unique_username(self):
+		#Repeated identification
 		try:
-			UserAuth.objects.create(
-				email = "mail@email.com",
-				user = user
+			UserProfile.objects.create(
+				first_name = 'Foo Name',
+				last_name = 'Foo Last Name',
+				username = 'username',
+				identification = 123
 			)
-			self.fail('email must be unique')
+			self.fail('username must be unique')
 		except IntegrityError:
 			pass
+
+	def test_default_values(self):
+		user = UserProfile.objects.get(identification = 1234567890)
+		self.assertEqual(user.role,3)
+		self.assertEqual(user.get_role_display(),'MEMBER')
+		self.assertEqual(user.password,'')
 
 class LoanTest(TestCase):
 
 	def setUp(self):
-		user = User.objects.create(
-			full_name = 'Foo Full Name',
+		user = UserProfile.objects.create(
+			first_name = 'Foo Name',
+			last_name = 'Foo Last Name',
+			username = 'username',
 			identification = 1234567890
 		)
 		foo_date = date(2017, 12, 9)
@@ -75,7 +66,7 @@ class LoanTest(TestCase):
 		)
 
 	def test_default_values(self):
-		user = User.objects.get(identification = 1234567890)
+		user = UserProfile.objects.get(identification = 1234567890)
 		loan = Loan.objects.get(user_id = user.id)
 		foo_date = date(2017, 12, 9)
 
@@ -90,7 +81,7 @@ class LoanTest(TestCase):
 		self.assertEqual(loan.get_state_display(),'WAITING_APPROVAL')
 
 	def test_many_loans(self):
-		user = User.objects.get(identification = 1234567890)
+		user = UserProfile.objects.get(identification = 1234567890)
 		foo_date = date(2016, 12, 9)
 		Loan.objects.create(
 			value = 1000,

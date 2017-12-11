@@ -16,16 +16,14 @@ view_get_post_users = 'view_get_post_users'
 view_get_update_delete_user = 'view_get_update_delete_user'
 
 def create_user():
-	user = User.objects.create(
+	user = UserProfile.objects.create_user(
 		id = 1,
-		full_name = 'Foo Full Name',
-		identification = 99999
-	)
-	UserAuth.objects.create(
+		first_name = 'Foo Name',
+		last_name = 'Foo Last Name',
+		identification = 99999,
+		username = "mail_for_tests@mail.com",
 		email = "mail_for_tests@mail.com",
-		password = "pbkdf2_sha256$100000$iGqql2jYhn1b$gik5vcbaSyLZZyFFsU12Pk5TfN8GtR8rXPdCqZPMR3c=",
-		is_active = True,
-		user = user
+		password = "password"
 	)
 	UserFinance.objects.create(
 		contributions= 2000,
@@ -43,9 +41,11 @@ class UserViewTest(TestCase):
 	def setUp(self):
 		create_user()
 		self.object_json = {
-			'full_name': 'Foo Name',
+			'first_name': 'Foo Name',
+			'last_name': 'Last Name',
 			'identification': 123,
 			'email': 'mail@mail.com',
+			'username': 'mail@mail.com',
 			'role': 2,
 			'contributions': 2000,
 			'balance_contributions': 2000,
@@ -54,16 +54,20 @@ class UserViewTest(TestCase):
 		}
 
 		self.object_json_identification_r = {
-			'full_name': 'Foo Name 2',
+			'first_name': 'Foo Name 2',
+			'last_name': 'Last Name 2',
 			'identification': 99999,
 			'email': 'mail2@mail.com',
+			'username': 'mail2@mail.com',
 			'role': 2
 		}
 
 		self.object_json_email_r = {
-			'full_name': 'Foo Name 3',
+			'first_name': 'Foo Name 3',
+			'last_name': 'Last Name 3',
 			'identification': 1234,
 			'email': 'mail_for_tests@mail.com',
+			'username': 'mail_for_tests@mail.com',
 			'role': 2
 		}
 
@@ -76,14 +80,13 @@ class UserViewTest(TestCase):
 		)
 		self.assertEquals(response.status_code,status.HTTP_201_CREATED)
 
-		user = User.objects.get(identification = 123)
-		self.assertEquals(user.full_name,'Foo Name')
+		user = UserProfile.objects.get(identification = 123)
+		self.assertEquals(user.first_name,'Foo Name')
 		self.assertEquals(user.identification,123)
 
-		user_auth = UserAuth.objects.get(user_id = user.id)
-		self.assertEquals(user_auth.email, "mail@mail.com")
-		self.assertEquals(user_auth.role, 2)
-		self.assertEquals(user_auth.get_role_display(),'TREASURER')
+		self.assertEquals(user.email, "mail@mail.com")
+		self.assertEquals(user.role, 2)
+		self.assertEquals(user.get_role_display(),'TREASURER')
 
 		user_finance = UserFinance.objects.get(user_id = user.id)
 		self.assertEquals(user_finance.contributions, 2000)
@@ -99,10 +102,9 @@ class UserViewTest(TestCase):
 			**get_auth_header()
 		)
 		self.assertEquals(response.status_code,status.HTTP_409_CONFLICT)
-		self.assertEquals(response.data['message'],'Identification already exists')
+		self.assertEquals(response.data['message'],'Identification/email already exists')
 
-		self.assertEquals(len(User.objects.all()),1)
-		self.assertEquals(len(UserAuth.objects.all()),1)
+		self.assertEquals(len(UserProfile.objects.all()),1)
 		self.assertEquals(len(UserFinance.objects.all()),1)
 
 	def test_unsuccess_post_email(self):
@@ -113,10 +115,9 @@ class UserViewTest(TestCase):
 			**get_auth_header()
 		)
 		self.assertEquals(response.status_code,status.HTTP_409_CONFLICT)
-		self.assertEquals(response.data['message'],'Email already exists')
+		self.assertEquals(response.data['message'],'Identification/email already exists')
 
-		self.assertEquals(len(User.objects.all()),1)
-		self.assertEquals(len(UserAuth.objects.all()),1)
+		self.assertEquals(len(UserProfile.objects.all()),1)
 		self.assertEquals(len(UserFinance.objects.all()),1)
 
 	def test_get_users(self):
@@ -125,12 +126,13 @@ class UserViewTest(TestCase):
 			**get_auth_header()
 		)
 		self.assertEquals(response.status_code, status.HTTP_200_OK)
-		self.assertEquals(len(response.data),len(User.objects.all()))
+		self.assertEquals(len(response.data),len(UserProfile.objects.all()))
 		for user in response.data:
 			self.assertIsNotNone(user['id'])
 			self.assertIsNotNone(user['identification'])
 			self.assertIsNotNone(user['full_name'])
 			self.assertIsNotNone(user['email'])
+			self.assertIsNotNone(user['role'])
 
 	def test_get_user(self):
 		response = client.get(
@@ -140,7 +142,7 @@ class UserViewTest(TestCase):
 		self.assertEquals(response.status_code, status.HTTP_200_OK)
 		self.assertEquals(response.data['id'],1)
 		self.assertEquals(response.data['identification'],99999)
-		self.assertEquals(response.data['full_name'],'Foo Full Name')
+		self.assertEquals(response.data['full_name'],'Foo Name Foo Last Name')
 		self.assertEquals(response.data['email'],'mail_for_tests@mail.com')
 		self.assertEquals(response.data['role'],'MEMBER')
 		self.assertEquals(response.data['contributions'],2000)
@@ -264,17 +266,15 @@ class LoanViewTest(TestCase):
 			content_type='application/json',
 			**get_auth_header()
 		)
-		user = User.objects.create(
+		user = UserProfile.objects.create_user(
 			id = 2,
-			full_name = 'Foo Full Name',
-			identification = 99899
-		)
-		UserAuth.objects.create(
+			first_name = 'Foo Name',
+			last_name = 'Foo Last Name',
+			identification = 99899,
 			email = "mail_for_tests_2@mail.com",
-			password = "pbkdf2_sha256$100000$GGXOHIxTaqdf$h8sarOioBKxABatTgcYXnpxVaCGS/8R5mzdFpp7gj08=",
-			is_active = True,
-			role = 1,
-			user = user
+			username = "mail_for_tests_2@mail.com",
+			password = "password",
+			role = 1
 		)
 		UserFinance.objects.create(
 			contributions= 2000,
@@ -297,7 +297,7 @@ class LoanViewTest(TestCase):
 		self.assertEquals(response.status_code,status.HTTP_200_OK)
 		self.assertEquals(len(response.data),1)
 		for loan in response.data:
-			self.assertIsNotNone(loan['user_name'])
+			self.assertIsNotNone(loan['user_full_name'])
 			self.assertIsNotNone(loan['state'])
 			self.assertIsNotNone(loan['value'])
 			self.assertIsNotNone(loan['timelimit'])
@@ -314,7 +314,7 @@ class LoanViewTest(TestCase):
 		self.assertEquals(response.status_code,status.HTTP_200_OK)
 		self.assertEquals(len(response.data),2)
 		for loan in response.data:
-			self.assertIsNotNone(loan['user_name'])
+			self.assertIsNotNone(loan['user_full_name'])
 			self.assertIsNotNone(loan['state'])
 			self.assertIsNotNone(loan['value'])
 			self.assertIsNotNone(loan['timelimit'])

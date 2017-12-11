@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .logic.user_logic import *
 from .logic.loan_logic import *
+from .models import UserProfile
 
 @api_view(['PATCH'])
 def view_update_loan(request,id):
@@ -17,20 +18,21 @@ def view_update_loan(request,id):
 
 @api_view(['GET','POST'])
 def view_get_post_loans(request):
-	user_auth = request.user
+	user = UserProfile.objects.get(id = request.user.id)
 	if request.method == 'POST':
-		state, msg = create_loan(user_auth.user_id,request.data)
+		state, msg = create_loan(user.id,request.data)
 		if state:
 			return Response(status = status.HTTP_201_CREATED)
 		return Response({'message':msg},status = status.HTTP_406_NOT_ACCEPTABLE)
 	if request.method == 'GET':
 		all_loans = (request.query_params.get('all_loans') == 'true')
-		if user_auth.role <= 2:
-			return Response(get_loans(user_auth.user_id,all_loans),status.HTTP_200_OK)
-		return Response(get_loans(user_auth.user_id),status.HTTP_200_OK)
+		if user.role <= 2:
+			return Response(get_loans(user.id,all_loans),status.HTTP_200_OK)
+		return Response(get_loans(user.id),status.HTTP_200_OK)
 
 # TODO: pagination
 @api_view(['GET','POST'])
+#@permission_classes([])
 def view_get_post_users(request):
 	if request.method =='POST':
 		state, msg = create_user(request.data)

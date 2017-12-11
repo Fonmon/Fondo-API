@@ -1,4 +1,4 @@
-from ..models import User,UserFinance,Loan
+from ..models import UserProfile,UserFinance,Loan
 from django.db import IntegrityError,transaction
 from ..serializers import LoanSerializer
 

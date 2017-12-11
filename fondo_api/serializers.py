@@ -1,19 +1,15 @@
 from rest_framework import serializers
-from .models import User,UserAuth,UserFinance,Loan
+from .models import UserProfile,UserFinance,Loan
 
-class UserSerializer(serializers.ModelSerializer):
-	class Meta:
-		model = User
-		fields = ('full_name', 'identification')
-
-class UserAuthSerializer(serializers.ModelSerializer):
-	identification = serializers.CharField(source='user.identification')
-	full_name = serializers.CharField(source='user.full_name')
+class UserProfileSerializer(serializers.ModelSerializer):
+	full_name = serializers.SerializerMethodField()
 	role = serializers.CharField(source='get_role_display')
-	id = serializers.CharField(source='user.id')
 	class Meta:
-		model = UserAuth
-		fields = ('email','role','id','identification','full_name')
+		model = UserProfile
+		fields = ('full_name', 'identification','email','role','id')
+
+	def get_full_name(self, obj):
+		return '{} {}'.format(obj.first_name, obj.last_name)
 
 class UserFinanceSerializer(serializers.ModelSerializer):
 	class Meta:
@@ -22,10 +18,13 @@ class UserFinanceSerializer(serializers.ModelSerializer):
 			'total_quota','available_quota','user_id')
 
 class LoanSerializer(serializers.ModelSerializer):
-	user_name = serializers.CharField(source='user.full_name')
+	user_full_name = serializers.SerializerMethodField()
 	state = serializers.CharField(source='get_state_display')
 	fee = serializers.CharField(source='get_fee_display')
 	class Meta:
 		model = Loan
 		fields = ('value','timelimit','disbursement_date',
-			'created_at','fee','state','user_name','id','rate')
+			'created_at','fee','state','user_full_name','id','rate')
+
+	def get_user_full_name(self, obj):
+		return '{} {}'.format(obj.user.first_name, obj.user.last_name)
