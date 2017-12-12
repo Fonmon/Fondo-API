@@ -4,6 +4,7 @@ from rest_framework import status
 from django.test import TestCase, Client
 from django.urls import reverse
 from ..models import *
+from django.contrib.auth.models import User
 
 # initialize the APIClient app
 client = Client()
@@ -33,13 +34,26 @@ def create_user():
 		user= user
 	)
 
-def get_auth_header():
-	return {'HTTP_AUTHORIZATION': "Basic bWFpbF9mb3JfdGVzdHNAbWFpbC5jb206cGFzc3dvcmQ="}
+def get_token(username, password):
+	body = {
+		'username':'{}'.format(username),
+		'password':'{}'.format(password)
+	}
+	response = client.post(
+		reverse('obtain_auth_token'),
+		data = json.dumps(body),
+		content_type='application/json',
+	)
+	return response.data['token']
+
+def get_auth_header(token):
+	return {'HTTP_AUTHORIZATION': "Token {}".format(token)}
 
 class UserViewTest(TestCase):
 
 	def setUp(self):
 		create_user()
+		self.token = get_token('mail_for_tests@mail.com','password')
 		self.object_json = {
 			'first_name': 'Foo Name',
 			'last_name': 'Last Name',
@@ -76,7 +90,7 @@ class UserViewTest(TestCase):
 			reverse(view_get_post_users),
 			data = json.dumps(self.object_json),
 			content_type='application/json',
-			**get_auth_header()
+			**get_auth_header(self.token)
 		)
 		self.assertEquals(response.status_code,status.HTTP_201_CREATED)
 
@@ -99,7 +113,7 @@ class UserViewTest(TestCase):
 			reverse(view_get_post_users),
 			data = json.dumps(self.object_json_identification_r),
 			content_type='application/json',
-			**get_auth_header()
+			**get_auth_header(self.token)
 		)
 		self.assertEquals(response.status_code,status.HTTP_409_CONFLICT)
 		self.assertEquals(response.data['message'],'Identification/email already exists')
@@ -112,7 +126,7 @@ class UserViewTest(TestCase):
 			reverse(view_get_post_users),
 			data = json.dumps(self.object_json_email_r),
 			content_type='application/json',
-			**get_auth_header()
+			**get_auth_header(self.token)
 		)
 		self.assertEquals(response.status_code,status.HTTP_409_CONFLICT)
 		self.assertEquals(response.data['message'],'Identification/email already exists')
@@ -123,7 +137,7 @@ class UserViewTest(TestCase):
 	def test_get_users(self):
 		response = client.get(
 			reverse(view_get_post_users),
-			**get_auth_header()
+			**get_auth_header(self.token)
 		)
 		self.assertEquals(response.status_code, status.HTTP_200_OK)
 		self.assertEquals(len(response.data),len(UserProfile.objects.all()))
@@ -137,7 +151,7 @@ class UserViewTest(TestCase):
 	def test_get_user(self):
 		response = client.get(
 			reverse(view_get_update_delete_user,kwargs={'id': 1}),
-			**get_auth_header()
+			**get_auth_header(self.token)
 		)
 		self.assertEquals(response.status_code, status.HTTP_200_OK)
 		self.assertEquals(response.data['id'],1)
@@ -153,15 +167,42 @@ class UserViewTest(TestCase):
 	def test_get_user_not_found(self):
 		response = client.get(
 			reverse(view_get_update_delete_user,kwargs={'id': 2}),
-			**get_auth_header()
+			**get_auth_header(self.token)
 		)
 		self.assertEquals(response.status_code, status.HTTP_404_NOT_FOUND)
+
+	def test_delete_user(self):
+		response = client.delete(
+			reverse(view_get_update_delete_user,kwargs={'id': 2}),
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code, status.HTTP_404_NOT_FOUND)
+
+		response = client.delete(
+			reverse(view_get_update_delete_user,kwargs={'id': 1}),
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code, status.HTTP_200_OK)
+		user = User.objects.get(id = 1)
+		self.assertFalse(user.is_active)
+
+		response = client.get(
+			reverse(view_get_update_delete_user,kwargs={'id': 1}),
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code,status.HTTP_401_UNAUTHORIZED)
+		try:
+			get_token('mail_for_tests@mail.com','password')
+			self.fail('That account is inactive')
+		except KeyError:
+			pass
 
 
 class LoanViewTest(TestCase):
 
 	def setUp(self):
 		create_user()
+		self.token = get_token('mail_for_tests@mail.com','password')
 		self.loan_with_quota_fee_5 = {
 			'value':100,
 			'timelimit': 5,
@@ -192,7 +233,7 @@ class LoanViewTest(TestCase):
 			reverse(view_get_post_loans),
 			data = json.dumps(self.loan_with_quota_fee_5),
 			content_type='application/json',
-			**get_auth_header()
+			**get_auth_header(self.token)
 		)
 
 		self.assertEquals(response.status_code, status.HTTP_201_CREATED)
@@ -210,7 +251,7 @@ class LoanViewTest(TestCase):
 			reverse(view_get_post_loans),
 			data = json.dumps(self.loan_with_quota_fee_10),
 			content_type='application/json',
-			**get_auth_header()
+			**get_auth_header(self.token)
 		)
 
 		self.assertEquals(response.status_code, status.HTTP_201_CREATED)
@@ -228,7 +269,7 @@ class LoanViewTest(TestCase):
 			reverse(view_get_post_loans),
 			data = json.dumps(self.loan_with_quota_fee_20),
 			content_type='application/json',
-			**get_auth_header()
+			**get_auth_header(self.token)
 		)
 
 		self.assertEquals(response.status_code, status.HTTP_201_CREATED)
@@ -246,25 +287,55 @@ class LoanViewTest(TestCase):
 			reverse(view_get_post_loans),
 			data = json.dumps(self.loan_with_not_quota),
 			content_type='application/json',
-			**get_auth_header()
+			**get_auth_header(self.token)
 		)
 
 		self.assertEquals(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 		self.assertEquals(response.data['message'],'User does not have available quota')
 		self.assertEquals(len(Loan.objects.filter(user_id = 1)),0)
 
+	def test_get_loans_paginator(self):
+		for i in range(25):
+			client.post(
+				reverse(view_get_post_loans),
+				data = json.dumps(self.loan_with_quota_fee_5),
+				content_type='application/json',
+				**get_auth_header(self.token)
+			)
+		self.assertEquals(len(Loan.objects.all()),25)
+		response = client.get(
+			reverse(view_get_post_loans),
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code,status.HTTP_200_OK)
+		self.assertEquals(len(response.data['list']),10)
+		self.assertEquals(response.data['num_pages'],3)
+		response = client.get(
+			"%s?page=0" % reverse(view_get_post_loans),
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code,status.HTTP_400_BAD_REQUEST)
+		self.assertEquals(response.data['message'],'Page number must be greater or equal than 0')
+		response = client.get(
+			"%s?page=3" % reverse(view_get_post_loans),
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code,status.HTTP_200_OK)
+		self.assertEquals(len(response.data['list']),5)
+		self.assertEquals(response.data['num_pages'],3)
+
 	def test_get_loans(self):
 		client.post(
 			reverse(view_get_post_loans),
 			data = json.dumps(self.loan_with_quota_fee_5),
 			content_type='application/json',
-			**get_auth_header()
+			**get_auth_header(self.token)
 		)
 		client.post(
 			reverse(view_get_post_loans),
 			data = json.dumps(self.loan_with_quota_fee_10),
 			content_type='application/json',
-			**get_auth_header()
+			**get_auth_header(self.token)
 		)
 		user = UserProfile.objects.create_user(
 			id = 2,
@@ -283,20 +354,21 @@ class LoanViewTest(TestCase):
 			available_quota= 500,
 			user= user
 		)
+		token = get_token('mail_for_tests_2@mail.com','password')
 		client.post(
 			reverse(view_get_post_loans),
 			data = json.dumps(self.loan_with_quota_fee_20),
 			content_type='application/json',
-			**{'HTTP_AUTHORIZATION': "Basic bWFpbF9mb3JfdGVzdHNfMkBtYWlsLmNvbTpwYXNzd29yZA=="}
+			**get_auth_header(token)
 		)
 
 		response = client.get(
 			reverse(view_get_post_loans),
-			**{'HTTP_AUTHORIZATION': "Basic bWFpbF9mb3JfdGVzdHNfMkBtYWlsLmNvbTpwYXNzd29yZA=="}	
+			**get_auth_header(token)
 		)
 		self.assertEquals(response.status_code,status.HTTP_200_OK)
-		self.assertEquals(len(response.data),1)
-		for loan in response.data:
+		self.assertEquals(len(response.data['list']),1)
+		for loan in response.data['list']:
 			self.assertIsNotNone(loan['user_full_name'])
 			self.assertIsNotNone(loan['state'])
 			self.assertIsNotNone(loan['value'])
@@ -309,11 +381,11 @@ class LoanViewTest(TestCase):
 
 		response = client.get(
 			reverse(view_get_post_loans),
-			**get_auth_header()
+			**get_auth_header(self.token)
 		)
 		self.assertEquals(response.status_code,status.HTTP_200_OK)
-		self.assertEquals(len(response.data),2)
-		for loan in response.data:
+		self.assertEquals(len(response.data['list']),2)
+		for loan in response.data['list']:
 			self.assertIsNotNone(loan['user_full_name'])
 			self.assertIsNotNone(loan['state'])
 			self.assertIsNotNone(loan['value'])
@@ -326,24 +398,24 @@ class LoanViewTest(TestCase):
 
 		response = client.get(
 			"%s?all_loans=true" % reverse(view_get_post_loans),
-			**get_auth_header()
+			**get_auth_header(self.token)
 		)
 		self.assertEquals(response.status_code,status.HTTP_200_OK)
-		self.assertEquals(len(response.data),2)
+		self.assertEquals(len(response.data['list']),2)
 
 		response = client.get(
 			"%s?all_loans=true" % reverse(view_get_post_loans),
-			**{'HTTP_AUTHORIZATION': "Basic bWFpbF9mb3JfdGVzdHNfMkBtYWlsLmNvbTpwYXNzd29yZA=="}	
+			**get_auth_header(token)
 		)
 		self.assertEquals(response.status_code,status.HTTP_200_OK)
-		self.assertEquals(len(response.data),3)
+		self.assertEquals(len(response.data['list']),3)
 
 	def test_update_loan_state(self):
 		client.post(
 			reverse(view_get_post_loans),
 			data = json.dumps(self.loan_with_quota_fee_10),
 			content_type='application/json',
-			**get_auth_header()
+			**get_auth_header(self.token)
 		)
 
 		loan = Loan.objects.get(user_id = 1)
@@ -351,7 +423,7 @@ class LoanViewTest(TestCase):
 			reverse(view_update_loan,kwargs={'id': loan.id}),
 			data = '{"state":2}',
 			content_type='application/json',
-			**get_auth_header()
+			**get_auth_header(self.token)
 		)
 		self.assertEquals(response.status_code,status.HTTP_200_OK)
 
@@ -364,7 +436,7 @@ class LoanViewTest(TestCase):
 			reverse(view_get_post_loans),
 			data = json.dumps(self.loan_with_quota_fee_10),
 			content_type='application/json',
-			**get_auth_header()
+			**get_auth_header(self.token)
 		)
 
 		loan = Loan.objects.get(user_id = 1)
@@ -372,7 +444,7 @@ class LoanViewTest(TestCase):
 			reverse(view_update_loan,kwargs={'id': loan.id+1}),
 			data = '{"state":2}',
 			content_type='application/json',
-			**get_auth_header()
+			**get_auth_header(self.token)
 		)
 		self.assertEquals(response.status_code,status.HTTP_404_NOT_FOUND)
 		self.assertEquals(response.data['message'],'Loan does not exist')
@@ -382,7 +454,7 @@ class LoanViewTest(TestCase):
 			reverse(view_get_post_loans),
 			data = json.dumps(self.loan_with_quota_fee_10),
 			content_type='application/json',
-			**get_auth_header()
+			**get_auth_header(self.token)
 		)
 
 		loan = Loan.objects.get(user_id = 1)
@@ -390,7 +462,7 @@ class LoanViewTest(TestCase):
 			reverse(view_update_loan,kwargs={'id': loan.id+1}),
 			data = '{"state":5}',
 			content_type='application/json',
-			**get_auth_header()
+			**get_auth_header(self.token)
 		)
 		self.assertEquals(response.status_code,status.HTTP_400_BAD_REQUEST)
 		self.assertEquals(response.data['message'],'State must be less or equal than 3')

@@ -1,6 +1,7 @@
 from ..models import UserProfile,UserFinance
 from django.contrib.auth.models import User
 from django.db import IntegrityError,transaction
+from rest_framework.authtoken.models import Token 
 from ..serializers import UserProfileSerializer
 
 def create_user(obj):
@@ -30,7 +31,6 @@ def get_users():
 	users = UserProfile.objects.all()
 	serializer = UserProfileSerializer(users,many=True)
 	return serializer.data
-	return {}
 
 def get_user(id):
 	try:
@@ -49,3 +49,19 @@ def get_user(id):
 		'total_quota': user_finance.total_quota,
 		'available_quota': user_finance.available_quota
 	})
+
+def delete_token(user_id):
+	try:
+		Token.objects.get(user_id = user_id).delete()
+	except Token.DoesNotExist:
+		return False
+	return True
+
+def inactive_user(id):
+	try:
+		user = User.objects.get(id = id)
+	except User.DoesNotExist:
+		return False
+	user.is_active = False
+	user.save()
+	return True

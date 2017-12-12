@@ -26,9 +26,12 @@ def view_get_post_loans(request):
 		return Response({'message':msg},status = status.HTTP_406_NOT_ACCEPTABLE)
 	if request.method == 'GET':
 		all_loans = (request.query_params.get('all_loans') == 'true')
+		page = int(request.query_params.get('page','1'))
+		if page <= 0:
+			return Response({'message':'Page number must be greater or equal than 0'},status = status.HTTP_400_BAD_REQUEST)
 		if user.role <= 2:
-			return Response(get_loans(user.id,all_loans),status.HTTP_200_OK)
-		return Response(get_loans(user.id),status.HTTP_200_OK)
+			return Response(get_loans(user.id,page,all_loans),status.HTTP_200_OK)
+		return Response(get_loans(user.id,page),status.HTTP_200_OK)
 
 # TODO: pagination
 @api_view(['GET','POST'])
@@ -49,6 +52,12 @@ def view_get_update_delete_user(request,id):
 		if state:
 			return Response(data,status = status.HTTP_200_OK)
 		return Response(status = status.HTTP_404_NOT_FOUND)
+	if request.method == 'DELETE':
+		state = inactive_user(id)
+		if state:
+			return Response(status = status.HTTP_200_OK)
+		return Response(status = status.HTTP_404_NOT_FOUND)
+
 
 
 #http://blog.apcelent.com/django-json-web-token-authentication-backend.html
