@@ -18,17 +18,17 @@ def create_user(obj):
 		except IntegrityError:
 			return (False,'Identification/email already exists')
 		UserFinance.objects.create(
-			contributions = obj['contributions'],
-			balance_contributions = obj['balance_contributions'],
-			total_quota = obj['total_quota'],
-			available_quota = obj['available_quota'],
+			contributions = 0,
+			balance_contributions = 0,
+			total_quota = 0,
+			available_quota = 0,
 			user = user
 		)
 	#Send email to set password or next login?
 	return (True,'Success')
 
 def get_users():
-	users = UserProfile.objects.all()
+	users = UserProfile.objects.filter(is_active = True)
 	serializer = UserProfileSerializer(users,many=True)
 	return serializer.data
 
@@ -43,7 +43,7 @@ def get_user(id):
 		'identification': user.identification,
 		'full_name': ''.join([user.first_name,' ',user.last_name]),
 		'email': user.email,
-		'role': user.get_role_display(),
+		'role': user.role,
 		'contributions': user_finance.contributions,
 		'balance_contributions': user_finance.balance_contributions,
 		'total_quota': user_finance.total_quota,

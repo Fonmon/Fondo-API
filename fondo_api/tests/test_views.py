@@ -60,11 +60,7 @@ class UserViewTest(TestCase):
 			'identification': 123,
 			'email': 'mail@mail.com',
 			'username': 'mail@mail.com',
-			'role': 2,
-			'contributions': 2000,
-			'balance_contributions': 2000,
-			'total_quota': 1000,
-			'available_quota': 500
+			'role': 2
 		}
 
 		self.object_json_identification_r = {
@@ -102,12 +98,6 @@ class UserViewTest(TestCase):
 		self.assertEquals(user.role, 2)
 		self.assertEquals(user.get_role_display(),'TREASURER')
 
-		user_finance = UserFinance.objects.get(user_id = user.id)
-		self.assertEquals(user_finance.contributions, 2000)
-		self.assertEquals(user_finance.balance_contributions, 2000)
-		self.assertEquals(user_finance.total_quota, 1000)
-		self.assertEquals(user_finance.available_quota, 500)
-
 	def test_unsuccess_post_identification(self):
 		response = client.post(
 			reverse(view_get_post_users),
@@ -140,7 +130,7 @@ class UserViewTest(TestCase):
 			**get_auth_header(self.token)
 		)
 		self.assertEquals(response.status_code, status.HTTP_200_OK)
-		self.assertEquals(len(response.data),len(UserProfile.objects.all()))
+		self.assertEquals(len(response.data),len(UserProfile.objects.filter(is_active=True)))
 		for user in response.data:
 			self.assertIsNotNone(user['id'])
 			self.assertIsNotNone(user['identification'])
@@ -158,7 +148,7 @@ class UserViewTest(TestCase):
 		self.assertEquals(response.data['identification'],99999)
 		self.assertEquals(response.data['full_name'],'Foo Name Foo Last Name')
 		self.assertEquals(response.data['email'],'mail_for_tests@mail.com')
-		self.assertEquals(response.data['role'],'MEMBER')
+		self.assertEquals(response.data['role'],3)
 		self.assertEquals(response.data['contributions'],2000)
 		self.assertEquals(response.data['balance_contributions'],2000)
 		self.assertEquals(response.data['total_quota'],1000)

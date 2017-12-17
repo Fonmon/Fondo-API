@@ -16,6 +16,7 @@ def view_update_loan(request,id):
 			return Response({'message':msg},status.HTTP_404_NOT_FOUND)
 		return Response({'message':'State must be less or equal than 3'},status = status.HTTP_400_BAD_REQUEST)
 
+# improve user id
 @api_view(['GET','POST'])
 def view_get_post_loans(request):
 	user = UserProfile.objects.get(id = request.user.id)
@@ -47,7 +48,10 @@ def view_get_post_users(request):
 
 @api_view(['GET','PATCH','DELETE'])
 def view_get_update_delete_user(request,id):
+	id = int(id)
 	if request.method == 'GET':
+		if id == -1:
+			id = request.user.id
 		state, data = get_user(id)
 		if state:
 			return Response(data,status = status.HTTP_200_OK)
