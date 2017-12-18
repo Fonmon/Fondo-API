@@ -41,7 +41,8 @@ def get_user(id):
 	return (True,{
 		'id': user.id,
 		'identification': user.identification,
-		'full_name': ''.join([user.first_name,' ',user.last_name]),
+		'first_name': user.first_name,
+		'last_name': user.last_name,
 		'email': user.email,
 		'role': user.role,
 		'contributions': user_finance.contributions,
