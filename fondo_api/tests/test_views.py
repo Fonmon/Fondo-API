@@ -81,6 +81,42 @@ class UserViewTest(TestCase):
 			'role': 2
 		}
 
+		self.object_json_user_update = {
+			'identification':123,
+			'first_name': 'Foo Name update',
+			'last_name': 'Last Name update',
+			'email': 'mail_updated@mail.com2',
+			'role': 2,
+			'contributions': 2000,
+			'balance_contributions': 2000,
+			'total_quota': 1000,
+			'available_quota': 500
+		}
+
+		self.object_json_user_update_email_r = {
+			'identification':12312451241243,
+			'first_name': 'Foo Name update',
+			'last_name': 'Last Name update',
+			'email': 'mail@mail.com',
+			'role': 2,
+			'contributions': 2000,
+			'balance_contributions': 2000,
+			'total_quota': 1000,
+			'available_quota': 500
+		}
+
+		self.object_json_user_update_identification_r = {
+			'identification':123,
+			'first_name': 'Foo Name update',
+			'last_name': 'Last Name update',
+			'email': 'mail2@m2ail.com',
+			'role': 2,
+			'contributions': 2000,
+			'balance_contributions': 2000,
+			'total_quota': 1000,
+			'available_quota': 500
+		}
+
 	def test_success_post(self):
 		response = client.post(
 			reverse(view_get_post_users),
@@ -130,8 +166,8 @@ class UserViewTest(TestCase):
 			**get_auth_header(self.token)
 		)
 		self.assertEquals(response.status_code, status.HTTP_200_OK)
-		self.assertEquals(len(response.data),len(UserProfile.objects.filter(is_active=True)))
-		for user in response.data:
+		self.assertEquals(len(response.data['list']),len(UserProfile.objects.filter(is_active=True)))
+		for user in response.data['list']:
 			self.assertIsNotNone(user['id'])
 			self.assertIsNotNone(user['identification'])
 			self.assertIsNotNone(user['full_name'])
@@ -187,6 +223,54 @@ class UserViewTest(TestCase):
 			self.fail('That account is inactive')
 		except KeyError:
 			pass
+
+	def test_patch_user(self):
+		response = client.patch(
+			reverse(view_get_update_delete_user,kwargs={'id': 2}),
+			data=json.dumps(self.object_json_user_update),
+			content_type='application/json',
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code, status.HTTP_404_NOT_FOUND)
+
+		response = client.patch(
+			reverse(view_get_update_delete_user,kwargs={'id': 1}),
+			data=json.dumps(self.object_json_user_update),
+			content_type='application/json',
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+		user = UserProfile.objects.get(id=1)
+		self.assertEquals(user.first_name,'Foo Name update')
+		self.assertEquals(user.last_name,'Last Name update')
+		self.assertEquals(user.email,'mail_updated@mail.com2')
+		self.assertEquals(user.username,'mail_updated@mail.com2')
+
+	def test_patch_user_conflict(self):
+		response = client.post(
+			reverse(view_get_post_users),
+			data = json.dumps(self.object_json),
+			content_type='application/json',
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code,status.HTTP_201_CREATED)
+
+		response = client.patch(
+			reverse(view_get_update_delete_user,kwargs={'id': 1}),
+			data=json.dumps(self.object_json_user_update_identification_r),
+			content_type='application/json',
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code, status.HTTP_409_CONFLICT)
+
+		response = client.patch(
+			reverse(view_get_update_delete_user,kwargs={'id': 1}),
+			data=json.dumps(self.object_json_user_update_email_r),
+			content_type='application/json',
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code, status.HTTP_409_CONFLICT)
 
 
 class LoanViewTest(TestCase):

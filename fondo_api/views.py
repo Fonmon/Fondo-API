@@ -44,7 +44,10 @@ def view_get_post_users(request):
 			return Response(status = status.HTTP_201_CREATED)
 		return Response({'message':msg},status = status.HTTP_409_CONFLICT)
 	if request.method == 'GET':
-		return Response(get_users(),status = status.HTTP_200_OK)
+		page = int(request.query_params.get('page','1'))
+		if page <= 0:
+			return Response({'message':'Page number must be greater or equal than 0'},status = status.HTTP_400_BAD_REQUEST)
+		return Response(get_users(page),status = status.HTTP_200_OK)
 
 @api_view(['GET','PATCH','DELETE'])
 def view_get_update_delete_user(request,id):
@@ -61,7 +64,14 @@ def view_get_update_delete_user(request,id):
 		if state:
 			return Response(status = status.HTTP_200_OK)
 		return Response(status = status.HTTP_404_NOT_FOUND)
-
+	if request.method == 'PATCH':
+		state,code = update_user(id,request.data)
+		if state:
+			return Response(status = status.HTTP_200_OK)
+		elif code == 404:
+			return Response(status = status.HTTP_404_NOT_FOUND)
+		elif code == 409:
+			return Response(status = status.HTTP_409_CONFLICT)
 
 
 #http://blog.apcelent.com/django-json-web-token-authentication-backend.html

@@ -2,7 +2,10 @@ from ..models import UserProfile,UserFinance
 from django.contrib.auth.models import User
 from django.db import IntegrityError,transaction
 from rest_framework.authtoken.models import Token 
+from django.core.paginator import Paginator
 from ..serializers import UserProfileSerializer
+
+USERS_PER_PAGE = 10
 
 def create_user(obj):
 	with transaction.atomic():
@@ -27,10 +30,14 @@ def create_user(obj):
 	#Send email to set password or next login?
 	return (True,'Success')
 
-def get_users():
-	users = UserProfile.objects.filter(is_active = True)
-	serializer = UserProfileSerializer(users,many=True)
-	return serializer.data
+def get_users(page=1):
+	users = UserProfile.objects.filter(is_active = True).order_by('id')
+	paginator = Paginator(users,USERS_PER_PAGE)
+	if page > paginator.num_pages:
+		return {'list':[], 'num_pages':paginator.num_pages}
+	page_return = paginator.page(page)
+	serializer = UserProfileSerializer(page_return.object_list,many=True)
+	return {'list':serializer.data, 'num_pages':paginator.num_pages}
 
 def get_user(id):
 	try:
@@ -66,3 +73,28 @@ def inactive_user(id):
 	user.is_active = False
 	user.save()
 	return True
+
+def update_user(id,obj):
+	with transaction.atomic():
+		try:
+			user_finance = UserFinance.objects.get(user_id = id)
+		except UserFinance.DoesNotExist:
+			return (False,404)
+		user = user_finance.user
+		user_finance.contributions = obj['contributions']
+		user_finance.balance_contributions = obj['balance_contributions']
+		user_finance.total_quota = obj['total_quota']
+		user_finance.available_quota = obj['available_quota'];
+		user_finance.save()
+
+		user.first_name = obj['first_name']
+		user.last_name = obj['last_name']
+		user.email = obj['email']
+		user.username = obj['email']
+		user.identification = obj['identification']
+		user.role = obj['role']
+		try:
+			user.save()
+		except IntegrityError:
+			return (False,409)
+	return (True,200)
