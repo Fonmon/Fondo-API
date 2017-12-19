@@ -19,12 +19,12 @@ class UserFinanceSerializer(serializers.ModelSerializer):
 
 class LoanSerializer(serializers.ModelSerializer):
 	user_full_name = serializers.SerializerMethodField()
-	state = serializers.CharField(source='get_state_display')
-	fee = serializers.CharField(source='get_fee_display')
+	#state = serializers.CharField(source='get_state_display')
+	#fee = serializers.CharField(source='get_fee_display')
 	class Meta:
 		model = Loan
-		fields = ('value','timelimit','disbursement_date',
-			'created_at','fee','state','user_full_name','id','rate')
+		fields = ('value','timelimit','disbursement_date', 'payment',
+			'created_at','fee','comments','state','user_full_name','id','rate')
 
 	def get_user_full_name(self, obj):
 		return '{} {}'.format(obj.user.first_name, obj.user.last_name)

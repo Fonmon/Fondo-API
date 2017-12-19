@@ -16,15 +16,17 @@ def create_loan(user_id,obj):
 		rate = 0.025
 	elif 12 < obj['timelimit'] and obj['timelimit'] <= 24:
 		rate = 0.03
-	Loan.objects.create(
+	newLoan = Loan.objects.create(
 		value = obj['value'],
 		timelimit = obj['timelimit'],
 		disbursement_date = obj['disbursement_date'],
 		fee = obj['fee'],
+		payment = obj['payment'],
+		comments = obj['comments'],
 		rate = rate,
 		user = user
 	)
-	return (True, 'Created')
+	return (True, newLoan.id)
 
 # TODO: add filter by state
 def get_loans(user_id,page,all_loans=False):
@@ -45,9 +47,17 @@ def update_loan(id,state):
 	try:
 		loan = Loan.objects.get(id = id)
 	except Loan.DoesNotExist:
-		return (False,'Loan does not exist')
+		return (False,'')
 	loan.state = state
 	#if state == 1:
 		# send mail to loan.user
 	loan.save()
 	return (True,'Success')
+
+def get_loan(id):
+	try:
+		loan = Loan.objects.get(id = id)
+	except Loan.DoesNotExist:
+		return (False,'Loan does not exist')
+	serializer = LoanSerializer(loan)
+	return (True,serializer.data)

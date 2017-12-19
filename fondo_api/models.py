@@ -31,11 +31,17 @@ class Loan(models.Model):
 		(0,'MONTHLY'),
 		(1,'UNIQUE')
 	)
+	PAYMENT_TYPES = (
+		(0,'CASH'),
+		(1,'BANK_ACCOUNT')
+	)
 	value = models.BigIntegerField()
 	timelimit = models.IntegerField()
 	disbursement_date = models.DateField()
+	payment = models.IntegerField(choices=PAYMENT_TYPES, default=0)
 	created_at = models.DateTimeField(auto_now_add=True)
 	fee = models.IntegerField(choices=FEE_TYPES)
+	comments = models.TextField(null=True)
 	state = models.IntegerField(choices=LOAN_STATES, default=0)
 	rate = models.DecimalField(max_digits=5,decimal_places=3)
 	user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)

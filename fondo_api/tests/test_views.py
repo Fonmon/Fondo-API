@@ -11,7 +11,7 @@ client = Client()
 THREEPLACES = Decimal(10) ** -3
 
 # Paths API tests
-view_update_loan = 'view_update_loan'
+view_get_update_loan = 'view_get_update_loan'
 view_get_post_loans = 'view_get_post_loans'
 view_get_post_users = 'view_get_post_users'
 view_get_update_delete_user = 'view_get_update_delete_user'
@@ -282,24 +282,32 @@ class LoanViewTest(TestCase):
 			'value':100,
 			'timelimit': 5,
 			'disbursement_date': '2017-12-9',
+			'comments':'',
+			'payment':0,
 			'fee': 0
 		}
 		self.loan_with_quota_fee_10 = {
 			'value':200,
 			'timelimit': 10,
 			'disbursement_date': '2017-11-9',
+			'comments':'',
+			'payment':1,
 			'fee': 0
 		}
 		self.loan_with_quota_fee_20 = {
 			'value':300,
 			'timelimit': 20,
 			'disbursement_date': '2018-1-1',
+			'comments':'',
+			'payment':0,
 			'fee': 0
 		}
 		self.loan_with_not_quota = {
 			'value':600,
 			'timelimit': 8,
 			'disbursement_date': '2017-12-9',
+			'comments':'',
+			'payment':0,
 			'fee': 0
 		}
 
@@ -313,6 +321,7 @@ class LoanViewTest(TestCase):
 
 		self.assertEquals(response.status_code, status.HTTP_201_CREATED)
 		loan = Loan.objects.get(user_id = 1)
+		self.assertEquals(response.data['id'],loan.id)
 		self.assertEquals(loan.value,100)
 		self.assertEquals(loan.get_fee_display(),'MONTHLY')
 		self.assertEquals(loan.get_state_display(),'WAITING_APPROVAL')
@@ -320,6 +329,9 @@ class LoanViewTest(TestCase):
 		self.assertEquals(loan.disbursement_date.year, 2017)
 		self.assertEquals(loan.disbursement_date.month, 12)
 		self.assertEquals(loan.disbursement_date.day, 9)
+		self.assertEquals(loan.comments,'')
+		self.assertEquals(loan.payment,0)
+		self.assertEquals(loan.get_payment_display(),'CASH')
 
 	def test_post_loan_2(self):
 		response = client.post(
@@ -331,6 +343,7 @@ class LoanViewTest(TestCase):
 
 		self.assertEquals(response.status_code, status.HTTP_201_CREATED)
 		loan = Loan.objects.get(user_id = 1)
+		self.assertEquals(response.data['id'],loan.id)
 		self.assertEquals(loan.value,200)
 		self.assertEquals(loan.get_fee_display(),'MONTHLY')
 		self.assertEquals(loan.get_state_display(),'WAITING_APPROVAL')
@@ -338,6 +351,9 @@ class LoanViewTest(TestCase):
 		self.assertEquals(loan.disbursement_date.year, 2017)
 		self.assertEquals(loan.disbursement_date.month, 11)
 		self.assertEquals(loan.disbursement_date.day, 9)
+		self.assertEquals(loan.comments,'')
+		self.assertEquals(loan.payment,1)
+		self.assertEquals(loan.get_payment_display(),'BANK_ACCOUNT')
 
 	def test_post_loan_3(self):
 		response = client.post(
@@ -349,6 +365,7 @@ class LoanViewTest(TestCase):
 
 		self.assertEquals(response.status_code, status.HTTP_201_CREATED)
 		loan = Loan.objects.get(user_id = 1)
+		self.assertEquals(response.data['id'],loan.id)
 		self.assertEquals(loan.value,300)
 		self.assertEquals(loan.get_fee_display(),'MONTHLY')
 		self.assertEquals(loan.get_state_display(),'WAITING_APPROVAL')
@@ -356,6 +373,9 @@ class LoanViewTest(TestCase):
 		self.assertEquals(loan.disbursement_date.year, 2018)
 		self.assertEquals(loan.disbursement_date.month, 1)
 		self.assertEquals(loan.disbursement_date.day, 1)
+		self.assertEquals(loan.comments,'')
+		self.assertEquals(loan.payment,0)
+		self.assertEquals(loan.get_payment_display(),'CASH')
 
 	def test_post_loan_error(self):
 		response = client.post(
@@ -495,7 +515,7 @@ class LoanViewTest(TestCase):
 
 		loan = Loan.objects.get(user_id = 1)
 		response = client.patch(
-			reverse(view_update_loan,kwargs={'id': loan.id}),
+			reverse(view_get_update_loan,kwargs={'id': loan.id}),
 			data = '{"state":2}',
 			content_type='application/json',
 			**get_auth_header(self.token)
@@ -516,7 +536,7 @@ class LoanViewTest(TestCase):
 
 		loan = Loan.objects.get(user_id = 1)
 		response = client.patch(
-			reverse(view_update_loan,kwargs={'id': loan.id+1}),
+			reverse(view_get_update_loan,kwargs={'id': loan.id+1}),
 			data = '{"state":2}',
 			content_type='application/json',
 			**get_auth_header(self.token)
@@ -534,7 +554,7 @@ class LoanViewTest(TestCase):
 
 		loan = Loan.objects.get(user_id = 1)
 		response = client.patch(
-			reverse(view_update_loan,kwargs={'id': loan.id+1}),
+			reverse(view_get_update_loan,kwargs={'id': loan.id+1}),
 			data = '{"state":5}',
 			content_type='application/json',
 			**get_auth_header(self.token)

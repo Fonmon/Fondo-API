@@ -79,6 +79,9 @@ class LoanTest(TestCase):
 		self.assertIsNotNone(loan.created_at)
 		self.assertEqual(loan.state,0)
 		self.assertEqual(loan.get_state_display(),'WAITING_APPROVAL')
+		self.assertEqual(loan.payment,0)
+		self.assertEqual(loan.get_payment_display(),'CASH')
+		self.assertIsNone(loan.comments)
 
 	def test_many_loans(self):
 		user = UserProfile.objects.get(identification = 1234567890)

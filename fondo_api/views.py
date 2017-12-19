@@ -5,8 +5,8 @@ from .logic.user_logic import *
 from .logic.loan_logic import *
 from .models import UserProfile
 
-@api_view(['PATCH'])
-def view_update_loan(request,id):
+@api_view(['GET','PATCH'])
+def view_get_update_loan(request,id):
 	if request.method == 'PATCH':
 		new_state = int(request.data['state'])
 		if new_state <= 3:
@@ -15,6 +15,12 @@ def view_update_loan(request,id):
 				return Response(status=status.HTTP_200_OK)
 			return Response({'message':msg},status.HTTP_404_NOT_FOUND)
 		return Response({'message':'State must be less or equal than 3'},status = status.HTTP_400_BAD_REQUEST)
+	if request.method == 'GET':
+		state, data = get_loan(id)
+		if state:
+			return Response(data,status = status.HTTP_200_OK)
+		return Response(status = status.HTTP_404_NOT_FOUND)
+			
 
 # improve user id
 @api_view(['GET','POST'])
@@ -23,7 +29,7 @@ def view_get_post_loans(request):
 	if request.method == 'POST':
 		state, msg = create_loan(user.id,request.data)
 		if state:
-			return Response(status = status.HTTP_201_CREATED)
+			return Response({'id':msg},status = status.HTTP_201_CREATED)
 		return Response({'message':msg},status = status.HTTP_406_NOT_ACCEPTABLE)
 	if request.method == 'GET':
 		all_loans = (request.query_params.get('all_loans') == 'true')
