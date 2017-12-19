@@ -47,7 +47,7 @@ def update_loan(id,state):
 	try:
 		loan = Loan.objects.get(id = id)
 	except Loan.DoesNotExist:
-		return (False,'')
+		return (False,'Loan does not exist')
 	loan.state = state
 	#if state == 1:
 		# send mail to loan.user
@@ -58,6 +58,6 @@ def get_loan(id):
 	try:
 		loan = Loan.objects.get(id = id)
 	except Loan.DoesNotExist:
-		return (False,'Loan does not exist')
+		return (False,'')
 	serializer = LoanSerializer(loan)
 	return (True,serializer.data)

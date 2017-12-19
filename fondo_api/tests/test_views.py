@@ -561,3 +561,36 @@ class LoanViewTest(TestCase):
 		)
 		self.assertEquals(response.status_code,status.HTTP_400_BAD_REQUEST)
 		self.assertEquals(response.data['message'],'State must be less or equal than 3')
+
+	def test_get_loan(self):
+		client.post(
+			reverse(view_get_post_loans),
+			data = json.dumps(self.loan_with_quota_fee_10),
+			content_type='application/json',
+			**get_auth_header(self.token)
+		)
+		loan = Loan.objects.get(user_id = 1)
+
+		response = client.get(
+			reverse(view_get_update_delete_user,kwargs={'id': loan.id}),
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code, status.HTTP_200_OK)
+		self.assertEquals(response.data['id'],loan.id)
+		self.assertEquals(response.data['value'],200)
+		self.assertEquals(response.data['timelimit'],10)
+		self.assertEquals(response.data['disbursement_date'],'2017-11-9')
+		self.assertEquals(response.data['payment'],1)
+		self.assertEquals(response.data['fee'],0)
+		self.assertEquals(response.data['comments'],'')
+		self.assertEquals(response.data['state'],0)
+		self.assertEquals(response.data['user_full_name'],'Foo Name Foo Last Name')
+		self.assertEquals(response.data['rate'],0.025)
+		self.assertIsNotNone(response.data['created_at'])
+
+	def test_get_loan(self):
+		response = client.get(
+			reverse(view_get_update_delete_user,kwargs={'id': 2}),
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code, status.HTTP_404_NOT_FOUND)
