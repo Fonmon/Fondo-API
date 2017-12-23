@@ -57,7 +57,7 @@ def view_get_post_users(request):
 
 @api_view(['GET','PATCH','DELETE'])
 def view_get_update_delete_user(request,id):
-	id = int(id)
+	id = int(id);
 	if request.method == 'GET':
 		if id == -1:
 			id = request.user.id
@@ -79,6 +79,14 @@ def view_get_update_delete_user(request,id):
 		elif code == 409:
 			return Response(status = status.HTTP_409_CONFLICT)
 
+@api_view(['POST'])
+def view_logout(request):
+	if request.method == 'POST':
+		id = request.user.id
+		state = delete_token(id)
+		if state:
+			return Response(status = status.HTTP_200_OK)
+		return Response(status = status.HTTP_404_NOT_FOUND)
 
 #http://blog.apcelent.com/django-json-web-token-authentication-backend.html
 '''from django.contrib.auth.hashers import make_password

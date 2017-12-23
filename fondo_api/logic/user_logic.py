@@ -16,7 +16,8 @@ def create_user(obj):
 				first_name = obj['first_name'],
 				last_name = obj['last_name'],
 				email = obj['email'],
-				username = obj['email']
+				username = obj['email'],
+				is_active = False
 			)
 		except IntegrityError:
 			return (False,'Identification/email already exists')
