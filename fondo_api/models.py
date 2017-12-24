@@ -12,6 +12,7 @@ class UserProfile(User):
 	USERNAME_FIELD = 'email'
 	identification = models.BigIntegerField(unique=True)
 	role = models.IntegerField(choices=ROLES,default=3)
+	key_activation = models.CharField(null=True,max_length=100)
 
 class UserFinance(models.Model):
 	contributions = models.BigIntegerField()

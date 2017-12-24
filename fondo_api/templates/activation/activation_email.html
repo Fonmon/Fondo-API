@@ -1,0 +1,11 @@
+{% autoescape off %}
+Hola {{user_full_name}},
+<br /><br />
+se te ha creado una cuenta en el Fondo Montañez, para activarla es necesario que entres al siguiente link:<br />
+{{host_url}}/activate/{{user_id}}/{{user_key}}
+<br /><br />
+Si dando clic al link no funciona, por favor copiarlo y pegarlo en una nueva ventana de su navegador.
+<br /><br />
+Gracias,<br />
+Fondo Montañez<br />
+{% endautoescape %}

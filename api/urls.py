@@ -16,7 +16,6 @@ Including another URLconf
 from django.conf.urls import include, url
 from django.contrib.auth import views as auth_views
 from rest_framework.authtoken import views
-#from fondo_api.views import obtain_auth_token
 
 urlpatterns = [
 	url(r'^password_reset/$', auth_views.password_reset, name='password_reset'),

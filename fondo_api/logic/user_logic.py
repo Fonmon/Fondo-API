@@ -4,8 +4,13 @@ from django.db import IntegrityError,transaction
 from rest_framework.authtoken.models import Token 
 from django.core.paginator import Paginator
 from ..serializers import UserProfileSerializer
+import binascii,os
+from .sender_mails import *
 
 USERS_PER_PAGE = 10
+
+def generate_key():
+	return binascii.hexlify(os.urandom(25)).decode()
 
 def create_user(obj):
 	with transaction.atomic():
@@ -17,6 +22,7 @@ def create_user(obj):
 				last_name = obj['last_name'],
 				email = obj['email'],
 				username = obj['email'],
+				key_activation = generate_key(),
 				is_active = False
 			)
 		except IntegrityError:
@@ -28,7 +34,9 @@ def create_user(obj):
 			available_quota = 0,
 			user = user
 		)
-	#Send email to set password or next login?
+		if not send_activation_mail(user):
+			transaction.set_rollback(True)
+			return (False, 'Invalid email');
 	return (True,'Success')
 
 def get_users(page=1):
@@ -99,3 +107,17 @@ def update_user(id,obj):
 		except IntegrityError:
 			return (False,409)
 	return (True,200)
+
+def activate_user(id,obj):
+	try:
+		user = UserProfile.objects.get(
+			id=id,
+			key_activation=obj['key'],
+			identification=obj['identification']
+		)
+	except UserProfile.DoesNotExist:
+		return False
+	user.set_password(obj['password'])
+	user.is_active = True
+	user.save()
+	return True

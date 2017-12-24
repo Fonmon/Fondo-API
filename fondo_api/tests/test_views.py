@@ -5,6 +5,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from ..models import *
 from django.contrib.auth.models import User
+from django.core import mail
 
 # initialize the APIClient app
 client = Client()
@@ -15,6 +16,7 @@ view_get_update_loan = 'view_get_update_loan'
 view_get_post_loans = 'view_get_post_loans'
 view_get_post_users = 'view_get_post_users'
 view_get_update_delete_user = 'view_get_update_delete_user'
+view_activate_user = 'view_activate_user'
 
 def create_user():
 	user = UserProfile.objects.create_user(
@@ -133,6 +135,13 @@ class UserViewTest(TestCase):
 		self.assertEquals(user.email, "mail@mail.com")
 		self.assertEquals(user.role, 2)
 		self.assertEquals(user.get_role_display(),'TREASURER')
+		self.assertIsNotNone(user.key_activation)
+		self.assertFalse(user.is_active)
+
+		self.assertEquals(len(mail.outbox),1)
+		self.assertEquals(mail.outbox[0].subject,'Activación de cuenta Fondo Montañez')
+		self.assertEquals(len(mail.outbox[0].to),1)
+		self.assertEquals(mail.outbox[0].to[0],'mail@mail.com')
 
 	def test_unsuccess_post_identification(self):
 		response = client.post(
@@ -255,6 +264,10 @@ class UserViewTest(TestCase):
 			**get_auth_header(self.token)
 		)
 		self.assertEquals(response.status_code,status.HTTP_201_CREATED)
+		self.assertEquals(len(mail.outbox),1)
+		self.assertEquals(mail.outbox[0].subject,'Activación de cuenta Fondo Montañez')
+		self.assertEquals(len(mail.outbox[0].to),1)
+		self.assertEquals(mail.outbox[0].to[0],'mail@mail.com')
 
 		response = client.patch(
 			reverse(view_get_update_delete_user,kwargs={'id': 1}),
@@ -272,6 +285,67 @@ class UserViewTest(TestCase):
 		)
 		self.assertEquals(response.status_code, status.HTTP_409_CONFLICT)
 
+	def test_activation_successful(self):
+		response = client.post(
+			reverse(view_get_post_users),
+			data = json.dumps(self.object_json),
+			content_type='application/json',
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code,status.HTTP_201_CREATED)
+		self.assertEquals(len(mail.outbox),1)
+		self.assertEquals(mail.outbox[0].subject,'Activación de cuenta Fondo Montañez')
+		self.assertEquals(len(mail.outbox[0].to),1)
+		self.assertEquals(mail.outbox[0].to[0],'mail@mail.com')
+
+		user = UserProfile.objects.get(identification = 123)
+		obj = {
+			'password':'newPassword123',
+			'identification':123,
+			'key':user.key_activation
+		};
+
+		response = client.post(
+			reverse(view_activate_user,kwargs={'id': user.id}),
+			data = json.dumps(obj),
+			content_type='application/json',
+		)
+		self.assertEquals(response.status_code,status.HTTP_200_OK)
+
+		user = UserProfile.objects.get(identification = 123)
+		self.assertEquals(user.is_active,True)
+		self.assertTrue('pbkdf2_sha256' in user.password)
+
+	def test_activation_unsuccessful(self):
+		response = client.post(
+			reverse(view_get_post_users),
+			data = json.dumps(self.object_json),
+			content_type='application/json',
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code,status.HTTP_201_CREATED)
+		self.assertEquals(len(mail.outbox),1)
+		self.assertEquals(mail.outbox[0].subject,'Activación de cuenta Fondo Montañez')
+		self.assertEquals(len(mail.outbox[0].to),1)
+		self.assertEquals(mail.outbox[0].to[0],'mail@mail.com')
+
+		user = UserProfile.objects.get(identification = 123)
+		obj = {
+			'password':'newPassword123',
+			'identification':1234,
+			'key':user.key_activation
+		};
+
+		response = client.post(
+			reverse(view_activate_user,kwargs={'id': user.id}),
+			data = json.dumps(obj),
+			content_type='application/json',
+		)
+		self.assertEquals(response.status_code,status.HTTP_404_NOT_FOUND)
+
+		user = UserProfile.objects.get(identification = 123)
+		self.assertEquals(user.is_active,False)
+		self.assertFalse('pbkdf2_sha256' in user.password)
 
 class LoanViewTest(TestCase):
 

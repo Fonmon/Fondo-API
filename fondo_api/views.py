@@ -88,6 +88,15 @@ def view_logout(request):
 			return Response(status = status.HTTP_200_OK)
 		return Response(status = status.HTTP_404_NOT_FOUND)
 
+@api_view(['POST'])
+@permission_classes([])
+def view_activate_user(request,id):
+	if request.method == 'POST':
+		state = activate_user(id,request.data)
+		if state:
+			return Response(status = status.HTTP_200_OK)
+		return Response(status = status.HTTP_404_NOT_FOUND)
+
 #http://blog.apcelent.com/django-json-web-token-authentication-backend.html
 '''from django.contrib.auth.hashers import make_password
 @api_view(['POST'])

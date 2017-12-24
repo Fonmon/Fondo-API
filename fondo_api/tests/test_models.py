@@ -45,6 +45,7 @@ class UserProfileTest(TestCase):
 		self.assertEqual(user.role,3)
 		self.assertEqual(user.get_role_display(),'MEMBER')
 		self.assertEqual(user.password,'')
+		self.assertIsNone(user.key_activation)
 
 class LoanTest(TestCase):
 
