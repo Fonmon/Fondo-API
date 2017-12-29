@@ -1,6 +1,7 @@
-from rest_framework.decorators import api_view,permission_classes
+from rest_framework.decorators import api_view,permission_classes,parser_classes
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.parsers import MultiPartParser
 from .logic.user_logic import *
 from .logic.loan_logic import *
 from .models import UserProfile
@@ -41,9 +42,9 @@ def view_get_post_loans(request):
 		return Response(get_loans(user.id,page),status.HTTP_200_OK)
 
 # TODO: pagination
-@api_view(['GET','POST'])
-#@permission_classes([])
-def view_get_post_users(request):
+@api_view(['GET','POST','PATCH'])
+@parser_classes((MultiPartParser,))
+def view_get_post_users(request,format=None):
 	if request.method =='POST':
 		state, msg = create_user(request.data)
 		if state:
@@ -54,6 +55,8 @@ def view_get_post_users(request):
 		if page <= 0:
 			return Response({'message':'Page number must be greater or equal than 0'},status = status.HTTP_400_BAD_REQUEST)
 		return Response(get_users(page),status = status.HTTP_200_OK)
+	if request.method == 'PATCH':
+		return Response({'re':request.data},status=status.HTTP_200_OK)
 
 @api_view(['GET','PATCH','DELETE'])
 def view_get_update_delete_user(request,id):

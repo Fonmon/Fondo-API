@@ -86,16 +86,9 @@ def inactive_user(id):
 def update_user(id,obj):
 	with transaction.atomic():
 		try:
-			user_finance = UserFinance.objects.get(user_id = id)
+			user = update_user_finance(id,obj);
 		except UserFinance.DoesNotExist:
 			return (False,404)
-		user = user_finance.user
-		user_finance.contributions = obj['contributions']
-		user_finance.balance_contributions = obj['balance_contributions']
-		user_finance.total_quota = obj['total_quota']
-		user_finance.available_quota = obj['available_quota'];
-		user_finance.save()
-
 		user.first_name = obj['first_name']
 		user.last_name = obj['last_name']
 		user.email = obj['email']
@@ -107,6 +100,18 @@ def update_user(id,obj):
 		except IntegrityError:
 			return (False,409)
 	return (True,200)
+
+def update_user_finance(id,obj):
+	try:
+		user_finance = UserFinance.objects.get(user_id = id)
+	except UserFinance.DoesNotExist:
+		raise
+	user_finance.contributions = obj['contributions']
+	user_finance.balance_contributions = obj['balance_contributions']
+	user_finance.total_quota = obj['total_quota']
+	user_finance.available_quota = obj['available_quota'];
+	user_finance.save()
+	return user_finance.user
 
 def activate_user(id,obj):
 	try:
