@@ -1,7 +1,7 @@
 from rest_framework.decorators import api_view,permission_classes,parser_classes
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.parsers import MultiPartParser
+from rest_framework.parsers import MultiPartParser,JSONParser
 from .logic.user_logic import *
 from .logic.loan_logic import *
 from .models import UserProfile
@@ -43,7 +43,7 @@ def view_get_post_loans(request):
 
 # TODO: pagination
 @api_view(['GET','POST','PATCH'])
-@parser_classes((MultiPartParser,))
+@parser_classes((MultiPartParser,JSONParser))
 def view_get_post_users(request,format=None):
 	if request.method =='POST':
 		state, msg = create_user(request.data)
