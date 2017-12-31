@@ -85,11 +85,8 @@ def view_get_update_delete_user(request,id):
 @api_view(['POST'])
 def view_logout(request):
 	if request.method == 'POST':
-		id = request.user.id
-		state = delete_token(id)
-		if state:
-			return Response(status = status.HTTP_200_OK)
-		return Response(status = status.HTTP_404_NOT_FOUND)
+		request.user.auth_token.delete()
+		return Response(status = status.HTTP_200_OK)
 
 @api_view(['POST'])
 @permission_classes([])

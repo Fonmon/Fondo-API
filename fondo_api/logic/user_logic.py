@@ -64,15 +64,9 @@ def get_user(id):
 		'contributions': user_finance.contributions,
 		'balance_contributions': user_finance.balance_contributions,
 		'total_quota': user_finance.total_quota,
-		'available_quota': user_finance.available_quota
+		'available_quota': user_finance.available_quota,
+		'last_modified': user_finance.last_modified
 	})
-
-def delete_token(user_id):
-	try:
-		Token.objects.get(user_id = user_id).delete()
-	except Token.DoesNotExist:
-		return False
-	return True
 
 def inactive_user(id):
 	try:
