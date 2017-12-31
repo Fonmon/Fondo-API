@@ -139,7 +139,7 @@ class UserViewTest(TestCase):
 		self.assertFalse(user.is_active)
 
 		self.assertEquals(len(mail.outbox),1)
-		self.assertEquals(mail.outbox[0].subject,'Activación de cuenta Fondo Montañez')
+		self.assertEquals(mail.outbox[0].subject,'[Fondo Montañez] Activación de cuenta')
 		self.assertEquals(len(mail.outbox[0].to),1)
 		self.assertEquals(mail.outbox[0].to[0],'mail@mail.com')
 
@@ -265,7 +265,7 @@ class UserViewTest(TestCase):
 		)
 		self.assertEquals(response.status_code,status.HTTP_201_CREATED)
 		self.assertEquals(len(mail.outbox),1)
-		self.assertEquals(mail.outbox[0].subject,'Activación de cuenta Fondo Montañez')
+		self.assertEquals(mail.outbox[0].subject,'[Fondo Montañez] Activación de cuenta')
 		self.assertEquals(len(mail.outbox[0].to),1)
 		self.assertEquals(mail.outbox[0].to[0],'mail@mail.com')
 
@@ -294,7 +294,7 @@ class UserViewTest(TestCase):
 		)
 		self.assertEquals(response.status_code,status.HTTP_201_CREATED)
 		self.assertEquals(len(mail.outbox),1)
-		self.assertEquals(mail.outbox[0].subject,'Activación de cuenta Fondo Montañez')
+		self.assertEquals(mail.outbox[0].subject,'[Fondo Montañez] Activación de cuenta')
 		self.assertEquals(len(mail.outbox[0].to),1)
 		self.assertEquals(mail.outbox[0].to[0],'mail@mail.com')
 
@@ -325,7 +325,7 @@ class UserViewTest(TestCase):
 		)
 		self.assertEquals(response.status_code,status.HTTP_201_CREATED)
 		self.assertEquals(len(mail.outbox),1)
-		self.assertEquals(mail.outbox[0].subject,'Activación de cuenta Fondo Montañez')
+		self.assertEquals(mail.outbox[0].subject,'[Fondo Montañez] Activación de cuenta')
 		self.assertEquals(len(mail.outbox[0].to),1)
 		self.assertEquals(mail.outbox[0].to[0],'mail@mail.com')
 

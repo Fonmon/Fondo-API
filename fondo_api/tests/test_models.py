@@ -1,6 +1,6 @@
 from django.test import TestCase
 from django.db import IntegrityError
-from ..models import UserProfile,UserFinance,Loan
+from ..models import UserProfile,UserFinance,Loan,LoanDetail
 from datetime import date
 
 class UserProfileTest(TestCase):
@@ -101,3 +101,76 @@ class LoanTest(TestCase):
 
 		loans = Loan.objects.filter(disbursement_date__year = 2016)
 		self.assertEqual(len(loans),1)
+
+class UserFinanceTest(TestCase):
+	def setUp(self):
+		UserProfile.objects.create(
+			first_name = 'Foo Name',
+			last_name = 'Foo Last Name',
+			username = 'username',
+			identification = 1234567890
+		)
+
+	def test_defaults(self):
+		user = UserProfile.objects.get(identification = 1234567890)
+		UserFinance.objects.create(
+			contributions=123,
+			balance_contributions=123,
+			total_quota=124124,
+			available_quota=41243,
+			user = user
+		)
+
+		user_finance = UserFinance.objects.get(user_id=user.id)
+		self.assertIsNotNone(user_finance)
+		self.assertIsNotNone(user_finance.last_modified)
+
+class LoanDetailTest(TestCase):
+
+	def setUp(self):
+		user = UserProfile.objects.create(
+			first_name = 'Foo Name',
+			last_name = 'Foo Last Name',
+			username = 'username',
+			identification = 1234567890
+		)
+
+	def test_loan_detail_defaults(self):
+		user = UserProfile.objects.get(identification = 1234567890)
+		foo_date = date(2016, 12, 9)
+		loan = Loan.objects.create(
+			value = 1000,
+			fee = 0,
+			timelimit = 5,
+			rate = 0.004,
+			disbursement_date = foo_date,
+			user = user
+		)
+		LoanDetail.objects.create(
+			last_payment_date = foo_date,
+			payday_limit = foo_date,
+			loan = loan
+		)
+
+		loan_detail = LoanDetail.objects.filter(loan_id = loan.id)
+		self.assertIsNotNone(loan_detail)
+		self.assertEqual(len(loan_detail),1)
+		self.assertEqual(loan_detail[0].current_balance,0)
+		self.assertEqual(loan_detail[0].interest,0)
+		self.assertEqual(loan_detail[0].total_payment,0)
+		self.assertEqual(loan_detail[0].last_payment_value,0)
+
+	def test_delete_loan(self):
+		user = UserProfile.objects.get(identification = 1234567890)
+		foo_date = date(2016, 12, 9)
+		loan = Loan.objects.create(
+			value = 1000,
+			fee = 0,
+			timelimit = 5,
+			rate = 0.004,
+			disbursement_date = foo_date,
+			user = user
+		)
+		Loan.objects.filter(id = loan.id).delete()
+		loan_detail = LoanDetail.objects.filter(loan_id = loan.id)
+		self.assertEqual(len(loan_detail),0)

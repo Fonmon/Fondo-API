@@ -126,3 +126,12 @@ def activate_user(id,obj):
 	user.is_active = True
 	user.save()
 	return True
+
+'''
+* identification
+* balance_contributions
+* total_quota
+* contributions
+'''
+def bulk_update():
+	return
