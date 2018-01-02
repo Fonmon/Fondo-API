@@ -13,7 +13,7 @@ def view_get_update_loan(request,id):
 		if new_state <= 3:
 			state, msg = update_loan(id,new_state)
 			if state:
-				return Response(status=status.HTTP_200_OK)
+				return Response(msg,status=status.HTTP_200_OK)
 			return Response({'message':msg},status.HTTP_404_NOT_FOUND)
 		return Response({'message':'State must be less or equal than 3'},status = status.HTTP_400_BAD_REQUEST)
 	if request.method == 'GET':

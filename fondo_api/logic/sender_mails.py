@@ -22,3 +22,22 @@ def send_activation_mail(user):
 		fail_silently=False
 	)
 	return value == 1
+
+def send_approved_loan(loan,loan_table):
+	params = {
+		'loan_id':loan.id,
+		'loan_table':loan_table
+	}
+	html_template = render_to_string('loans/approved_email.html',params)
+	subject = render_to_string('loans/approved_subject.txt')
+	from_email = os.environ.get('EMAIL_HOST_USER')
+	to = loan.user.email
+	value = send_mail(
+		subject,
+		'',
+		from_email,
+		[to],
+		html_message=html_template,
+		fail_silently=False
+	)
+	return value == 1

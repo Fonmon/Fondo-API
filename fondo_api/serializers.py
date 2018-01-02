@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import UserProfile,UserFinance,Loan
+from .models import UserProfile,UserFinance,Loan,LoanDetail
 
 class UserProfileSerializer(serializers.ModelSerializer):
 	full_name = serializers.SerializerMethodField()
@@ -33,3 +33,9 @@ class LoanSerializer(serializers.ModelSerializer):
 	def get_created_at(self,obj):
 		date = obj.created_at
 		return '{}-{}-{}'.format(date.year,date.month,date.day)
+
+class LoanDetailSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = LoanDetail
+		fields = ('current_balance','interest','last_payment_date', 'total_payment',
+			'last_payment_value','payday_limit')

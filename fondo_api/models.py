@@ -51,7 +51,7 @@ class Loan(models.Model):
 class LoanDetail(models.Model):
 	current_balance = models.BigIntegerField(default=0)
 	interest = models.BigIntegerField(default=0)
-	last_payment_date = models.DateField()
+	last_payment_date = models.DateField(null=True)
 	total_payment = models.BigIntegerField(default=0)
 	last_payment_value = models.BigIntegerField(default = 0)
 	payday_limit = models.DateField()
