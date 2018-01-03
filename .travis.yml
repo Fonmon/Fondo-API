@@ -8,8 +8,11 @@ before_script:
   - psql -c "CREATE DATABASE test_fondo_api;" -U postgres
   - python3 manage.py makemigrations fondo_api && python3 manage.py migrate
 env:
-  matrix:
-    - POSTGRES_DATABASE=test_fondo_api POSTGRES_USER=postgres POSTGRES_HOST=localhost POSTGRES_PASSWORD= POSTGRES_PORT=5432
+    - POSTGRES_DATABASE=test_fondo_api 
+    - POSTGRES_USER=postgres 
+    - POSTGRES_HOST=localhost 
+    - POSTGRES_PASSWORD= 
+    - POSTGRES_PORT=5432
     - DJANGO_SETTINGS_MODULE=api.settings.development
 script:
   - coverage run --branch --source='.' manage.py test && coverage report -m --omit="*env*,*tests*"
