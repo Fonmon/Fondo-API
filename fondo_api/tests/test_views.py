@@ -6,6 +6,7 @@ from django.urls import reverse
 from ..models import *
 from django.contrib.auth.models import User
 from django.core import mail
+from mock import patch
 
 # initialize the APIClient app
 client = Client()
@@ -156,6 +157,23 @@ class UserViewTest(TestCase):
 		self.assertEquals(mail.outbox[0].subject,'[Fondo Montañez] Activación de cuenta')
 		self.assertEquals(len(mail.outbox[0].to),1)
 		self.assertEquals(mail.outbox[0].to[0],'mail@mail.com')
+
+		self.assertEquals(len(UserProfile.objects.all()),2)
+		self.assertEquals(len(UserFinance.objects.all()),2)
+
+	@patch('fondo_api.logic.sender_mails.send_activation_mail',return_value=False)
+	def test_invalid_email(self,mock):
+		response = client.post(
+			reverse(view_get_post_users),
+			data = json.dumps(self.object_json),
+			content_type='application/json',
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code,status.HTTP_409_CONFLICT)
+		self.assertEquals(response.data['message'],'Invalid email')
+
+		self.assertEquals(len(UserProfile.objects.all()),1)
+		self.assertEquals(len(UserFinance.objects.all()),1)
 
 	def test_unsuccess_post_identification(self):
 		response = client.post(

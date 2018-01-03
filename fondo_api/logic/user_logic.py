@@ -6,7 +6,7 @@ from django.core.paginator import Paginator
 from ..serializers import UserProfileSerializer
 import binascii,os
 import logging
-from .sender_mails import *
+from . import sender_mails
 
 USERS_PER_PAGE = 10
 logger = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ def create_user(obj):
 			utilized_quota = 0,
 			user = user
 		)
-		if not send_activation_mail(user):
+		if not sender_mails.send_activation_mail(user):
 			transaction.set_rollback(True)
 			return (False, 'Invalid email');
 	return (True,'Success')
