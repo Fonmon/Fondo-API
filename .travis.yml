@@ -10,5 +10,6 @@ before_script:
 env:
   matrix:
     - POSTGRES_DATABASE=test_fondo_api POSTGRES_USER=postgres POSTGRES_HOST=localhost POSTGRES_PASSWORD= POSTGRES_PORT=5432
+    - DJANGO_SETTINGS_MODULE=api.settings.development
 script:
   - coverage run --branch --source='.' manage.py test && coverage report -m --omit="*env*,*tests*"
