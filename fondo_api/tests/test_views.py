@@ -92,7 +92,7 @@ class UserViewTest(TestCase):
 			'contributions': 2000,
 			'balance_contributions': 2000,
 			'total_quota': 1000,
-			'available_quota': 500
+			'utilized_quota': 500
 		}
 
 		self.object_json_user_update_email_r = {
@@ -104,7 +104,7 @@ class UserViewTest(TestCase):
 			'contributions': 2000,
 			'balance_contributions': 2000,
 			'total_quota': 1000,
-			'available_quota': 500
+			'utilized_quota': 500
 		}
 
 		self.object_json_user_update_identification_r = {
@@ -116,7 +116,7 @@ class UserViewTest(TestCase):
 			'contributions': 2000,
 			'balance_contributions': 2000,
 			'total_quota': 1000,
-			'available_quota': 500
+			'utilized_quota': 500
 		}
 
 	def test_success_post(self):

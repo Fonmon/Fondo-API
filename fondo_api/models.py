@@ -18,6 +18,7 @@ class UserFinance(models.Model):
 	contributions = models.BigIntegerField()
 	balance_contributions = models.BigIntegerField()
 	total_quota = models.BigIntegerField()
+	utilized_quota = models.BigIntegerField(default=0)
 	available_quota = models.BigIntegerField()
 	last_modified = models.DateField(auto_now=True)
 	user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
@@ -49,10 +50,7 @@ class Loan(models.Model):
 	user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
 
 class LoanDetail(models.Model):
-	current_balance = models.BigIntegerField(default=0)
-	interest = models.BigIntegerField(default=0)
-	last_payment_date = models.DateField(null=True)
 	total_payment = models.BigIntegerField(default=0)
-	last_payment_value = models.BigIntegerField(default = 0)
+	minimum_payment = models.BigIntegerField(default = 0)
 	payday_limit = models.DateField()
 	loan = models.ForeignKey(Loan, on_delete=models.CASCADE)

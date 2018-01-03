@@ -123,6 +123,7 @@ class UserFinanceTest(TestCase):
 
 		user_finance = UserFinance.objects.get(user_id=user.id)
 		self.assertIsNotNone(user_finance)
+		self.assertEqual(user_finance.utilized_quota,0)
 		self.assertIsNotNone(user_finance.last_modified)
 
 class LoanDetailTest(TestCase):
@@ -147,7 +148,6 @@ class LoanDetailTest(TestCase):
 			user = user
 		)
 		LoanDetail.objects.create(
-			last_payment_date = foo_date,
 			payday_limit = foo_date,
 			loan = loan
 		)
@@ -155,10 +155,8 @@ class LoanDetailTest(TestCase):
 		loan_detail = LoanDetail.objects.filter(loan_id = loan.id)
 		self.assertIsNotNone(loan_detail)
 		self.assertEqual(len(loan_detail),1)
-		self.assertEqual(loan_detail[0].current_balance,0)
-		self.assertEqual(loan_detail[0].interest,0)
 		self.assertEqual(loan_detail[0].total_payment,0)
-		self.assertEqual(loan_detail[0].last_payment_value,0)
+		self.assertEqual(loan_detail[0].minimum_payment,0)
 
 	def test_delete_loan(self):
 		user = UserProfile.objects.get(identification = 1234567890)

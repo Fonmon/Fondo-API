@@ -6,9 +6,11 @@ from dateutil.relativedelta import relativedelta
 from .sender_mails import *
 from decimal import Decimal
 import locale
+import logging
 
 LOANS_PER_PAGE = 10
 locale.setlocale(locale.LC_ALL, '')
+logger = logging.getLogger(__name__)
 
 def create_loan(user_id,obj):
 	user_finance = UserFinance.objects.get(user_id = user_id)
@@ -50,9 +52,8 @@ def get_loans(user_id,page,all_loans=False):
 def create_loan_detail(loan,detail):
 	try:
 		loan_detail = LoanDetail.objects.create(
-			current_balance=loan.value,
-			interest=detail['interest'],
 			total_payment=detail['total_payment'],
+			minimum_payment=detail['minimum_payment'],
 			payday_limit=detail['payday_limit'],
 			loan=loan
 		)
@@ -64,7 +65,6 @@ def update_loan(id,state):
 	with transaction.atomic():
 		try:
 			loan = Loan.objects.get(id = id)
-			user_finance = UserFinance.objects.get(user_id = loan.user.id)
 		except Loan.DoesNotExist:
 			return (False,'Loan does not exist')
 		loan.state = state
@@ -72,13 +72,8 @@ def update_loan(id,state):
 		if state == 1:
 			table, detail = generate_table(loan)
 			loan_detail = create_loan_detail(loan, detail)
-			user_finance.available_quota -= loan.value
-			user_finance.save()
 			send_approved_loan(loan,table)
 			return (True,LoanDetailSerializer(loan_detail).data)
-		elif state == 3:
-			user_finance.available_quota += loan.value
-			user_finance.save()
 	return (True,'')
 
 def generate_table(loan):
@@ -102,7 +97,7 @@ def generate_table(loan):
 	constant_payment = Decimal(loan.value)/fee
 
 	#info to store
-	first_interest = 0
+	first_payment_value = 0
 	payday_limit = None
 	total_payment = 0
 	for i in range(1,fee+1):
@@ -114,7 +109,7 @@ def generate_table(loan):
 		payment_value = constant_payment + interests
 		final_balance = initial_balance - constant_payment
 		if i == 1:
-			first_interest = int(round(interests,0))
+			first_payment_value = int(round(payment_value,0))
 			payday_limit = payment_date
 		total_payment += payment_value
 		table += '<tr>'
@@ -131,8 +126,8 @@ def generate_table(loan):
 		initial_date_display = payment_date
 	table += '</table>'
 	return (table,{
-		'interest':first_interest,
 		'payday_limit':payday_limit,
+		'minimum_payment':first_payment_value,
 		'total_payment':int(round(total_payment,0))
 	})
 
@@ -152,3 +147,34 @@ def get_loan(id):
 	return (True,{
 		'loan':serializer.data
 	})
+
+def update_loan_detail(obj):
+	try:
+		loan_detail = LoanDetail.objects.get(loan_id = obj['id'])
+	except LoanDetail.DoesNotExist:
+		raise
+	loan_detail.total_payment = obj['total_payment']
+	loan_detail.minimum_payment = obj['minimum_payment']
+	loan_detail.payday_limit = obj['payday_limit']
+	loan_detail.save()
+
+'''
+* Loan ID
+* Total payment
+* Minimum payment
+* Payday limit
+'''
+def bulk_update_loans(obj):
+	for line in obj['file']:
+		data = line.decode('utf-8').strip().split("\t")
+		info = {}
+		info['id'] = int(data[0])
+		info['total_payment']=int(float(data[1]))
+		info['minimum_payment']=int(float(data[2]))
+		date = data[3].strip().split("/")
+		info['payday_limit']="{}-{}-{}".format(date[2],date[1],date[0])
+		try:
+			update_loan_detail(info)
+		except LoanDetail.DoesNotExist:
+			logger.error('Loan with id: {}, not exists'.format(info['id']))
+			continue

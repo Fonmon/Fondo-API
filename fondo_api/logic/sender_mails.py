@@ -29,7 +29,7 @@ def send_approved_loan(loan,loan_table):
 		'loan_table':loan_table
 	}
 	html_template = render_to_string('loans/approved_email.html',params)
-	subject = render_to_string('loans/approved_subject.txt')
+	subject = render_to_string('loans/loan_subject.txt')
 	from_email = os.environ.get('EMAIL_HOST_USER')
 	to = loan.user.email
 	value = send_mail(

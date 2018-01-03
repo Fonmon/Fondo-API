@@ -5,9 +5,11 @@ from rest_framework.authtoken.models import Token
 from django.core.paginator import Paginator
 from ..serializers import UserProfileSerializer
 import binascii,os
+import logging
 from .sender_mails import *
 
 USERS_PER_PAGE = 10
+logger = logging.getLogger(__name__)
 
 def generate_key():
 	return binascii.hexlify(os.urandom(25)).decode()
@@ -32,6 +34,7 @@ def create_user(obj):
 			balance_contributions = 0,
 			total_quota = 0,
 			available_quota = 0,
+			utilized_quota = 0,
 			user = user
 		)
 		if not send_activation_mail(user):
@@ -65,6 +68,7 @@ def get_user(id):
 		'balance_contributions': user_finance.balance_contributions,
 		'total_quota': user_finance.total_quota,
 		'available_quota': user_finance.available_quota,
+		'utilized_quota': user_finance.utilized_quota,
 		'last_modified': user_finance.last_modified
 	})
 
@@ -80,7 +84,7 @@ def inactive_user(id):
 def update_user(id,obj):
 	with transaction.atomic():
 		try:
-			user = update_user_finance(id,obj);
+			user = update_user_finance(id,None,obj);
 		except UserFinance.DoesNotExist:
 			return (False,404)
 		user.first_name = obj['first_name']
@@ -95,16 +99,24 @@ def update_user(id,obj):
 			return (False,409)
 	return (True,200)
 
-def update_user_finance(id,obj):
+def update_user_finance(id,identification,obj):
 	try:
-		user_finance = UserFinance.objects.get(user_id = id)
+		if id is not None:
+			user_finance = UserFinance.objects.get(user_id = id)
+		else:
+			user_finance = UserFinance.objects.get(user__identification = identification)
 	except UserFinance.DoesNotExist:
 		raise
-	user_finance.contributions = obj['contributions']
-	user_finance.balance_contributions = obj['balance_contributions']
-	user_finance.total_quota = obj['total_quota']
-	user_finance.available_quota = obj['available_quota'];
-	user_finance.save()
+	if (user_finance.contributions != obj['contributions']
+		or user_finance.balance_contributions != obj['balance_contributions']
+		or user_finance.total_quota != obj['total_quota']
+		or user_finance.utilized_quota != obj['utilized_quota']):
+		user_finance.contributions = obj['contributions']
+		user_finance.balance_contributions = obj['balance_contributions']
+		user_finance.total_quota = obj['total_quota']
+		user_finance.utilized_quota = obj['utilized_quota']
+		user_finance.available_quota = int(user_finance.total_quota) - int(user_finance.utilized_quota)
+		user_finance.save()
 	return user_finance.user
 
 def activate_user(id,obj):
@@ -127,5 +139,17 @@ def activate_user(id,obj):
 * total_quota
 * contributions
 '''
-def bulk_update():
-	return
+def bulk_update_users(obj):
+	for line in obj['file']:
+		data = line.decode('utf-8').strip().split("\t")
+		info = {}
+		identification = int(data[0])
+		info['balance_contributions']=int(float(data[1]))
+		info['total_quota']=int(float(data[2]))
+		info['contributions']=int(float(data[3]))
+		info['utilized_quota'] = int(float(data[4]))
+		try:
+			update_user_finance(None,identification,info)
+		except UserFinance.DoesNotExist:
+			logger.error('User with identification: {}, not exists'.format(identification))
+			continue

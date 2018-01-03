@@ -15,7 +15,7 @@ class UserFinanceSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = UserFinance
 		fields = ('contributions','balance_contributions',
-			'total_quota','available_quota','user_id')
+			'total_quota','available_quota','user_id','utilized_quota')
 
 class LoanSerializer(serializers.ModelSerializer):
 	user_full_name = serializers.SerializerMethodField()
@@ -37,5 +37,4 @@ class LoanSerializer(serializers.ModelSerializer):
 class LoanDetailSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = LoanDetail
-		fields = ('current_balance','interest','last_payment_date', 'total_payment',
-			'last_payment_value','payday_limit')
+		fields = ('minimum_payment', 'total_payment','payday_limit')
