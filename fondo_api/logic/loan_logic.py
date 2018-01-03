@@ -50,15 +50,12 @@ def get_loans(user_id,page,all_loans=False):
 	return {'list':serializer.data, 'num_pages':paginator.num_pages}
 
 def create_loan_detail(loan,detail):
-	try:
-		loan_detail = LoanDetail.objects.create(
-			total_payment=detail['total_payment'],
-			minimum_payment=detail['minimum_payment'],
-			payday_limit=detail['payday_limit'],
-			loan=loan
-		)
-	except IntegrityError:
-		raise
+	loan_detail = LoanDetail.objects.create(
+		total_payment=detail['total_payment'],
+		minimum_payment=detail['minimum_payment'],
+		payday_limit=detail['payday_limit'],
+		loan=loan
+	)
 	return loan_detail
 
 def update_loan(id,state):
@@ -103,8 +100,8 @@ def generate_table(loan):
 	for i in range(1,fee+1):
 		payment_date = initial_date + relativedelta(months=+i) if loan.fee == 0 else initial_date + relativedelta(months=+loan.timelimit)
 		diff_dates = relativedelta(payment_date, initial_date_display)
-		if diff_dates.months == 0 and diff_dates.years > 0:
-			diff_dates.months = diff_dates.years*12
+		if diff_dates.years > 0:
+			diff_dates.months = (diff_dates.years*12) + diff_dates.months
 		interests = ((initial_balance*loan.rate)/30)*(diff_dates.months*30)
 		payment_value = constant_payment + interests
 		final_balance = initial_balance - constant_payment

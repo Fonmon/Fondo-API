@@ -17,6 +17,7 @@ view_get_post_loans = 'view_get_post_loans'
 view_get_post_users = 'view_get_post_users'
 view_get_update_delete_user = 'view_get_update_delete_user'
 view_activate_user = 'view_activate_user'
+view_logout = 'view_logout'
 
 def create_user():
 	user = UserProfile.objects.create_user(
@@ -93,6 +94,19 @@ class UserViewTest(TestCase):
 			'balance_contributions': 2000,
 			'total_quota': 1000,
 			'utilized_quota': 500
+		}
+
+		self.object_json_user_update_same_finance = {
+			'contributions': 2000,
+			'balance_contributions': 2000,
+			'total_quota':1000,
+			'available_quota': 500,
+			'utilized_quota':0,
+			'identification':123,
+			'first_name': 'Foo Name update',
+			'last_name': 'Last Name update',
+			'email': 'mail_updated@mail.com2',
+			'role': 2,
 		}
 
 		self.object_json_user_update_email_r = {
@@ -183,6 +197,23 @@ class UserViewTest(TestCase):
 			self.assertIsNotNone(user['email'])
 			self.assertIsNotNone(user['role'])
 
+	def test_get_users_empty(self):
+		response = client.get(
+			"%s?page=2" % reverse(view_get_post_users),
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code, status.HTTP_200_OK)
+		self.assertEquals(len(response.data['list']),0)
+		self.assertEquals(response.data['num_pages'],1)
+
+	def test_get_users_error_pagination(self):
+		response = client.get(
+			"%s?page=0" % reverse(view_get_post_users),
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+		self.assertEquals(response.data['message'],'Page number must be greater or equal than 0')
+
 	def test_get_user(self):
 		response = client.get(
 			reverse(view_get_update_delete_user,kwargs={'id': 1}),
@@ -199,6 +230,25 @@ class UserViewTest(TestCase):
 		self.assertEquals(response.data['balance_contributions'],2000)
 		self.assertEquals(response.data['total_quota'],1000)
 		self.assertEquals(response.data['available_quota'],500)
+		self.assertEquals(response.data['utilized_quota'],0)
+
+	def test_get_session_user(self):
+		response = client.get(
+			reverse(view_get_update_delete_user,kwargs={'id': -1}),
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code, status.HTTP_200_OK)
+		self.assertEquals(response.data['id'],1)
+		self.assertEquals(response.data['identification'],99999)
+		self.assertEquals(response.data['first_name'],'Foo Name')
+		self.assertEquals(response.data['last_name'],'Foo Last Name')
+		self.assertEquals(response.data['email'],'mail_for_tests@mail.com')
+		self.assertEquals(response.data['role'],3)
+		self.assertEquals(response.data['contributions'],2000)
+		self.assertEquals(response.data['balance_contributions'],2000)
+		self.assertEquals(response.data['total_quota'],1000)
+		self.assertEquals(response.data['available_quota'],500)
+		self.assertEquals(response.data['utilized_quota'],0)
 
 	def test_get_user_not_found(self):
 		response = client.get(
@@ -245,6 +295,21 @@ class UserViewTest(TestCase):
 		response = client.patch(
 			reverse(view_get_update_delete_user,kwargs={'id': 1}),
 			data=json.dumps(self.object_json_user_update),
+			content_type='application/json',
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+		user = UserProfile.objects.get(id=1)
+		self.assertEquals(user.first_name,'Foo Name update')
+		self.assertEquals(user.last_name,'Last Name update')
+		self.assertEquals(user.email,'mail_updated@mail.com2')
+		self.assertEquals(user.username,'mail_updated@mail.com2')
+
+	def test_patch_user_not_finance(self):
+		response = client.patch(
+			reverse(view_get_update_delete_user,kwargs={'id': 1}),
+			data=json.dumps(self.object_json_user_update_same_finance),
 			content_type='application/json',
 			**get_auth_header(self.token)
 		)
@@ -346,6 +411,18 @@ class UserViewTest(TestCase):
 		user = UserProfile.objects.get(identification = 123)
 		self.assertEquals(user.is_active,False)
 		self.assertFalse('pbkdf2_sha256' in user.password)
+
+	def test_logout(self):
+		response = client.post(
+			reverse(view_logout),
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code,status.HTTP_200_OK)
+		response = client.post(
+			reverse(view_logout),
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code,status.HTTP_401_UNAUTHORIZED)
 
 class LoanViewTest(TestCase):
 
@@ -493,6 +570,14 @@ class LoanViewTest(TestCase):
 		self.assertEquals(len(response.data['list']),5)
 		self.assertEquals(response.data['num_pages'],3)
 
+		response = client.get(
+			"%s?page=4" % reverse(view_get_post_loans),
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code,status.HTTP_200_OK)
+		self.assertEquals(len(response.data['list']),0)
+		self.assertEquals(response.data['num_pages'],3)
+
 	def test_get_loans(self):
 		client.post(
 			reverse(view_get_post_loans),
@@ -579,6 +664,110 @@ class LoanViewTest(TestCase):
 		self.assertEquals(response.status_code,status.HTTP_200_OK)
 		self.assertEquals(len(response.data['list']),3)
 
+	def test_update_loan_approved_monthly(self):
+		client.post(
+			reverse(view_get_post_loans),
+			data = json.dumps(self.loan_with_quota_fee_10),
+			content_type='application/json',
+			**get_auth_header(self.token)
+		)
+
+		loan = Loan.objects.get(user_id = 1)
+		response = client.patch(
+			reverse(view_get_update_loan,kwargs={'id': loan.id}),
+			data = '{"state":1}',
+			content_type='application/json',
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code,status.HTTP_200_OK)
+		self.assertEquals(response.data['total_payment'],228)
+		self.assertEquals(response.data['minimum_payment'],25)
+		self.assertEquals(response.data['payday_limit'],'2017-12-09')
+		self.assertEquals(len(mail.outbox),1)
+		self.assertEquals(mail.outbox[0].subject,'[Fondo Montañez] Solicitud de crédito')
+		self.assertEquals(len(mail.outbox[0].to),1)
+		self.assertEquals(mail.outbox[0].to[0],'mail_for_tests@mail.com')
+		content, mimetype = mail.outbox[0].alternatives[0]
+		self.assertEquals(mimetype,'text/html')
+		subcontent = 'crédito número: {},'.format(loan.id)
+		self.assertTrue(subcontent in content)
+		subcontent = '<table style="width:100%" border="1"><tr><th>Cuota</th><th>Saldo inicial</th><th>Fecha inicial</th><th>Intereses</th><th>Abono a capital</th><th>Fecha de pago</th><th>Valor pago</th><th>Saldo final</th></tr><tr><td>1</td><td>$200</td><td>2017-11-09</td><td>$5</td><td>$20</td><td>2017-12-09</td><td>$25</td><td>$180</td></tr><tr><td>2</td><td>$180</td><td>2017-12-09</td><td>$4</td><td>$20</td><td>2018-01-09</td><td>$24</td><td>$160</td></tr><tr><td>3</td><td>$160</td><td>2018-01-09</td><td>$4</td><td>$20</td><td>2018-02-09</td><td>$24</td><td>$140</td></tr><tr><td>4</td><td>$140</td><td>2018-02-09</td><td>$3</td><td>$20</td><td>2018-03-09</td><td>$23</td><td>$120</td></tr><tr><td>5</td><td>$120</td><td>2018-03-09</td><td>$3</td><td>$20</td><td>2018-04-09</td><td>$23</td><td>$100</td></tr><tr><td>6</td><td>$100</td><td>2018-04-09</td><td>$2</td><td>$20</td><td>2018-05-09</td><td>$22</td><td>$80</td></tr><tr><td>7</td><td>$80</td><td>2018-05-09</td><td>$2</td><td>$20</td><td>2018-06-09</td><td>$22</td><td>$60</td></tr><tr><td>8</td><td>$60</td><td>2018-06-09</td><td>$1</td><td>$20</td><td>2018-07-09</td><td>$21</td><td>$40</td></tr><tr><td>9</td><td>$40</td><td>2018-07-09</td><td>$1</td><td>$20</td><td>2018-08-09</td><td>$21</td><td>$20</td></tr><tr><td>10</td><td>$20</td><td>2018-08-09</td><td>$0</td><td>$20</td><td>2018-09-09</td><td>$20</td><td>$0</td></tr></table>'
+		self.assertTrue(subcontent in content)
+
+		response = client.get(
+			reverse(view_get_update_loan,kwargs={'id': loan.id}),
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code, status.HTTP_200_OK)
+		self.assertEquals(response.data['loan']['id'],loan.id)
+		self.assertEquals(response.data['loan']['value'],200)
+		self.assertEquals(response.data['loan']['timelimit'],10)
+		self.assertEquals(response.data['loan']['disbursement_date'],'2017-11-09')
+		self.assertEquals(response.data['loan']['payment'],1)
+		self.assertEquals(response.data['loan']['fee'],0)
+		self.assertEquals(response.data['loan']['comments'],'')
+		self.assertEquals(response.data['loan']['state'],1)
+		self.assertEquals(response.data['loan']['user_full_name'],'Foo Name Foo Last Name')
+		self.assertEquals(Decimal(response.data['loan']['rate']).quantize(THREEPLACES),Decimal(0.025).quantize(THREEPLACES))
+		self.assertIsNotNone(response.data['loan']['created_at'])
+
+		self.assertEquals(response.data['loan_detail']['total_payment'],228)
+		self.assertEquals(response.data['loan_detail']['minimum_payment'],25)
+		self.assertEquals(response.data['loan_detail']['payday_limit'],'2017-12-09')
+
+	def test_update_loan_approved_unique(self):
+		self.loan_with_quota_fee_10['fee']=1
+		self.loan_with_quota_fee_10['timelimit']=13
+		client.post(
+			reverse(view_get_post_loans),
+			data = json.dumps(self.loan_with_quota_fee_10),
+			content_type='application/json',
+			**get_auth_header(self.token)
+		)
+
+		loan = Loan.objects.get(user_id = 1)
+		response = client.patch(
+			reverse(view_get_update_loan,kwargs={'id': loan.id}),
+			data = '{"state":1}',
+			content_type='application/json',
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code,status.HTTP_200_OK)
+		self.assertEquals(response.data['total_payment'],278)
+		self.assertEquals(response.data['minimum_payment'],278)
+		self.assertEquals(response.data['payday_limit'],'2018-12-09')
+		self.assertEquals(len(mail.outbox),1)
+		self.assertEquals(mail.outbox[0].subject,'[Fondo Montañez] Solicitud de crédito')
+		self.assertEquals(len(mail.outbox[0].to),1)
+		self.assertEquals(mail.outbox[0].to[0],'mail_for_tests@mail.com')
+		content, mimetype = mail.outbox[0].alternatives[0]
+		self.assertEquals(mimetype,'text/html')
+		subcontent = 'crédito número: {},'.format(loan.id)
+		self.assertTrue(subcontent in content)
+		subcontent = '<table style="width:100%" border="1"><tr><th>Cuota</th><th>Saldo inicial</th><th>Fecha inicial</th><th>Intereses</th><th>Abono a capital</th><th>Fecha de pago</th><th>Valor pago</th><th>Saldo final</th></tr><tr><td>1</td><td>$200</td><td>2017-11-09</td><td>$78</td><td>$200</td><td>2018-12-09</td><td>$278</td><td>$0</td></tr></table>'
+		self.assertTrue(subcontent in content)
+
+		response = client.get(
+			reverse(view_get_update_loan,kwargs={'id': loan.id}),
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code, status.HTTP_200_OK)
+		self.assertEquals(response.data['loan']['id'],loan.id)
+		self.assertEquals(response.data['loan']['value'],200)
+		self.assertEquals(response.data['loan']['timelimit'],13)
+		self.assertEquals(response.data['loan']['disbursement_date'],'2017-11-09')
+		self.assertEquals(response.data['loan']['payment'],1)
+		self.assertEquals(response.data['loan']['fee'],1)
+		self.assertEquals(response.data['loan']['comments'],'')
+		self.assertEquals(response.data['loan']['state'],1)
+		self.assertEquals(response.data['loan']['user_full_name'],'Foo Name Foo Last Name')
+		self.assertEquals(Decimal(response.data['loan']['rate']).quantize(THREEPLACES),Decimal(0.03).quantize(THREEPLACES))
+		self.assertIsNotNone(response.data['loan']['created_at'])
+
+		self.assertEquals(response.data['loan_detail']['total_payment'],278)
+		self.assertEquals(response.data['loan_detail']['minimum_payment'],278)
+		self.assertEquals(response.data['loan_detail']['payday_limit'],'2018-12-09')
+
 	def test_update_loan_state(self):
 		client.post(
 			reverse(view_get_post_loans),
@@ -646,25 +835,25 @@ class LoanViewTest(TestCase):
 		loan = Loan.objects.get(user_id = 1)
 
 		response = client.get(
-			reverse(view_get_update_delete_user,kwargs={'id': loan.id}),
+			reverse(view_get_update_loan,kwargs={'id': loan.id}),
 			**get_auth_header(self.token)
 		)
 		self.assertEquals(response.status_code, status.HTTP_200_OK)
-		self.assertEquals(response.data['id'],loan.id)
-		self.assertEquals(response.data['value'],200)
-		self.assertEquals(response.data['timelimit'],10)
-		self.assertEquals(response.data['disbursement_date'],'2017-11-9')
-		self.assertEquals(response.data['payment'],1)
-		self.assertEquals(response.data['fee'],0)
-		self.assertEquals(response.data['comments'],'')
-		self.assertEquals(response.data['state'],0)
-		self.assertEquals(response.data['user_full_name'],'Foo Name Foo Last Name')
-		self.assertEquals(response.data['rate'],0.025)
-		self.assertIsNotNone(response.data['created_at'])
+		self.assertEquals(response.data['loan']['id'],loan.id)
+		self.assertEquals(response.data['loan']['value'],200)
+		self.assertEquals(response.data['loan']['timelimit'],10)
+		self.assertEquals(response.data['loan']['disbursement_date'],'2017-11-09')
+		self.assertEquals(response.data['loan']['payment'],1)
+		self.assertEquals(response.data['loan']['fee'],0)
+		self.assertEquals(response.data['loan']['comments'],'')
+		self.assertEquals(response.data['loan']['state'],0)
+		self.assertEquals(response.data['loan']['user_full_name'],'Foo Name Foo Last Name')
+		self.assertEquals(Decimal(response.data['loan']['rate']).quantize(THREEPLACES),Decimal(0.025).quantize(THREEPLACES))
+		self.assertIsNotNone(response.data['loan']['created_at'])
 
-	def test_get_loan(self):
+	def test_get_loan_not_found(self):
 		response = client.get(
-			reverse(view_get_update_delete_user,kwargs={'id': 2}),
+			reverse(view_get_update_loan,kwargs={'id': 2}),
 			**get_auth_header(self.token)
 		)
 		self.assertEquals(response.status_code, status.HTTP_404_NOT_FOUND)
