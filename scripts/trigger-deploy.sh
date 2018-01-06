@@ -14,9 +14,6 @@ fi
 
 COMMIT=$1
 
-# Installing awscli
-# pip install awscli
-
 # Triggering deploy process
 aws ssm send-command \\
 	--document-name "AWS-RunShellScript" \\
