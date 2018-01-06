@@ -21,7 +21,7 @@ script:
   - coverage run --branch --source='.' manage.py test && coverage report -m --omit="*env*,*tests*"
 deploy:
   provider: script
-  script: $TRAVIS_BUILD_DIR/deploy/scripts/trigger-deploy.sh $TRAVIS_COMMIT
+  script: sh $TRAVIS_BUILD_DIR/deploy/scripts/trigger-deploy.sh $TRAVIS_COMMIT
   skip_cleanup: true
   on:
     branch: develop
