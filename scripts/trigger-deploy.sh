@@ -14,6 +14,7 @@ fi
 
 COMMIT=$1
 
+echo 'Starting trigger'
 # Triggering deploy process
 aws ssm send-command \\
 	--document-name "AWS-RunShellScript" \\
@@ -21,3 +22,5 @@ aws ssm send-command \\
 	--instance-ids "i-032bb4826c0e1b2c2" \\
 	--parameters commands="deploy-app" \\
 	--output text
+echo 'Finishing trigger'
+exit 0
