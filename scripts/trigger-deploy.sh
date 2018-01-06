@@ -14,8 +14,8 @@ fi
 
 COMMIT=$1
 
-echo 'Starting trigger'
 # Triggering deploy process
+echo 'Starting trigger'
 aws ssm send-command \
 	--document-name "AWS-RunShellScript" \
 	--comment "Deploying app" \

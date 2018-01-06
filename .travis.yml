@@ -24,4 +24,4 @@ deploy:
   script: sh $TRAVIS_BUILD_DIR/scripts/trigger-deploy.sh $TRAVIS_COMMIT
   skip_cleanup: true
   on:
-    branch: develop
+    branch: master
