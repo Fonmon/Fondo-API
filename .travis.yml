@@ -17,3 +17,8 @@ env:
     - DJANGO_SETTINGS_MODULE=api.settings.development
 script:
   - coverage run --branch --source='.' manage.py test && coverage report -m --omit="*env*,*tests*"
+deploy:
+  provider: script
+  script: scripts/trigger-deploy.sh $TRAVIS_COMMIT
+  on:
+    branch: develop

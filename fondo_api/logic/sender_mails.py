@@ -41,3 +41,21 @@ def send_approved_loan(loan,loan_table):
 		fail_silently=False
 	)
 	return value == 1
+
+def send_denied_loan(loan):
+	params = {
+		'loan_id':loan.id,
+	}
+	html_template = render_to_string('loans/denied_email.html',params)
+	subject = render_to_string('loans/loan_subject.txt')
+	from_email = os.environ.get('EMAIL_HOST_USER')
+	to = loan.user.email
+	value = send_mail(
+		subject,
+		'',
+		from_email,
+		[to],
+		html_message=html_template,
+		fail_silently=False
+	)
+	return value == 1

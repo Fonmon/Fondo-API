@@ -71,6 +71,8 @@ def update_loan(id,state):
 			loan_detail = create_loan_detail(loan, detail)
 			send_approved_loan(loan,table)
 			return (True,LoanDetailSerializer(loan_detail).data)
+		if state == 2:
+			send_denied_loan(loan)
 	return (True,'')
 
 def generate_table(loan):

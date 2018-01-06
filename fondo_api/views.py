@@ -99,14 +99,3 @@ def view_activate_user(request,id):
 		if state:
 			return Response(status = status.HTTP_200_OK)
 		return Response(status = status.HTTP_404_NOT_FOUND)
-
-#http://blog.apcelent.com/django-json-web-token-authentication-backend.html
-'''from django.contrib.auth.hashers import make_password
-@api_view(['POST'])
-@permission_classes([])
-def obtain_auth_token(request):
-	body = json.loads(request.body)
-	allPwd = body['email']+body['password']
-	password = make_password(allPwd)
-	return Response({'username1':body['email'],'password1':password})
-'''

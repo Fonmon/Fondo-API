@@ -2,6 +2,7 @@ import json
 from decimal import Decimal
 from rest_framework import status
 from django.test import TestCase, Client
+from django.test.client import encode_multipart
 from django.urls import reverse
 from ..models import *
 from django.contrib.auth.models import User
@@ -442,6 +443,70 @@ class UserViewTest(TestCase):
 		)
 		self.assertEquals(response.status_code,status.HTTP_401_UNAUTHORIZED)
 
+	def create_test_file(self):
+		try:
+			file = open("testfile.txt","w")
+			file.write("1\t100\t1000\t200\t300\r\n")
+			file.write("2\t400\t1000\t500\t600\r\n")
+			file.write("3\t700\t1000\t800\t900\r\n")
+			file.write("4\t0\t0\t0\t0\r\n")
+		finally:
+			file.close()
+		return file
+
+	def test_bulk_update_users(self):
+		for i in range(3):
+			user = UserProfile.objects.create_user(
+				id=i+5,
+				first_name = 'Foo Name',
+				last_name = 'Foo Last Name',
+				identification = i+1,
+				username = "mail{}@mail.com".format(i+1),
+				email = "mail{}@mail.com".format(i+1),
+				password = "password"
+			)
+			UserFinance.objects.create(
+				contributions= 0,
+				balance_contributions= 0,
+				total_quota= 0,
+				available_quota= 0,
+				utilized_quota=0,
+				user= user
+			)
+		file = {}
+		created_file = self.create_test_file()
+		file_reader = open(created_file.name,'r')
+		file['file'] = file_reader
+		response = client.patch(
+			reverse(view_get_post_users),
+			data=encode_multipart('file',file),
+			content_type='multipart/form-data; boundary=file',
+			**get_auth_header(self.token)
+		)
+
+		self.assertEquals(response.status_code,status.HTTP_200_OK)
+
+		user_finance = UserFinance.objects.get(user_id=5)
+		self.assertEquals(user_finance.balance_contributions,100)
+		self.assertEquals(user_finance.total_quota,1000)
+		self.assertEquals(user_finance.contributions,200)
+		self.assertEquals(user_finance.utilized_quota,300)
+		self.assertEquals(user_finance.available_quota,700)
+
+		user_finance = UserFinance.objects.get(user_id=6)
+		self.assertEquals(user_finance.balance_contributions,400)
+		self.assertEquals(user_finance.total_quota,1000)
+		self.assertEquals(user_finance.contributions,500)
+		self.assertEquals(user_finance.utilized_quota,600)
+		self.assertEquals(user_finance.available_quota,400)
+
+		user_finance = UserFinance.objects.get(user_id=7)
+		self.assertEquals(user_finance.balance_contributions,700)
+		self.assertEquals(user_finance.total_quota,1000)
+		self.assertEquals(user_finance.contributions,800)
+		self.assertEquals(user_finance.utilized_quota,900)
+		self.assertEquals(user_finance.available_quota,100)
+
 class LoanViewTest(TestCase):
 
 	def setUp(self):
@@ -709,8 +774,14 @@ class LoanViewTest(TestCase):
 		self.assertEquals(mimetype,'text/html')
 		subcontent = 'crédito número: {},'.format(loan.id)
 		self.assertTrue(subcontent in content)
+		subcontent = '<strong>APROBADA</strong>'
+		self.assertTrue(subcontent in content)
 		subcontent = '<table style="width:100%" border="1"><tr><th>Cuota</th><th>Saldo inicial</th><th>Fecha inicial</th><th>Intereses</th><th>Abono a capital</th><th>Fecha de pago</th><th>Valor pago</th><th>Saldo final</th></tr><tr><td>1</td><td>$200</td><td>2017-11-09</td><td>$5</td><td>$20</td><td>2017-12-09</td><td>$25</td><td>$180</td></tr><tr><td>2</td><td>$180</td><td>2017-12-09</td><td>$4</td><td>$20</td><td>2018-01-09</td><td>$24</td><td>$160</td></tr><tr><td>3</td><td>$160</td><td>2018-01-09</td><td>$4</td><td>$20</td><td>2018-02-09</td><td>$24</td><td>$140</td></tr><tr><td>4</td><td>$140</td><td>2018-02-09</td><td>$3</td><td>$20</td><td>2018-03-09</td><td>$23</td><td>$120</td></tr><tr><td>5</td><td>$120</td><td>2018-03-09</td><td>$3</td><td>$20</td><td>2018-04-09</td><td>$23</td><td>$100</td></tr><tr><td>6</td><td>$100</td><td>2018-04-09</td><td>$2</td><td>$20</td><td>2018-05-09</td><td>$22</td><td>$80</td></tr><tr><td>7</td><td>$80</td><td>2018-05-09</td><td>$2</td><td>$20</td><td>2018-06-09</td><td>$22</td><td>$60</td></tr><tr><td>8</td><td>$60</td><td>2018-06-09</td><td>$1</td><td>$20</td><td>2018-07-09</td><td>$21</td><td>$40</td></tr><tr><td>9</td><td>$40</td><td>2018-07-09</td><td>$1</td><td>$20</td><td>2018-08-09</td><td>$21</td><td>$20</td></tr><tr><td>10</td><td>$20</td><td>2018-08-09</td><td>$0</td><td>$20</td><td>2018-09-09</td><td>$20</td><td>$0</td></tr></table>'
 		self.assertTrue(subcontent in content)
+
+		loan = Loan.objects.get(user_id = 1)
+		self.assertEquals(loan.state,1)
+		self.assertEquals(loan.get_state_display(),'APPROVED')
 
 		response = client.get(
 			reverse(view_get_update_loan,kwargs={'id': loan.id}),
@@ -762,8 +833,14 @@ class LoanViewTest(TestCase):
 		self.assertEquals(mimetype,'text/html')
 		subcontent = 'crédito número: {},'.format(loan.id)
 		self.assertTrue(subcontent in content)
+		subcontent = '<strong>APROBADA</strong>'
+		self.assertTrue(subcontent in content)
 		subcontent = '<table style="width:100%" border="1"><tr><th>Cuota</th><th>Saldo inicial</th><th>Fecha inicial</th><th>Intereses</th><th>Abono a capital</th><th>Fecha de pago</th><th>Valor pago</th><th>Saldo final</th></tr><tr><td>1</td><td>$200</td><td>2017-11-09</td><td>$78</td><td>$200</td><td>2018-12-09</td><td>$278</td><td>$0</td></tr></table>'
 		self.assertTrue(subcontent in content)
+
+		loan = Loan.objects.get(user_id = 1)
+		self.assertEquals(loan.state,1)
+		self.assertEquals(loan.get_state_display(),'APPROVED')
 
 		response = client.get(
 			reverse(view_get_update_loan,kwargs={'id': loan.id}),
@@ -797,11 +874,42 @@ class LoanViewTest(TestCase):
 		loan = Loan.objects.get(user_id = 1)
 		response = client.patch(
 			reverse(view_get_update_loan,kwargs={'id': loan.id}),
+			data = '{"state":3}',
+			content_type='application/json',
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code,status.HTTP_200_OK)
+
+		loan = Loan.objects.get(user_id = 1)
+		self.assertEquals(loan.state,3)
+		self.assertEquals(loan.get_state_display(),'PAID_OUT')
+
+	def test_update_loan_denied(self):
+		client.post(
+			reverse(view_get_post_loans),
+			data = json.dumps(self.loan_with_quota_fee_10),
+			content_type='application/json',
+			**get_auth_header(self.token)
+		)
+
+		loan = Loan.objects.get(user_id = 1)
+		response = client.patch(
+			reverse(view_get_update_loan,kwargs={'id': loan.id}),
 			data = '{"state":2}',
 			content_type='application/json',
 			**get_auth_header(self.token)
 		)
 		self.assertEquals(response.status_code,status.HTTP_200_OK)
+		self.assertEquals(len(mail.outbox),1)
+		self.assertEquals(mail.outbox[0].subject,'[Fondo Montañez] Solicitud de crédito')
+		self.assertEquals(len(mail.outbox[0].to),1)
+		self.assertEquals(mail.outbox[0].to[0],'mail_for_tests@mail.com')
+		content, mimetype = mail.outbox[0].alternatives[0]
+		self.assertEquals(mimetype,'text/html')
+		subcontent = 'crédito número: {},'.format(loan.id)
+		self.assertTrue(subcontent in content)
+		subcontent = '<strong>RECHAZADA</strong>'
+		self.assertTrue(subcontent in content)
 
 		loan = Loan.objects.get(user_id = 1)
 		self.assertEquals(loan.state,2)
@@ -875,3 +983,66 @@ class LoanViewTest(TestCase):
 			**get_auth_header(self.token)
 		)
 		self.assertEquals(response.status_code, status.HTTP_404_NOT_FOUND)
+
+	def create_test_file(self):
+		try:
+			file = open("testfile.txt","w")
+			file.write("1\t1234\t5678\t1/1/2018\r\n")
+			file.write("2\t4321\t8765\t2/1/2018\r\n")
+			file.write("3\t1\t2\t3/1/2017\r\n")
+			file.write("4\t1\t2\t3/1/2017\r\n")
+		finally:
+			file.close()
+		return file
+
+	def test_bulk_update_loans(self):
+		user = UserProfile.objects.get(id=1)
+		for i in range(3):
+			loan = Loan.objects.create(
+				id=i+1,
+				value=100,
+				timelimit= 5,
+				disbursement_date= '2000-1-1',
+				comments='',
+				payment=0,
+				fee= 0,
+				rate=0,
+				user=user
+			)
+			LoanDetail.objects.create(
+				payday_limit="2000-1-1",
+				loan=loan
+			)
+		file = {}
+		created_file = self.create_test_file()
+		file_reader = open(created_file.name,'r')
+		file['file'] = file_reader
+		response = client.patch(
+			reverse(view_get_post_loans),
+			data=encode_multipart('file',file),
+			content_type='multipart/form-data; boundary=file',
+			**get_auth_header(self.token)
+		)
+
+		self.assertEquals(response.status_code,status.HTTP_200_OK)
+
+		loan_detail = LoanDetail.objects.get(loan_id=1)
+		self.assertEquals(loan_detail.total_payment,1234)
+		self.assertEquals(loan_detail.minimum_payment,5678)
+		self.assertEquals(loan_detail.payday_limit.year,2018)
+		self.assertEquals(loan_detail.payday_limit.month,1)
+		self.assertEquals(loan_detail.payday_limit.day,1)
+
+		loan_detail = LoanDetail.objects.get(loan_id=2)
+		self.assertEquals(loan_detail.total_payment,4321)
+		self.assertEquals(loan_detail.minimum_payment,8765)
+		self.assertEquals(loan_detail.payday_limit.year,2018)
+		self.assertEquals(loan_detail.payday_limit.month,1)
+		self.assertEquals(loan_detail.payday_limit.day,2)
+
+		loan_detail = LoanDetail.objects.get(loan_id=3)
+		self.assertEquals(loan_detail.total_payment,1)
+		self.assertEquals(loan_detail.minimum_payment,2)
+		self.assertEquals(loan_detail.payday_limit.year,2017)
+		self.assertEquals(loan_detail.payday_limit.month,1)
+		self.assertEquals(loan_detail.payday_limit.day,3)

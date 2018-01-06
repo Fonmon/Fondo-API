@@ -138,6 +138,7 @@ def activate_user(id,obj):
 * balance_contributions
 * total_quota
 * contributions
+* utilized_quota
 '''
 def bulk_update_users(obj):
 	for line in obj['file']:
