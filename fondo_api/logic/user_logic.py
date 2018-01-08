@@ -145,10 +145,10 @@ def bulk_update_users(obj):
 		data = line.decode('utf-8').strip().split("\t")
 		info = {}
 		identification = int(data[0])
-		info['balance_contributions']=int(float(data[1]))
-		info['total_quota']=int(float(data[2]))
-		info['contributions']=int(float(data[3]))
-		info['utilized_quota'] = int(float(data[4]))
+		info['balance_contributions']=int(round(float(data[1]),0))
+		info['total_quota']=int(round(float(data[2]),0))
+		info['contributions']=int(round(float(data[3]),0))
+		info['utilized_quota'] = int(round(float(data[4]),0))
 		try:
 			update_user_finance(None,identification,info)
 		except UserFinance.DoesNotExist:

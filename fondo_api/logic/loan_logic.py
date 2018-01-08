@@ -38,9 +38,9 @@ def create_loan(user_id,obj):
 # TODO: add filter by state
 def get_loans(user_id,page,all_loans=False):
 	if not all_loans:
-		loans = Loan.objects.filter(user_id=user_id).order_by('-created_at')
+		loans = Loan.objects.filter(user_id=user_id).order_by('-created_at','id')
 	else:
-		loans = Loan.objects.all().order_by('-created_at')
+		loans = Loan.objects.all().order_by('-created_at','id')
 
 	paginator = Paginator(loans,LOANS_PER_PAGE)
 	if page > paginator.num_pages:
@@ -168,8 +168,8 @@ def bulk_update_loans(obj):
 		data = line.decode('utf-8').strip().split("\t")
 		info = {}
 		info['id'] = int(data[0])
-		info['total_payment']=int(float(data[1]))
-		info['minimum_payment']=int(float(data[2]))
+		info['total_payment']=int(round(float(data[1]),0))
+		info['minimum_payment']=int(round(float(data[2]),0))
 		date = data[3].strip().split("/")
 		info['payday_limit']="{}-{}-{}".format(date[2],date[1],date[0])
 		try:
