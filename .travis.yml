@@ -1,0 +1,27 @@
+language: python
+python:
+  - 3.6
+install: 
+  - pip install -r requirements.txt 
+  - pip install awscli
+services:
+  - postgresql
+before_script:
+  - psql -c "CREATE DATABASE test_fondo_api;" -U postgres
+  - python3 manage.py makemigrations fondo_api && python3 manage.py migrate
+env:
+  global:
+    - POSTGRES_DATABASE=test_fondo_api
+    - POSTGRES_USER=postgres
+    - POSTGRES_HOST=localhost
+    - POSTGRES_PASSWORD=
+    - POSTGRES_PORT=5432
+    - DJANGO_SETTINGS_MODULE=api.settings.development
+script:
+  - coverage run --branch --source='.' manage.py test && coverage report -m --omit="*env*,*tests*"
+deploy:
+  provider: script
+  script: sh $TRAVIS_BUILD_DIR/scripts/trigger-deploy.sh $TRAVIS_COMMIT
+  skip_cleanup: true
+  on:
+    branch: master
