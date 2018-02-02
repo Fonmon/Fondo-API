@@ -1,6 +1,7 @@
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 import os
+from . import user_logic
 
 def send_activation_mail(user):
 	params = { 
@@ -31,12 +32,14 @@ def send_approved_loan(loan,loan_table):
 	html_template = render_to_string('loans/approved_email.html',params)
 	subject = render_to_string('loans/loan_subject.txt')
 	from_email = os.environ.get('EMAIL_HOST_USER')
-	to = loan.user.email
+	to = user_logic.get_profile_emails([0,2])
+	if loan.user.email not in to:
+		to.append(loan.user.email)
 	value = send_mail(
 		subject,
 		'',
 		from_email,
-		[to],
+		to,
 		html_message=html_template,
 		fail_silently=False
 	)
@@ -49,12 +52,14 @@ def send_denied_loan(loan):
 	html_template = render_to_string('loans/denied_email.html',params)
 	subject = render_to_string('loans/loan_subject.txt')
 	from_email = os.environ.get('EMAIL_HOST_USER')
-	to = loan.user.email
+	to = user_logic.get_profile_emails([0,2])
+	if loan.user.email not in to:
+		to.append(loan.user.email)
 	value = send_mail(
 		subject,
 		'',
 		from_email,
-		[to],
+		to,
 		html_message=html_template,
 		fail_silently=False
 	)

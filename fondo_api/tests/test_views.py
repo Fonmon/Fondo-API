@@ -27,6 +27,7 @@ def create_user():
 		first_name = 'Foo Name',
 		last_name = 'Foo Last Name',
 		identification = 99999,
+		role = 0,
 		username = "mail_for_tests@mail.com",
 		email = "mail_for_tests@mail.com",
 		password = "password"
@@ -244,7 +245,7 @@ class UserViewTest(TestCase):
 		self.assertEquals(response.data['first_name'],'Foo Name')
 		self.assertEquals(response.data['last_name'],'Foo Last Name')
 		self.assertEquals(response.data['email'],'mail_for_tests@mail.com')
-		self.assertEquals(response.data['role'],3)
+		self.assertEquals(response.data['role'],0)
 		self.assertEquals(response.data['contributions'],2000)
 		self.assertEquals(response.data['balance_contributions'],2000)
 		self.assertEquals(response.data['total_quota'],1000)
@@ -262,7 +263,7 @@ class UserViewTest(TestCase):
 		self.assertEquals(response.data['first_name'],'Foo Name')
 		self.assertEquals(response.data['last_name'],'Foo Last Name')
 		self.assertEquals(response.data['email'],'mail_for_tests@mail.com')
-		self.assertEquals(response.data['role'],3)
+		self.assertEquals(response.data['role'],0)
 		self.assertEquals(response.data['contributions'],2000)
 		self.assertEquals(response.data['balance_contributions'],2000)
 		self.assertEquals(response.data['total_quota'],1000)
@@ -682,7 +683,7 @@ class LoanViewTest(TestCase):
 			email = "mail_for_tests_2@mail.com",
 			username = "mail_for_tests_2@mail.com",
 			password = "password",
-			role = 1
+			role = 3
 		)
 		UserFinance.objects.create(
 			contributions= 2000,
@@ -738,14 +739,14 @@ class LoanViewTest(TestCase):
 			**get_auth_header(self.token)
 		)
 		self.assertEquals(response.status_code,status.HTTP_200_OK)
-		self.assertEquals(len(response.data['list']),2)
+		self.assertEquals(len(response.data['list']),3)
 
 		response = client.get(
 			"%s?all_loans=true" % reverse(view_get_post_loans),
 			**get_auth_header(token)
 		)
 		self.assertEquals(response.status_code,status.HTTP_200_OK)
-		self.assertEquals(len(response.data['list']),3)
+		self.assertEquals(len(response.data['list']),1)
 
 	def test_update_loan_approved_monthly(self):
 		client.post(
@@ -863,6 +864,64 @@ class LoanViewTest(TestCase):
 		self.assertEquals(response.data['loan_detail']['minimum_payment'],278)
 		self.assertEquals(response.data['loan_detail']['payday_limit'],'2018-12-09')
 
+	def test_update_loan_approved_repeat_email(self):
+		self.loan_with_quota_fee_10['fee']=1
+		self.loan_with_quota_fee_10['timelimit']=13
+		user = UserProfile.objects.create_user(
+			id = 2,
+			first_name = 'Foo Name',
+			last_name = 'Foo Last Name',
+			identification = 99899,
+			email = "mail_for_tests_2@mail.com",
+			username = "mail_for_tests_2@mail.com",
+			password = "password",
+			role = 3
+		)
+		UserFinance.objects.create(
+			contributions= 2000,
+			balance_contributions= 2000,
+			total_quota= 1000,
+			available_quota= 500,
+			user= user
+		)
+		token = get_token('mail_for_tests_2@mail.com','password')
+
+		client.post(
+			reverse(view_get_post_loans),
+			data = json.dumps(self.loan_with_quota_fee_10),
+			content_type='application/json',
+			**get_auth_header(token)
+		)
+
+		loan = Loan.objects.get(user_id = 2)
+		response = client.patch(
+			reverse(view_get_update_loan,kwargs={'id': loan.id}),
+			data = '{"state":1}',
+			content_type='application/json',
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code,status.HTTP_200_OK)
+		self.assertEquals(response.data['total_payment'],278)
+		self.assertEquals(response.data['minimum_payment'],278)
+		self.assertEquals(response.data['payday_limit'],'2018-12-09')
+		self.assertEquals(len(mail.outbox),1)
+		self.assertEquals(mail.outbox[0].subject,'[Fondo Montañez] Solicitud de crédito')
+		self.assertEquals(len(mail.outbox[0].to),2)
+		self.assertEquals(mail.outbox[0].to[0],'mail_for_tests@mail.com')
+		self.assertEquals(mail.outbox[0].to[1],'mail_for_tests_2@mail.com')
+		content, mimetype = mail.outbox[0].alternatives[0]
+		self.assertEquals(mimetype,'text/html')
+		subcontent = 'crédito número: {},'.format(loan.id)
+		self.assertTrue(subcontent in content)
+		subcontent = '<strong>APROBADA</strong>'
+		self.assertTrue(subcontent in content)
+		subcontent = '<table style="width:100%" border="1"><tr><th>Cuota</th><th>Saldo inicial</th><th>Fecha inicial</th><th>Intereses</th><th>Abono a capital</th><th>Fecha de pago</th><th>Valor pago</th><th>Saldo final</th></tr><tr><td>1</td><td>$200</td><td>2017-11-09</td><td>$78</td><td>$200</td><td>2018-12-09</td><td>$278</td><td>$0</td></tr></table>'
+		self.assertTrue(subcontent in content)
+
+		loan = Loan.objects.get(user_id = 2)
+		self.assertEquals(loan.state,1)
+		self.assertEquals(loan.get_state_display(),'APPROVED')
+
 	def test_update_loan_state(self):
 		client.post(
 			reverse(view_get_post_loans),
@@ -912,6 +971,57 @@ class LoanViewTest(TestCase):
 		self.assertTrue(subcontent in content)
 
 		loan = Loan.objects.get(user_id = 1)
+		self.assertEquals(loan.state,2)
+		self.assertEquals(loan.get_state_display(),'DENIED')
+
+	def test_update_loan_denied_repeat_email(self):
+		user = UserProfile.objects.create_user(
+			id = 2,
+			first_name = 'Foo Name',
+			last_name = 'Foo Last Name',
+			identification = 99899,
+			email = "mail_for_tests_2@mail.com",
+			username = "mail_for_tests_2@mail.com",
+			password = "password",
+			role = 3
+		)
+		UserFinance.objects.create(
+			contributions= 2000,
+			balance_contributions= 2000,
+			total_quota= 1000,
+			available_quota= 500,
+			user= user
+		)
+		token = get_token('mail_for_tests_2@mail.com','password')
+
+		client.post(
+			reverse(view_get_post_loans),
+			data = json.dumps(self.loan_with_quota_fee_10),
+			content_type='application/json',
+			**get_auth_header(token)
+		)
+
+		loan = Loan.objects.get(user_id = 2)
+		response = client.patch(
+			reverse(view_get_update_loan,kwargs={'id': loan.id}),
+			data = '{"state":2}',
+			content_type='application/json',
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code,status.HTTP_200_OK)
+		self.assertEquals(len(mail.outbox),1)
+		self.assertEquals(mail.outbox[0].subject,'[Fondo Montañez] Solicitud de crédito')
+		self.assertEquals(len(mail.outbox[0].to),2)
+		self.assertEquals(mail.outbox[0].to[0],'mail_for_tests@mail.com')
+		self.assertEquals(mail.outbox[0].to[1],'mail_for_tests_2@mail.com')
+		content, mimetype = mail.outbox[0].alternatives[0]
+		self.assertEquals(mimetype,'text/html')
+		subcontent = 'crédito número: {},'.format(loan.id)
+		self.assertTrue(subcontent in content)
+		subcontent = '<strong>RECHAZADA</strong>'
+		self.assertTrue(subcontent in content)
+
+		loan = Loan.objects.get(user_id = 2)
 		self.assertEquals(loan.state,2)
 		self.assertEquals(loan.get_state_display(),'DENIED')
 
