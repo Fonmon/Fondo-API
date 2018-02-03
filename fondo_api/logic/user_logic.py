@@ -154,3 +154,10 @@ def bulk_update_users(obj):
 		except UserFinance.DoesNotExist:
 			logger.error('User with identification: {}, not exists'.format(identification))
 			continue
+
+def get_profile_emails(profiles):
+	users = UserProfile.objects.filter(role__in = profiles)
+	emails = []
+	for user in users:
+		emails.append(user.email)
+	return emails
