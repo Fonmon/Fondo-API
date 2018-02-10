@@ -17,6 +17,4 @@ COPY . /app
 
 EXPOSE 8443
 
-RUN /bin/bash -c "ls -lha"
-
 CMD sh scripts/run-server.sh
