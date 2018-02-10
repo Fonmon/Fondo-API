@@ -13,7 +13,7 @@ RUN dpkg-reconfigure --frontend noninteractive locales
 
 WORKDIR /app
 
-COPY ../. .
+COPY ../ /app
 
 EXPOSE 8443
 
