@@ -19,6 +19,8 @@ COMMIT=$1
 INSTANCE=$2
 ENV=$3
 
+echo "Arguments accepted: $COMMIT $INSTANCE $ENV"
+
 # Triggering deploy process
 echo 'Starting trigger'
 aws ssm send-command \
