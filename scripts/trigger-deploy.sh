@@ -9,8 +9,7 @@
 # 1: commit number
 # 2: instance ID
 # 3: env
-if [  $# -ne 3 ]
-then
+if [  $# -ne 3 ]; then
 	echo 'Arguments: commit_revision instance_id {master|develop}'
 	exit 1
 fi
