@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 
 ######################################################
 # Script that trigger deploy process for api layer   #
