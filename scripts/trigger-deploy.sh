@@ -1,26 +1,31 @@
 #!/bin/bash
+set -x
 
 ######################################################
-# Script that trigger deploy process in server side. #
+# Script that trigger deploy process for api layer   #
+# in server side.                                    #
 ######################################################
 
-# Arguments length: 1
+# Arguments length: 2
 # 1: commit number
-if [  $# -ne 1 ]
-then
-	echo 'Missing commit argument'
+# 2: instance ID
+# 3: env
+if [  $# -ne 3 ]; then
+	echo 'Arguments: commit_revision instance_id {master|develop}'
 	exit 1
 fi
 
 COMMIT=$1
+INSTANCE=$2
+ENV=$3
 
 # Triggering deploy process
 echo 'Starting trigger'
 aws ssm send-command \
 	--document-name "AWS-RunShellScript" \
-	--comment "Deploying app" \
-	--instance-ids "i-032bb4826c0e1b2c2" \
-	--parameters commands="deploy-app ${COMMIT}" \
+	--comment "Deploying api layer" \
+	--instance-ids "${INSTANCE}" \
+	--parameters commands="entrypoint_deploy ${COMMIT} api ${ENV}" \
 	--output text
-echo 'Finishing trigger'
+echo 'Deploying in background'
 exit 0
