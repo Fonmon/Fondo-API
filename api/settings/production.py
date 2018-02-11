@@ -8,7 +8,7 @@ import os
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
-ALLOWED_HOSTS = ['api-fonmon.minagle.com','127.0.0.1']
+ALLOWED_HOSTS = ['ALLOWED_HOST_DOMAIN','127.0.0.1']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
