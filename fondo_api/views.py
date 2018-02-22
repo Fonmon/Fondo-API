@@ -33,17 +33,19 @@ def view_get_post_loans(request):
 		return Response({'message':msg},status = status.HTTP_406_NOT_ACCEPTABLE)
 	if request.method == 'GET':
 		all_loans = (request.query_params.get('all_loans') == 'true')
+		state = int(request.query_params.get('state',4))
 		page = int(request.query_params.get('page','1'))
 		if page <= 0:
 			return Response({'message':'Page number must be greater or equal than 0'},status = status.HTTP_400_BAD_REQUEST)
+		if state > 4 or state < 0:
+			return Response({'message':'State must be between 0 and 4'},status = status.HTTP_400_BAD_REQUEST)
 		if user.role <= 2:
-			return Response(get_loans(user.id,page,all_loans),status.HTTP_200_OK)
-		return Response(get_loans(user.id,page),status.HTTP_200_OK)
+			return Response(get_loans(user.id,page,all_loans,state=state),status.HTTP_200_OK)
+		return Response(get_loans(user.id,page,state=state),status.HTTP_200_OK)
 	if request.method == 'PATCH':
 		bulk_update_loans(request.data)
 		return Response(status=status.HTTP_200_OK)
 
-# TODO: pagination
 @api_view(['GET','POST','PATCH'])
 @parser_classes((MultiPartParser,JSONParser))
 def view_get_post_users(request,format=None):
