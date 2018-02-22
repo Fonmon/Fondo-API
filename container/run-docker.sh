@@ -1,11 +1,11 @@
 #!/bin/bash
 set -x
 
-cd /home/ubuntu/Fondo-DevOps/
+cd $HOME_FONMON
 
 docker run -d --expose 8443 \
 	--link fondo_db \
-	--env-file=.env \
+	--env-file=deploy/.env \
 	--name fondo_api \
 	--net fondo_network\
 	fonapi_image:$1
