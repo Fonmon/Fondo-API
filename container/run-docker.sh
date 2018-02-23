@@ -1,6 +1,7 @@
 #!/bin/bash
 set -x
 
+source /etc/environment
 cd $HOME_FONMON
 
 docker run -d --expose 8443 \
