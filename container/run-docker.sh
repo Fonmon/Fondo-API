@@ -2,11 +2,11 @@
 set -x
 
 source /etc/environment
-cd $HOME_FONMON
+cd $HOME_FONMON/deploy
 
 docker run -d --expose 8443 \
 	--link fondo_db \
-	--env-file=deploy/.env \
+	--env-file=.env \
 	--name fondo_api \
 	--net fondo_network\
 	fonapi_image:$1
