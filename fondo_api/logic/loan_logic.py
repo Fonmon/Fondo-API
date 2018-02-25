@@ -35,12 +35,17 @@ def create_loan(user_id,obj):
 	)
 	return (True, newLoan.id)
 
-# TODO: add filter by state
-def get_loans(user_id,page,all_loans=False):
-	if not all_loans:
-		loans = Loan.objects.filter(user_id=user_id).order_by('-created_at','-id')
+def get_loans(user_id,page,all_loans=False,state=4):
+	if state == 4:
+		if not all_loans:
+			loans = Loan.objects.filter(user_id=user_id).order_by('-created_at','-id')
+		else:
+			loans = Loan.objects.all().order_by('-created_at','-id')
 	else:
-		loans = Loan.objects.all().order_by('-created_at','-id')
+		if not all_loans:
+			loans = Loan.objects.filter(user_id=user_id,state=state).order_by('-created_at','-id')
+		else:
+			loans = Loan.objects.filter(state=state).order_by('-created_at','-id')
 
 	paginator = Paginator(loans,LOANS_PER_PAGE)
 	if page > paginator.num_pages:
