@@ -748,6 +748,65 @@ class LoanViewTest(TestCase):
 		self.assertEquals(response.status_code,status.HTTP_200_OK)
 		self.assertEquals(len(response.data['list']),1)
 
+	def test_get_loans_filter(self):
+		client.post(
+			reverse(view_get_post_loans),
+			data = json.dumps(self.loan_with_quota_fee_5),
+			content_type='application/json',
+			**get_auth_header(self.token)
+		)
+		client.post(
+			reverse(view_get_post_loans),
+			data = json.dumps(self.loan_with_quota_fee_10),
+			content_type='application/json',
+			**get_auth_header(self.token)
+		)
+		response = client.get(
+			"%s?state=5" % reverse(view_get_post_loans),
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code,status.HTTP_400_BAD_REQUEST)
+		self.assertEquals(response.data['message'],'State must be between 0 and 4')
+
+		response = client.get(
+			"%s?state=1" % reverse(view_get_post_loans),
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code,status.HTTP_200_OK)
+		self.assertEquals(len(response.data['list']),0)
+
+		response = client.get(
+			"%s?state=0" % reverse(view_get_post_loans),
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code,status.HTTP_200_OK)
+		self.assertEquals(len(response.data['list']),2)
+		for loan in response.data['list']:
+			self.assertEquals(loan['state'],0)
+
+	def test_get_loans_filter_all(self):
+		client.post(
+			reverse(view_get_post_loans),
+			data = json.dumps(self.loan_with_quota_fee_5),
+			content_type='application/json',
+			**get_auth_header(self.token)
+		)
+		client.post(
+			reverse(view_get_post_loans),
+			data = json.dumps(self.loan_with_quota_fee_10),
+			content_type='application/json',
+			**get_auth_header(self.token)
+		)
+
+		response = client.get(
+			"%s?state=0&all_loans=true" % reverse(view_get_post_loans),
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code,status.HTTP_200_OK)
+		self.assertEquals(len(response.data['list']),2)
+		for loan in response.data['list']:
+			self.assertEquals(loan['state'],0)
+
 	def test_update_loan_approved_monthly(self):
 		client.post(
 			reverse(view_get_post_loans),
