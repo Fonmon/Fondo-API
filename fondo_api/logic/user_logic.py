@@ -51,6 +51,9 @@ def get_users(page=1):
 	serializer = UserProfileSerializer(page_return.object_list,many=True)
 	return {'list':serializer.data, 'num_pages':paginator.num_pages}
 
+'''
+TODO: make a serializer for returning this data
+'''
 def get_user(id):
 	try:
 		user_finance = UserFinance.objects.get(user_id = id)
@@ -69,7 +72,7 @@ def get_user(id):
 		'total_quota': user_finance.total_quota,
 		'available_quota': user_finance.available_quota,
 		'utilized_quota': user_finance.utilized_quota,
-		'last_modified': user_finance.last_modified
+		'last_modified': user_finance.last_modified.strftime("%d %b, %Y")
 	})
 
 def inactive_user(id):
