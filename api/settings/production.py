@@ -24,7 +24,7 @@ LOGGING = {
         'require_debug_false': {
             '()':'django.utils.log.RequireDebugFalse'
         }
-    }
+    },
     'handlers': {
         'console': {
             'level': 'ERROR',
