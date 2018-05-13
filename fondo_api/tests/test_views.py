@@ -830,8 +830,9 @@ class LoanViewTest(TestCase):
 		self.assertEquals(mail.outbox[0].subject,'[Fondo Montañez] Solicitud de crédito')
 		self.assertEquals(len(mail.outbox[0].to),1)
 		self.assertEquals(mail.outbox[0].to[0],'mail_for_tests@mail.com')
-		content, mimetype = mail.outbox[0].alternatives[0]
-		self.assertEquals(mimetype,'text/html')
+		content = mail.outbox[0].body
+		mimetype = mail.outbox[0].content_subtype
+		self.assertEquals(mimetype,'html')
 		subcontent = 'crédito número: {},'.format(loan.id)
 		self.assertTrue(subcontent in content)
 		subcontent = '<strong>APROBADA</strong>'
@@ -889,8 +890,9 @@ class LoanViewTest(TestCase):
 		self.assertEquals(mail.outbox[0].subject,'[Fondo Montañez] Solicitud de crédito')
 		self.assertEquals(len(mail.outbox[0].to),1)
 		self.assertEquals(mail.outbox[0].to[0],'mail_for_tests@mail.com')
-		content, mimetype = mail.outbox[0].alternatives[0]
-		self.assertEquals(mimetype,'text/html')
+		content = mail.outbox[0].body
+		mimetype = mail.outbox[0].content_subtype
+		self.assertEquals(mimetype,'html')
 		subcontent = 'crédito número: {},'.format(loan.id)
 		self.assertTrue(subcontent in content)
 		subcontent = '<strong>APROBADA</strong>'
@@ -965,11 +967,13 @@ class LoanViewTest(TestCase):
 		self.assertEquals(response.data['payday_limit'],'09 dic, 2018')
 		self.assertEquals(len(mail.outbox),1)
 		self.assertEquals(mail.outbox[0].subject,'[Fondo Montañez] Solicitud de crédito')
-		self.assertEquals(len(mail.outbox[0].to),2)
-		self.assertEquals(mail.outbox[0].to[0],'mail_for_tests@mail.com')
-		self.assertEquals(mail.outbox[0].to[1],'mail_for_tests_2@mail.com')
-		content, mimetype = mail.outbox[0].alternatives[0]
-		self.assertEquals(mimetype,'text/html')
+		self.assertEquals(len(mail.outbox[0].to),1)
+		self.assertEquals(len(mail.outbox[0].bcc),1)
+		self.assertEquals(mail.outbox[0].to[0],'mail_for_tests_2@mail.com')
+		self.assertEquals(mail.outbox[0].bcc[0],'mail_for_tests@mail.com')
+		content = mail.outbox[0].body
+		mimetype = mail.outbox[0].content_subtype
+		self.assertEquals(mimetype,'html')
 		subcontent = 'crédito número: {},'.format(loan.id)
 		self.assertTrue(subcontent in content)
 		subcontent = '<strong>APROBADA</strong>'
@@ -1022,8 +1026,9 @@ class LoanViewTest(TestCase):
 		self.assertEquals(mail.outbox[0].subject,'[Fondo Montañez] Solicitud de crédito')
 		self.assertEquals(len(mail.outbox[0].to),1)
 		self.assertEquals(mail.outbox[0].to[0],'mail_for_tests@mail.com')
-		content, mimetype = mail.outbox[0].alternatives[0]
-		self.assertEquals(mimetype,'text/html')
+		content = mail.outbox[0].body
+		mimetype = mail.outbox[0].content_subtype
+		self.assertEquals(mimetype,'html')
 		subcontent = 'crédito número: {},'.format(loan.id)
 		self.assertTrue(subcontent in content)
 		subcontent = '<strong>RECHAZADA</strong>'
@@ -1070,11 +1075,13 @@ class LoanViewTest(TestCase):
 		self.assertEquals(response.status_code,status.HTTP_200_OK)
 		self.assertEquals(len(mail.outbox),1)
 		self.assertEquals(mail.outbox[0].subject,'[Fondo Montañez] Solicitud de crédito')
-		self.assertEquals(len(mail.outbox[0].to),2)
-		self.assertEquals(mail.outbox[0].to[0],'mail_for_tests@mail.com')
-		self.assertEquals(mail.outbox[0].to[1],'mail_for_tests_2@mail.com')
-		content, mimetype = mail.outbox[0].alternatives[0]
-		self.assertEquals(mimetype,'text/html')
+		self.assertEquals(len(mail.outbox[0].to),1)
+		self.assertEquals(len(mail.outbox[0].bcc),1)
+		self.assertEquals(mail.outbox[0].to[0],'mail_for_tests_2@mail.com')
+		self.assertEquals(mail.outbox[0].bcc[0],'mail_for_tests@mail.com')
+		content = mail.outbox[0].body
+		mimetype = mail.outbox[0].content_subtype
+		self.assertEquals(mimetype,'html')
 		subcontent = 'crédito número: {},'.format(loan.id)
 		self.assertTrue(subcontent in content)
 		subcontent = '<strong>RECHAZADA</strong>'
