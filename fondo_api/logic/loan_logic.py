@@ -35,7 +35,7 @@ def create_loan(user_id,obj):
 	)
 	return (True, newLoan.id)
 
-def get_loans(user_id,page,all_loans=False,state=4):
+def get_loans(user_id,page,all_loans=False,state=4, paginate=True):
 	if state == 4:
 		if not all_loans:
 			loans = Loan.objects.filter(user_id=user_id).order_by('-created_at','-id')
@@ -47,12 +47,15 @@ def get_loans(user_id,page,all_loans=False,state=4):
 		else:
 			loans = Loan.objects.filter(state=state).order_by('-created_at','-id')
 
-	paginator = Paginator(loans,LOANS_PER_PAGE)
-	if page > paginator.num_pages:
-		return {'list':[], 'num_pages':paginator.num_pages}
-	page_return = paginator.page(page)
-	serializer = LoanSerializer(page_return.object_list,many=True)
-	return {'list':serializer.data, 'num_pages':paginator.num_pages}
+	if paginate:
+		paginator = Paginator(loans,LOANS_PER_PAGE)
+		if page > paginator.num_pages:
+			return {'list':[], 'num_pages':paginator.num_pages}
+		page_return = paginator.page(page)
+		serializer = LoanSerializer(page_return.object_list,many=True)
+		return {'list':serializer.data, 'num_pages':paginator.num_pages}
+	serializer = LoanSerializer(loans,many=True)
+	return {'list':serializer.data}
 
 def create_loan_detail(loan,detail):
 	loan_detail = LoanDetail.objects.create(

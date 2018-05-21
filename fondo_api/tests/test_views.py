@@ -662,6 +662,23 @@ class LoanViewTest(TestCase):
 		self.assertEquals(len(response.data['list']),0)
 		self.assertEquals(response.data['num_pages'],3)
 
+	def test_get_loans_not_paginator(self):
+		for i in range(25):
+			client.post(
+				reverse(view_get_post_loans),
+				data = json.dumps(self.loan_with_quota_fee_5),
+				content_type='application/json',
+				**get_auth_header(self.token)
+			)
+		self.assertEquals(len(Loan.objects.all()),25)
+		response = client.get(
+			"%s?paginate=false" % reverse(view_get_post_loans),
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code,status.HTTP_200_OK)
+		self.assertEquals(len(response.data['list']),25)
+		self.assertFalse(hasattr(response.data,'num_pages'))
+
 	def test_get_loans(self):
 		client.post(
 			reverse(view_get_post_loans),
