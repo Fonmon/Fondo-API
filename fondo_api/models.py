@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from datetime import datetime
+from datetime import date
 
 class UserProfile(User):
 	REQUIRED_FIELDS = ('email','password')
@@ -56,5 +56,5 @@ class LoanDetail(models.Model):
 	payday_limit = models.DateField()
 	interests = models.BigIntegerField(default = 0)
 	capital_balance = models.BigIntegerField(default = 0)
-	from_date = models.DateField(default = datetime.now().date)
+	from_date = models.DateField(default = date.today)
 	loan = models.ForeignKey(Loan, on_delete=models.CASCADE)
