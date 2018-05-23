@@ -62,6 +62,7 @@ def create_loan_detail(loan,detail):
 		total_payment=detail['total_payment'],
 		minimum_payment=detail['minimum_payment'],
 		payday_limit=detail['payday_limit'],
+		from_date=detail['from_date'],
 		loan=loan
 	)
 	return loan_detail
@@ -76,6 +77,7 @@ def update_loan(id,state):
 		loan.save()
 		if state == 1:
 			table, detail = generate_table(loan)
+			detail['from_date'] = loan.disbursement_date
 			loan_detail = create_loan_detail(loan, detail)
 			send_change_state_loan(loan,'approved',table)
 			return (True,LoanDetailSerializer(loan_detail).data)

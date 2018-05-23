@@ -34,6 +34,8 @@ class LoanSerializer(serializers.ModelSerializer):
 
 class LoanDetailSerializer(serializers.ModelSerializer):
 	payday_limit = serializers.DateField(format=dateFormat)
+	from_date = serializers.DateField(format=dateFormat)
 	class Meta:
 		model = LoanDetail
-		fields = ('minimum_payment', 'total_payment','payday_limit')
+		fields = ('minimum_payment', 'total_payment','payday_limit','interests',
+			'capital_balance','from_date')

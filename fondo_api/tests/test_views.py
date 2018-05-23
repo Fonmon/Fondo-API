@@ -881,6 +881,7 @@ class LoanViewTest(TestCase):
 		self.assertEquals(response.data['loan_detail']['total_payment'],228)
 		self.assertEquals(response.data['loan_detail']['minimum_payment'],25)
 		self.assertEquals(response.data['loan_detail']['payday_limit'],'09 dic, 2017')
+		self.assertEquals(response.data['loan_detail']['from_date'],'09 nov, 2017')
 
 	def test_update_loan_approved_unique(self):
 		self.loan_with_quota_fee_10['fee']=1
@@ -941,6 +942,7 @@ class LoanViewTest(TestCase):
 		self.assertEquals(response.data['loan_detail']['total_payment'],278)
 		self.assertEquals(response.data['loan_detail']['minimum_payment'],278)
 		self.assertEquals(response.data['loan_detail']['payday_limit'],'09 dic, 2018')
+		self.assertEquals(response.data['loan_detail']['from_date'],'09 nov, 2017')
 
 	def test_update_loan_approved_repeat_email(self):
 		self.loan_with_quota_fee_10['fee']=1
