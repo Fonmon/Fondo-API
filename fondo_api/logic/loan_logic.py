@@ -62,7 +62,9 @@ def create_loan_detail(loan,detail):
 		total_payment=detail['total_payment'],
 		minimum_payment=detail['minimum_payment'],
 		payday_limit=detail['payday_limit'],
-		from_date=detail['from_date'],
+		from_date=loan.disbursement_date,
+		interests=detail['interests'],
+		capital_balance=loan.value,
 		loan=loan
 	)
 	return loan_detail
@@ -77,7 +79,6 @@ def update_loan(id,state):
 		loan.save()
 		if state == 1:
 			table, detail = generate_table(loan)
-			detail['from_date'] = loan.disbursement_date
 			loan_detail = create_loan_detail(loan, detail)
 			send_change_state_loan(loan,'approved',table)
 			return (True,LoanDetailSerializer(loan_detail).data)
@@ -109,16 +110,15 @@ def generate_table(loan):
 	first_payment_value = 0
 	payday_limit = None
 	total_payment = 0
+	first_interests = 0
 	for i in range(1,fee+1):
-		payment_date = initial_date + relativedelta(months=+i) if loan.fee == 0 else initial_date + relativedelta(months=+loan.timelimit)
-		diff_dates = relativedelta(payment_date, initial_date_display)
-		if diff_dates.years > 0:
-			diff_dates.months = (diff_dates.years*12) + diff_dates.months
-		interests = ((initial_balance*loan.rate)/30)*(diff_dates.months*30)
+		payment_date = initial_date + (relativedelta(months=+i) if loan.fee == 0 else relativedelta(months=+loan.timelimit))
+		interests = calculate_interests(loan,initial_balance,payment_date,initial_date_display)
 		payment_value = constant_payment + interests
 		final_balance = initial_balance - constant_payment
 		if i == 1:
 			first_payment_value = int(round(payment_value,0))
+			first_interests = int(round(interests,0))
 			payday_limit = payment_date
 		total_payment += payment_value
 		table += '<tr>'
@@ -137,8 +137,24 @@ def generate_table(loan):
 	return (table,{
 		'payday_limit':payday_limit,
 		'minimum_payment':first_payment_value,
-		'total_payment':int(round(total_payment,0))
+		'total_payment':int(round(total_payment,0)),
+		'interests':first_interests
 	})
+
+def calculate_interests(loan,initial_balance,payment_date,initial_date_display):
+	diff_dates = relativedelta(payment_date, initial_date_display)
+	diff_days = (diff_dates.years*12*30) + (diff_dates.months*30) + diff_dates.days
+	interests = ((initial_balance*loan.rate)/30)*diff_days
+	return interests
+
+def payment_projection(loan_id, to_date):
+	loan_detail = LoanDetail.objects.get(loan_id=loan_id)
+	loan = loan_detail.loan
+	interests = calculate_interests(loan,loan_detail.capital_balance,to_date,loan_detail.from_date)
+	return {
+		'interests': int(round(interests,0)),
+		'capital_balance': loan_detail.capital_balance
+	}
 
 def get_loan(id):
 	try:
@@ -165,13 +181,20 @@ def update_loan_detail(obj):
 	loan_detail.total_payment = obj['total_payment']
 	loan_detail.minimum_payment = obj['minimum_payment']
 	loan_detail.payday_limit = obj['payday_limit']
+	loan_detail.interests = obj['interests']
+	loan_detail.capital_balance = obj['capital_balance']
+	loan_detail.from_date = obj['from_date']
 	loan_detail.save()
 
 '''
+TODO: improve creating a map with keys and indexes
 * Loan ID
 * Total payment
 * Minimum payment
 * Payday limit
+* Interests
+* Capital balance
+* From date
 '''
 def bulk_update_loans(obj):
 	for line in obj['file']:
@@ -182,6 +205,10 @@ def bulk_update_loans(obj):
 		info['minimum_payment']=int(round(float(data[2]),0))
 		date = data[3].strip().split("/")
 		info['payday_limit']="{}-{}-{}".format(date[2],date[1],date[0])
+		info['interests'] = int(round(float(data[4]),0))
+		info['capital_balance'] = int(round(float(data[5]),0))
+		date = data[6].strip().split("/")
+		info['from_date']="{}-{}-{}".format(date[2],date[1],date[0])
 		try:
 			update_loan_detail(info)
 		except LoanDetail.DoesNotExist:
