@@ -2,7 +2,7 @@ from rest_framework.decorators import api_view,permission_classes,parser_classes
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser,JSONParser
-from datetime import datetime
+from datetime import datetime,date
 from .logic.user_logic import *
 from .logic.loan_logic import *
 from .models import UserProfile
@@ -111,6 +111,6 @@ def view_loan_apps(request,id,app):
 	if app == 'paymentProjection':
 		if 'to_date' not in request.data:
 			return Response(status = status.HTTP_400_BAD_REQUEST)
-		to_date = datetime.strptime(request.data['to_date'],'%Y-%m-%d')
+		to_date = datetime.strptime(request.data['to_date'],'%Y-%m-%d').date()
 		return Response(payment_projection(id,to_date),status = status.HTTP_200_OK)
 	return Response(status = status.HTTP_404_NOT_FOUND)
