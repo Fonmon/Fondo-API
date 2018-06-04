@@ -21,9 +21,9 @@ class UserFinanceSerializer(serializers.ModelSerializer):
 
 class LoanSerializer(serializers.ModelSerializer):
 	user_full_name = serializers.SerializerMethodField()
-	# created_at = serializers.SerializerMethodField()
+	created_at = serializers.SerializerMethodField()
 	disbursement_date = serializers.DateField(format=dateFormat)
-	created_at = serializers.DateTimeField(format=dateFormat)
+	# created_at = serializers.DateTimeField(format=dateFormat)
 	class Meta:
 		model = Loan
 		fields = ('value','timelimit','disbursement_date', 'payment',
@@ -32,15 +32,13 @@ class LoanSerializer(serializers.ModelSerializer):
 	def get_user_full_name(self, obj):
 		return '{} {}'.format(obj.user.first_name, obj.user.last_name)
 
-	'''
-		This method is unused
-	'''
-	def get_created_at(self,obj):
-		date = obj.created_at
-		return '{}-{}-{}'.format(date.year,date.month,date.day)
+	def get_created_at(self, obj):
+		return obj.created_at.strftime(dateFormat)
 
 class LoanDetailSerializer(serializers.ModelSerializer):
-	payday_limit = serializers.DateTimeField(format=dateFormat)
+	payday_limit = serializers.DateField(format=dateFormat)
+	from_date = serializers.DateField(format=dateFormat)
 	class Meta:
 		model = LoanDetail
-		fields = ('minimum_payment', 'total_payment','payday_limit')
+		fields = ('minimum_payment', 'total_payment','payday_limit','interests',
+			'capital_balance','from_date')

@@ -157,6 +157,9 @@ class LoanDetailTest(TestCase):
 		self.assertEqual(len(loan_detail),1)
 		self.assertEqual(loan_detail[0].total_payment,0)
 		self.assertEqual(loan_detail[0].minimum_payment,0)
+		self.assertEqual(loan_detail[0].capital_balance,0)
+		self.assertEqual(loan_detail[0].interests,0)
+		self.assertIsNotNone(loan_detail[0].from_date)
 
 	def test_delete_loan(self):
 		user = UserProfile.objects.get(identification = 1234567890)

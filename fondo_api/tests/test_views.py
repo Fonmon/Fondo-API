@@ -20,6 +20,7 @@ view_get_post_users = 'view_get_post_users'
 view_get_update_delete_user = 'view_get_update_delete_user'
 view_activate_user = 'view_activate_user'
 view_logout = 'view_logout'
+view_loan_apps = 'view_loan_apps'
 
 def create_user():
 	user = UserProfile.objects.create_user(
@@ -662,6 +663,23 @@ class LoanViewTest(TestCase):
 		self.assertEquals(len(response.data['list']),0)
 		self.assertEquals(response.data['num_pages'],3)
 
+	def test_get_loans_not_paginator(self):
+		for i in range(25):
+			client.post(
+				reverse(view_get_post_loans),
+				data = json.dumps(self.loan_with_quota_fee_5),
+				content_type='application/json',
+				**get_auth_header(self.token)
+			)
+		self.assertEquals(len(Loan.objects.all()),25)
+		response = client.get(
+			"%s?paginate=false" % reverse(view_get_post_loans),
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code,status.HTTP_200_OK)
+		self.assertEquals(len(response.data['list']),25)
+		self.assertFalse(hasattr(response.data,'num_pages'))
+
 	def test_get_loans(self):
 		client.post(
 			reverse(view_get_post_loans),
@@ -830,8 +848,9 @@ class LoanViewTest(TestCase):
 		self.assertEquals(mail.outbox[0].subject,'[Fondo Montañez] Solicitud de crédito')
 		self.assertEquals(len(mail.outbox[0].to),1)
 		self.assertEquals(mail.outbox[0].to[0],'mail_for_tests@mail.com')
-		content, mimetype = mail.outbox[0].alternatives[0]
-		self.assertEquals(mimetype,'text/html')
+		content = mail.outbox[0].body
+		mimetype = mail.outbox[0].content_subtype
+		self.assertEquals(mimetype,'html')
 		subcontent = 'crédito número: {},'.format(loan.id)
 		self.assertTrue(subcontent in content)
 		subcontent = '<strong>APROBADA</strong>'
@@ -863,6 +882,7 @@ class LoanViewTest(TestCase):
 		self.assertEquals(response.data['loan_detail']['total_payment'],228)
 		self.assertEquals(response.data['loan_detail']['minimum_payment'],25)
 		self.assertEquals(response.data['loan_detail']['payday_limit'],'09 dic, 2017')
+		self.assertEquals(response.data['loan_detail']['from_date'],'09 nov, 2017')
 
 	def test_update_loan_approved_unique(self):
 		self.loan_with_quota_fee_10['fee']=1
@@ -889,8 +909,9 @@ class LoanViewTest(TestCase):
 		self.assertEquals(mail.outbox[0].subject,'[Fondo Montañez] Solicitud de crédito')
 		self.assertEquals(len(mail.outbox[0].to),1)
 		self.assertEquals(mail.outbox[0].to[0],'mail_for_tests@mail.com')
-		content, mimetype = mail.outbox[0].alternatives[0]
-		self.assertEquals(mimetype,'text/html')
+		content = mail.outbox[0].body
+		mimetype = mail.outbox[0].content_subtype
+		self.assertEquals(mimetype,'html')
 		subcontent = 'crédito número: {},'.format(loan.id)
 		self.assertTrue(subcontent in content)
 		subcontent = '<strong>APROBADA</strong>'
@@ -922,6 +943,7 @@ class LoanViewTest(TestCase):
 		self.assertEquals(response.data['loan_detail']['total_payment'],278)
 		self.assertEquals(response.data['loan_detail']['minimum_payment'],278)
 		self.assertEquals(response.data['loan_detail']['payday_limit'],'09 dic, 2018')
+		self.assertEquals(response.data['loan_detail']['from_date'],'09 nov, 2017')
 
 	def test_update_loan_approved_repeat_email(self):
 		self.loan_with_quota_fee_10['fee']=1
@@ -965,11 +987,13 @@ class LoanViewTest(TestCase):
 		self.assertEquals(response.data['payday_limit'],'09 dic, 2018')
 		self.assertEquals(len(mail.outbox),1)
 		self.assertEquals(mail.outbox[0].subject,'[Fondo Montañez] Solicitud de crédito')
-		self.assertEquals(len(mail.outbox[0].to),2)
-		self.assertEquals(mail.outbox[0].to[0],'mail_for_tests@mail.com')
-		self.assertEquals(mail.outbox[0].to[1],'mail_for_tests_2@mail.com')
-		content, mimetype = mail.outbox[0].alternatives[0]
-		self.assertEquals(mimetype,'text/html')
+		self.assertEquals(len(mail.outbox[0].to),1)
+		self.assertEquals(len(mail.outbox[0].bcc),1)
+		self.assertEquals(mail.outbox[0].to[0],'mail_for_tests_2@mail.com')
+		self.assertEquals(mail.outbox[0].bcc[0],'mail_for_tests@mail.com')
+		content = mail.outbox[0].body
+		mimetype = mail.outbox[0].content_subtype
+		self.assertEquals(mimetype,'html')
 		subcontent = 'crédito número: {},'.format(loan.id)
 		self.assertTrue(subcontent in content)
 		subcontent = '<strong>APROBADA</strong>'
@@ -1022,8 +1046,9 @@ class LoanViewTest(TestCase):
 		self.assertEquals(mail.outbox[0].subject,'[Fondo Montañez] Solicitud de crédito')
 		self.assertEquals(len(mail.outbox[0].to),1)
 		self.assertEquals(mail.outbox[0].to[0],'mail_for_tests@mail.com')
-		content, mimetype = mail.outbox[0].alternatives[0]
-		self.assertEquals(mimetype,'text/html')
+		content = mail.outbox[0].body
+		mimetype = mail.outbox[0].content_subtype
+		self.assertEquals(mimetype,'html')
 		subcontent = 'crédito número: {},'.format(loan.id)
 		self.assertTrue(subcontent in content)
 		subcontent = '<strong>RECHAZADA</strong>'
@@ -1070,11 +1095,13 @@ class LoanViewTest(TestCase):
 		self.assertEquals(response.status_code,status.HTTP_200_OK)
 		self.assertEquals(len(mail.outbox),1)
 		self.assertEquals(mail.outbox[0].subject,'[Fondo Montañez] Solicitud de crédito')
-		self.assertEquals(len(mail.outbox[0].to),2)
-		self.assertEquals(mail.outbox[0].to[0],'mail_for_tests@mail.com')
-		self.assertEquals(mail.outbox[0].to[1],'mail_for_tests_2@mail.com')
-		content, mimetype = mail.outbox[0].alternatives[0]
-		self.assertEquals(mimetype,'text/html')
+		self.assertEquals(len(mail.outbox[0].to),1)
+		self.assertEquals(len(mail.outbox[0].bcc),1)
+		self.assertEquals(mail.outbox[0].to[0],'mail_for_tests_2@mail.com')
+		self.assertEquals(mail.outbox[0].bcc[0],'mail_for_tests@mail.com')
+		content = mail.outbox[0].body
+		mimetype = mail.outbox[0].content_subtype
+		self.assertEquals(mimetype,'html')
 		subcontent = 'crédito número: {},'.format(loan.id)
 		self.assertTrue(subcontent in content)
 		subcontent = '<strong>RECHAZADA</strong>'
@@ -1156,10 +1183,10 @@ class LoanViewTest(TestCase):
 	def create_test_file(self):
 		try:
 			file = open("testfile.txt","w")
-			file.write("1\t1234\t5678\t1/1/2018\r\n")
-			file.write("2\t4321\t8765\t2/1/2018\r\n")
-			file.write("3\t1\t2\t3/1/2017\r\n")
-			file.write("4\t1\t2\t3/1/2017\r\n")
+			file.write("1\t1234\t5678\t1/1/2018\t13\t24\t2/2/2018\r\n")
+			file.write("2\t4321\t8765\t2/1/2018\t45\t56\t3/3/2018\r\n")
+			file.write("3\t1\t2\t3/1/2017\t4\t5\t1/1/2017\r\n")
+			file.write("4\t1\t2\t3/1/2017\t4\t5\t3/3/2017\r\n")
 		finally:
 			file.close()
 		return file
@@ -1201,6 +1228,11 @@ class LoanViewTest(TestCase):
 		self.assertEquals(loan_detail.payday_limit.year,2018)
 		self.assertEquals(loan_detail.payday_limit.month,1)
 		self.assertEquals(loan_detail.payday_limit.day,1)
+		self.assertEquals(loan_detail.interests,13)
+		self.assertEquals(loan_detail.capital_balance,24)
+		self.assertEquals(loan_detail.from_date.year,2018)
+		self.assertEquals(loan_detail.from_date.month,2)
+		self.assertEquals(loan_detail.from_date.day,2)
 
 		loan_detail = LoanDetail.objects.get(loan_id=2)
 		self.assertEquals(loan_detail.total_payment,4321)
@@ -1208,6 +1240,11 @@ class LoanViewTest(TestCase):
 		self.assertEquals(loan_detail.payday_limit.year,2018)
 		self.assertEquals(loan_detail.payday_limit.month,1)
 		self.assertEquals(loan_detail.payday_limit.day,2)
+		self.assertEquals(loan_detail.interests,45)
+		self.assertEquals(loan_detail.capital_balance,56)
+		self.assertEquals(loan_detail.from_date.year,2018)
+		self.assertEquals(loan_detail.from_date.month,3)
+		self.assertEquals(loan_detail.from_date.day,3)
 
 		loan_detail = LoanDetail.objects.get(loan_id=3)
 		self.assertEquals(loan_detail.total_payment,1)
@@ -1215,3 +1252,67 @@ class LoanViewTest(TestCase):
 		self.assertEquals(loan_detail.payday_limit.year,2017)
 		self.assertEquals(loan_detail.payday_limit.month,1)
 		self.assertEquals(loan_detail.payday_limit.day,3)
+		self.assertEquals(loan_detail.interests,4)
+		self.assertEquals(loan_detail.capital_balance,5)
+		self.assertEquals(loan_detail.from_date.year,2017)
+		self.assertEquals(loan_detail.from_date.month,1)
+		self.assertEquals(loan_detail.from_date.day,1)
+
+	def test_loan_app_not_found(self):
+		response = client.post(
+			reverse(view_loan_apps,kwargs={'id': 2,'app':'notFound'}),
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code,status.HTTP_404_NOT_FOUND)
+
+	def test_payment_projection_date_none(self):
+		response = client.post(
+			reverse(view_loan_apps,kwargs={'id': 1,'app':'paymentProjection'}),
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code,status.HTTP_400_BAD_REQUEST)
+
+	def test_payment_projection(self):
+		response = client.post(
+			reverse(view_get_post_loans),
+			data = json.dumps(self.loan_with_quota_fee_10),
+			content_type='application/json',
+			**get_auth_header(self.token)
+		)
+		loan = Loan.objects.get(user_id = 1)
+		response = client.patch(
+			reverse(view_get_update_loan,kwargs={'id': loan.id}),
+			data = '{"state":1}',
+			content_type='application/json',
+			**get_auth_header(self.token)
+		)
+
+		response = client.post(
+			reverse(view_loan_apps,kwargs={'id': loan.id,'app':'paymentProjection'}),
+			data='{"to_date":"2017-11-09"}',
+			content_type='application/json',
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code, status.HTTP_200_OK)
+		self.assertEquals(response.data['capital_balance'],200)
+		self.assertEquals(response.data['interests'],0)
+
+		response = client.post(
+			reverse(view_loan_apps,kwargs={'id': loan.id,'app':'paymentProjection'}),
+			data='{"to_date":"2017-11-15"}',
+			content_type='application/json',
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code, status.HTTP_200_OK)
+		self.assertEquals(response.data['capital_balance'],200)
+		self.assertEquals(response.data['interests'],1)
+
+		response = client.post(
+			reverse(view_loan_apps,kwargs={'id': loan.id,'app':'paymentProjection'}),
+			data='{"to_date":"2017-12-09"}',
+			content_type='application/json',
+			**get_auth_header(self.token)
+		)
+		self.assertEquals(response.status_code, status.HTTP_200_OK)
+		self.assertEquals(response.data['capital_balance'],200)
+		self.assertEquals(response.data['interests'],5)

@@ -1,7 +1,17 @@
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 import os
 from . import user_logic
+
+def send_mail(subject,body,recipient_list,bcc_list=[]):
+	mail = EmailMessage(
+		subject=subject,
+		body=body,
+		to=recipient_list,
+		bcc=bcc_list
+	)
+	mail.content_subtype = "html"
+	return mail.send(fail_silently=False)
 
 def send_activation_mail(user):
 	params = { 
@@ -12,55 +22,30 @@ def send_activation_mail(user):
 	}
 	html_template = render_to_string('activation/activation_email.html',params)
 	subject = render_to_string('activation/activation_subject.txt')
-	from_email = os.environ.get('EMAIL_HOST_USER')
-	to = user.email
+	recipient_list = [user.email]
 	value = send_mail(
 		subject,
-		'',
-		from_email,
-		[to],
-		html_message=html_template,
-		fail_silently=False
+		html_template,
+		recipient_list
 	)
 	return value == 1
 
-def send_approved_loan(loan,loan_table):
+def send_change_state_loan(loan,state,loan_table=None):
 	params = {
 		'loan_id':loan.id,
 		'loan_table':loan_table
 	}
-	html_template = render_to_string('loans/approved_email.html',params)
+	html_template = render_to_string('loans/{}_email.html'.format(state),params)
 	subject = render_to_string('loans/loan_subject.txt')
-	from_email = os.environ.get('EMAIL_HOST_USER')
-	to = user_logic.get_profile_emails([0,2])
-	if loan.user.email not in to:
-		to.append(loan.user.email)
+	bcc_list = user_logic.get_profile_emails([0,2])
+	if loan.user.email in bcc_list:
+		bcc_list.remove(loan.user.email)
+	recipient_list = [loan.user.email]
+	
 	value = send_mail(
 		subject,
-		'',
-		from_email,
-		to,
-		html_message=html_template,
-		fail_silently=False
-	)
-	return value == 1
-
-def send_denied_loan(loan):
-	params = {
-		'loan_id':loan.id,
-	}
-	html_template = render_to_string('loans/denied_email.html',params)
-	subject = render_to_string('loans/loan_subject.txt')
-	from_email = os.environ.get('EMAIL_HOST_USER')
-	to = user_logic.get_profile_emails([0,2])
-	if loan.user.email not in to:
-		to.append(loan.user.email)
-	value = send_mail(
-		subject,
-		'',
-		from_email,
-		to,
-		html_message=html_template,
-		fail_silently=False
+		html_template,
+		recipient_list,
+		bcc_list
 	)
 	return value == 1
