@@ -124,10 +124,10 @@ def generate_table(loan):
 		table += '<tr>'
 		table += '<td>{}</td>'.format(i)
 		table += '<td>${}</td>'.format(locale.format('%d',round(initial_balance,2),True))
-		table += '<td>{}</td>'.format(initial_date_display.strftime("%d %b, %Y"))
+		table += '<td>{}</td>'.format(initial_date_display.strftime("%d %b. %Y"))
 		table += '<td>${}</td>'.format(locale.format('%d',round(interests,2),True))
 		table += '<td>${}</td>'.format(locale.format('%d',round(constant_payment,2),True))
-		table += '<td>{}</td>'.format(payment_date.strftime("%d %b, %Y"))
+		table += '<td>{}</td>'.format(payment_date.strftime("%d %b. %Y"))
 		table += '<td>${}</td>'.format(locale.format('%d',round(payment_value,2),True))
 		table += '<td>${}</td>'.format(locale.format('%d',round(final_balance,2),True))
 		table += '</tr>'

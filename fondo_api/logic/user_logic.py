@@ -72,7 +72,7 @@ def get_user(id):
 		'total_quota': user_finance.total_quota,
 		'available_quota': user_finance.available_quota,
 		'utilized_quota': user_finance.utilized_quota,
-		'last_modified': user_finance.last_modified.strftime("%d %b, %Y")
+		'last_modified': user_finance.last_modified.strftime("%d %b. %Y")
 	})
 
 def inactive_user(id):

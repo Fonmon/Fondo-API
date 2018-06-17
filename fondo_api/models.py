@@ -58,3 +58,16 @@ class LoanDetail(models.Model):
 	capital_balance = models.BigIntegerField(default = 0)
 	from_date = models.DateField(default = date.today)
 	loan = models.ForeignKey(Loan, on_delete=models.CASCADE)
+
+class ActivityYear(models.Model):
+	year = models.BigIntegerField(default = 0, unique=True)
+
+class Activity(models.Model):
+	name = models.TextField(default="")
+	value = models.BigIntegerField(default=0)
+	date = models.DateField()
+	year = models.ForeignKey(ActivityYear, on_delete=models.CASCADE)
+
+class ActivityUser(models.Model):
+	user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+	activity = models.ForeignKey(Activity,on_delete=models.CASCADE)

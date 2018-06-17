@@ -1,7 +1,7 @@
 from rest_framework import serializers
-from .models import UserProfile,UserFinance,Loan,LoanDetail
+from .models import UserProfile,UserFinance,Loan,LoanDetail,ActivityYear,Activity
 
-dateFormat = "%d %b, %Y"
+dateFormat = "%d %b. %Y"
 
 class UserProfileSerializer(serializers.ModelSerializer):
 	full_name = serializers.SerializerMethodField()
@@ -42,3 +42,13 @@ class LoanDetailSerializer(serializers.ModelSerializer):
 		model = LoanDetail
 		fields = ('minimum_payment', 'total_payment','payday_limit','interests',
 			'capital_balance','from_date')
+
+class ActivityYearSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = ActivityYear
+		fields = ('id','year')
+
+class ActivityGeneralSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = Activity
+		fields = ('id','name')
