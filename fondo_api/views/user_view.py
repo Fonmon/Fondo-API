@@ -13,12 +13,12 @@ class UserView:
             if state:
                 return Response(status = status.HTTP_201_CREATED)
             return Response({'message':msg},status = status.HTTP_409_CONFLICT)
-        if request.method == 'GET':
+        elif request.method == 'GET':
             page = int(request.query_params.get('page','1'))
             if page <= 0:
                 return Response({'message':'Page number must be greater or equal than 0'},status = status.HTTP_400_BAD_REQUEST)
             return Response(get_users(page),status = status.HTTP_200_OK)
-        if request.method == 'PATCH':
+        else:
             bulk_update_users(request.data)
             return Response(status=status.HTTP_200_OK)
 
@@ -32,12 +32,12 @@ class UserView:
             if state:
                 return Response(data,status = status.HTTP_200_OK)
             return Response(status = status.HTTP_404_NOT_FOUND)
-        if request.method == 'DELETE':
+        elif request.method == 'DELETE':
             state = inactive_user(id)
             if state:
                 return Response(status = status.HTTP_200_OK)
             return Response(status = status.HTTP_404_NOT_FOUND)
-        if request.method == 'PATCH':
+        else:
             state,code = update_user(id,request.data)
             if state:
                 return Response(status = status.HTTP_200_OK)

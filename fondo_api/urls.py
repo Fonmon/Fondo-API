@@ -15,5 +15,5 @@ urlpatterns = [
 
     url( r'^api/activity/year/?$', ActivityView.view_get_post_years, name='view_get_post_years'),
     url( r'^api/activity/year/(?P<id_year>[0-9]+)$', ActivityView.view_get_post_activities, name='view_get_post_activities'),
-    # url( r'^api/activity/(?P<id>[0-9]+)$'),
+    url( r'^api/activity/(?P<id>[0-9]+)$', ActivityView.view_get_patch_delete_activity, name='view_get_patch_delete_activity'),
 ]

@@ -67,7 +67,14 @@ class Activity(models.Model):
 	value = models.BigIntegerField(default=0)
 	date = models.DateField()
 	year = models.ForeignKey(ActivityYear, on_delete=models.CASCADE)
+	users = models.ManyToManyField(UserProfile, through='ActivityUser')
 
 class ActivityUser(models.Model):
+	STATE_TYPES = (
+		(0,'NOT_PAID'),
+		(1,'PAID_OUT'),
+		(2,'EXEMPTED')
+	)
 	user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
 	activity = models.ForeignKey(Activity,on_delete=models.CASCADE)
+	state = models.IntegerField(choices=STATE_TYPES, default=0)

@@ -143,6 +143,7 @@ def activate_user(id,obj):
 * contributions
 * utilized_quota
 '''
+@transaction.atomic
 def bulk_update_users(obj):
 	for line in obj['file']:
 		data = line.decode('utf-8').strip().split("\t")

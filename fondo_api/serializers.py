@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import UserProfile,UserFinance,Loan,LoanDetail,ActivityYear,Activity
+from .models import UserProfile,UserFinance,Loan,LoanDetail,ActivityYear,Activity, ActivityUser
 
 dateFormat = "%d %b. %Y"
 
@@ -52,3 +52,15 @@ class ActivityGeneralSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Activity
 		fields = ('id','name')
+
+class ActivityUserSerializer(serializers.ModelSerializer):
+	user = UserProfileSerializer()
+	class Meta:
+		model = ActivityUser
+		fields = ('id','state','user')
+
+class ActivityDetailSerializer(serializers.ModelSerializer):
+	users = ActivityUserSerializer(source='activityuser_set',many=True)
+	class Meta:
+		model = Activity
+		fields = ('id','name','date','value','users')

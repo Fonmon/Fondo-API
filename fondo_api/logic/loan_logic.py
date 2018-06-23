@@ -196,6 +196,7 @@ TODO: improve creating a map with keys and indexes
 * Capital balance
 * From date
 '''
+@transaction.atomic
 def bulk_update_loans(obj):
 	for line in obj['file']:
 		data = line.decode('utf-8').strip().split("\t")
