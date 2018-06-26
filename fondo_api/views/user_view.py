@@ -43,8 +43,7 @@ class UserView:
                 return Response(status = status.HTTP_200_OK)
             elif code == 404:
                 return Response(status = status.HTTP_404_NOT_FOUND)
-            elif code == 409:
-                return Response(status = status.HTTP_409_CONFLICT)
+            return Response(status = status.HTTP_409_CONFLICT)
 
     @api_view(['POST'])
     @permission_classes([])
