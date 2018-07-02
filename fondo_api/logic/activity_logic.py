@@ -53,3 +53,32 @@ def get_activity(id):
 
 def remove_activity(id):
     activity = Activity.objects.filter(id = id).delete()
+
+def patch_activity(patch, id, data):
+    try:
+        if patch == 'activity':
+            update_activity(id,data)
+        else:
+            update_activity_user(id, data)
+    except:
+        return None
+    return get_activity(id)
+
+def update_activity(id, data):
+    try:
+        activity = Activity.objects.get(id = id)
+        activity.name = data['name']
+        activity.date = data['date']
+        activity.value = data['value']
+        activity.save()
+    except Activity.DoesNotExist:
+        raise
+
+def update_activity_user(id, data):
+    try:
+        activity_user_id = data['id']
+        activity_user = ActivityUser.objects.get(activity_id = id, id = activity_user_id)
+        activity_user.state = data['state']
+        activity_user.save()
+    except ActivityUser.DoesNotExist:
+        raise

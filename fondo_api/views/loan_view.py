@@ -25,7 +25,7 @@ class LoanView:
 					return Response(msg,status=status.HTTP_200_OK)
 				return Response({'message':msg},status.HTTP_404_NOT_FOUND)
 			return Response({'message':'State must be less or equal than 3'},status = status.HTTP_400_BAD_REQUEST)
-		if request.method == 'GET':
+		else:
 			state, data = get_loan(id)
 			if state:
 				return Response(data,status = status.HTTP_200_OK)
@@ -54,6 +54,6 @@ class LoanView:
 			if user.role <= 2:
 				return Response(get_loans(user.id,page,all_loans,state=state,paginate=paginate),status.HTTP_200_OK)
 			return Response(get_loans(user.id,page,state=state,paginate=paginate),status.HTTP_200_OK)
-		if request.method == 'PATCH':
+		else:
 			bulk_update_loans(request.data)
 			return Response(status=status.HTTP_200_OK)

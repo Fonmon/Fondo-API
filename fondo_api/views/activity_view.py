@@ -28,7 +28,7 @@ class ActivityView:
                 return Response(status=status.HTTP_201_CREATED)
             return Response(status=status.HTTP_409_CONFLICT)
     
-    @api_view(['GET','POST','DELETE'])
+    @api_view(['GET','PATCH','DELETE'])
     def view_get_patch_delete_activity(request,id):
         if request.method == 'GET':
             activity = get_activity(id)
@@ -38,3 +38,11 @@ class ActivityView:
         elif request.method == 'DELETE':
             remove_activity(id)
             return Response(status = status.HTTP_200_OK)
+        else:
+            patch = request.query_params.get('patch','activity')
+            if patch != 'activity' and patch != 'user':
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            activity = patch_activity(patch, id, request.data)
+            if activity is None:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+            return Response(activity, status = status.HTTP_200_OK)
