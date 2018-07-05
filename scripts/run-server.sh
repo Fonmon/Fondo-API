@@ -6,8 +6,6 @@
 
 cd /app
 
-pip install -r requirements.txt
-
 python manage.py makemigrations fondo_api && python manage.py migrate
 
 gunicorn --bind 0.0.0.0:8443 api.wsgi\
