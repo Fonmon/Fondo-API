@@ -4,6 +4,8 @@ from django.db import IntegrityError,transaction
 from rest_framework.authtoken.models import Token 
 from django.core.paginator import Paginator
 from ..serializers import UserProfileSerializer
+from babel.dates import format_date
+from django.conf import settings
 import binascii,os
 import logging
 from . import sender_mails
@@ -72,7 +74,7 @@ def get_user(id):
 		'total_quota': user_finance.total_quota,
 		'available_quota': user_finance.available_quota,
 		'utilized_quota': user_finance.utilized_quota,
-		'last_modified': user_finance.last_modified.strftime("%d %b. %Y")
+		'last_modified': format_date(user_finance.last_modified,locale=settings.LANGUAGE_LOCALE)
 	})
 
 def inactive_user(id):
