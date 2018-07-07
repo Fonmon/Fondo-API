@@ -11,7 +11,7 @@ class ActivityView:
             if state:
                 return Response(status=status.HTTP_201_CREATED)
             return Response(status=status.HTTP_304_NOT_MODIFIED)
-        if request.method == 'GET':
+        else:
             years = get_years()
             if len(years) == 0:
                 return Response(status = status.HTTP_204_NO_CONTENT)
@@ -23,10 +23,8 @@ class ActivityView:
             activities = get_activities(id_year)
             return Response(activities, status = status.HTTP_200_OK)
         else:
-            state = create_activity(request.data, id_year)
-            if state:
-                return Response(status=status.HTTP_201_CREATED)
-            return Response(status=status.HTTP_409_CONFLICT)
+            create_activity(request.data, id_year)
+            return Response(status=status.HTTP_201_CREATED)
     
     @api_view(['GET','PATCH','DELETE'])
     def view_get_patch_delete_activity(request,id):

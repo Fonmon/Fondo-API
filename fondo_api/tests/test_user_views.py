@@ -99,25 +99,25 @@ class UserViewTest(AbstractTest):
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_201_CREATED)
+		self.assertEqual(response.status_code,status.HTTP_201_CREATED)
 
 		user = UserProfile.objects.get(identification = 123)
-		self.assertEquals(user.first_name,'Foo Name')
-		self.assertEquals(user.identification,123)
+		self.assertEqual(user.first_name,'Foo Name')
+		self.assertEqual(user.identification,123)
 
-		self.assertEquals(user.email, "mail@mail.com")
-		self.assertEquals(user.role, 2)
-		self.assertEquals(user.get_role_display(),'TREASURER')
+		self.assertEqual(user.email, "mail@mail.com")
+		self.assertEqual(user.role, 2)
+		self.assertEqual(user.get_role_display(),'TREASURER')
 		self.assertIsNotNone(user.key_activation)
 		self.assertFalse(user.is_active)
 
-		self.assertEquals(len(mail.outbox),1)
-		self.assertEquals(mail.outbox[0].subject,'[Fondo Montañez] Activación de cuenta')
-		self.assertEquals(len(mail.outbox[0].to),1)
-		self.assertEquals(mail.outbox[0].to[0],'mail@mail.com')
+		self.assertEqual(len(mail.outbox),1)
+		self.assertEqual(mail.outbox[0].subject,'[Fondo Montañez] Activación de cuenta')
+		self.assertEqual(len(mail.outbox[0].to),1)
+		self.assertEqual(mail.outbox[0].to[0],'mail@mail.com')
 
-		self.assertEquals(len(UserProfile.objects.all()),2)
-		self.assertEquals(len(UserFinance.objects.all()),2)
+		self.assertEqual(len(UserProfile.objects.all()),2)
+		self.assertEqual(len(UserFinance.objects.all()),2)
 
 	@patch('fondo_api.logic.sender_mails.send_activation_mail',return_value=False)
 	def test_invalid_email(self,mock):
@@ -127,11 +127,11 @@ class UserViewTest(AbstractTest):
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_409_CONFLICT)
-		self.assertEquals(response.data['message'],'Invalid email')
+		self.assertEqual(response.status_code,status.HTTP_409_CONFLICT)
+		self.assertEqual(response.data['message'],'Invalid email')
 
-		self.assertEquals(len(UserProfile.objects.all()),1)
-		self.assertEquals(len(UserFinance.objects.all()),1)
+		self.assertEqual(len(UserProfile.objects.all()),1)
+		self.assertEqual(len(UserFinance.objects.all()),1)
 
 	def test_unsuccess_post_identification(self):
 		response = self.client.post(
@@ -140,11 +140,11 @@ class UserViewTest(AbstractTest):
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_409_CONFLICT)
-		self.assertEquals(response.data['message'],'Identification/email already exists')
+		self.assertEqual(response.status_code,status.HTTP_409_CONFLICT)
+		self.assertEqual(response.data['message'],'Identification/email already exists')
 
-		self.assertEquals(len(UserProfile.objects.all()),1)
-		self.assertEquals(len(UserFinance.objects.all()),1)
+		self.assertEqual(len(UserProfile.objects.all()),1)
+		self.assertEqual(len(UserFinance.objects.all()),1)
 
 	def test_unsuccess_post_email(self):
 		response = self.client.post(
@@ -153,19 +153,19 @@ class UserViewTest(AbstractTest):
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_409_CONFLICT)
-		self.assertEquals(response.data['message'],'Identification/email already exists')
+		self.assertEqual(response.status_code,status.HTTP_409_CONFLICT)
+		self.assertEqual(response.data['message'],'Identification/email already exists')
 
-		self.assertEquals(len(UserProfile.objects.all()),1)
-		self.assertEquals(len(UserFinance.objects.all()),1)
+		self.assertEqual(len(UserProfile.objects.all()),1)
+		self.assertEqual(len(UserFinance.objects.all()),1)
 
 	def test_get_users(self):
 		response = self.client.get(
 			reverse(view_get_post_users),
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code, status.HTTP_200_OK)
-		self.assertEquals(len(response.data['list']),len(UserProfile.objects.filter(is_active=True)))
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(len(response.data['list']),len(UserProfile.objects.filter(is_active=True)))
 		for user in response.data['list']:
 			self.assertIsNotNone(user['id'])
 			self.assertIsNotNone(user['identification'])
@@ -178,73 +178,73 @@ class UserViewTest(AbstractTest):
 			"%s?page=2" % reverse(view_get_post_users),
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code, status.HTTP_200_OK)
-		self.assertEquals(len(response.data['list']),0)
-		self.assertEquals(response.data['num_pages'],1)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(len(response.data['list']),0)
+		self.assertEqual(response.data['num_pages'],1)
 
 	def test_get_users_error_pagination(self):
 		response = self.client.get(
 			"%s?page=0" % reverse(view_get_post_users),
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-		self.assertEquals(response.data['message'],'Page number must be greater or equal than 0')
+		self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+		self.assertEqual(response.data['message'],'Page number must be greater or equal than 0')
 
 	def test_get_user(self):
 		response = self.client.get(
 			reverse(view_get_update_delete_user,kwargs={'id': 1}),
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code, status.HTTP_200_OK)
-		self.assertEquals(response.data['id'],1)
-		self.assertEquals(response.data['identification'],99999)
-		self.assertEquals(response.data['first_name'],'Foo Name')
-		self.assertEquals(response.data['last_name'],'Foo Last Name')
-		self.assertEquals(response.data['email'],'mail_for_tests@mail.com')
-		self.assertEquals(response.data['role'],0)
-		self.assertEquals(response.data['contributions'],2000)
-		self.assertEquals(response.data['balance_contributions'],2000)
-		self.assertEquals(response.data['total_quota'],1000)
-		self.assertEquals(response.data['available_quota'],500)
-		self.assertEquals(response.data['utilized_quota'],0)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(response.data['id'],1)
+		self.assertEqual(response.data['identification'],99999)
+		self.assertEqual(response.data['first_name'],'Foo Name')
+		self.assertEqual(response.data['last_name'],'Foo Last Name')
+		self.assertEqual(response.data['email'],'mail_for_tests@mail.com')
+		self.assertEqual(response.data['role'],0)
+		self.assertEqual(response.data['contributions'],2000)
+		self.assertEqual(response.data['balance_contributions'],2000)
+		self.assertEqual(response.data['total_quota'],1000)
+		self.assertEqual(response.data['available_quota'],500)
+		self.assertEqual(response.data['utilized_quota'],0)
 
 	def test_get_session_user(self):
 		response = self.client.get(
 			reverse(view_get_update_delete_user,kwargs={'id': -1}),
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code, status.HTTP_200_OK)
-		self.assertEquals(response.data['id'],1)
-		self.assertEquals(response.data['identification'],99999)
-		self.assertEquals(response.data['first_name'],'Foo Name')
-		self.assertEquals(response.data['last_name'],'Foo Last Name')
-		self.assertEquals(response.data['email'],'mail_for_tests@mail.com')
-		self.assertEquals(response.data['role'],0)
-		self.assertEquals(response.data['contributions'],2000)
-		self.assertEquals(response.data['balance_contributions'],2000)
-		self.assertEquals(response.data['total_quota'],1000)
-		self.assertEquals(response.data['available_quota'],500)
-		self.assertEquals(response.data['utilized_quota'],0)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(response.data['id'],1)
+		self.assertEqual(response.data['identification'],99999)
+		self.assertEqual(response.data['first_name'],'Foo Name')
+		self.assertEqual(response.data['last_name'],'Foo Last Name')
+		self.assertEqual(response.data['email'],'mail_for_tests@mail.com')
+		self.assertEqual(response.data['role'],0)
+		self.assertEqual(response.data['contributions'],2000)
+		self.assertEqual(response.data['balance_contributions'],2000)
+		self.assertEqual(response.data['total_quota'],1000)
+		self.assertEqual(response.data['available_quota'],500)
+		self.assertEqual(response.data['utilized_quota'],0)
 
 	def test_get_user_not_found(self):
 		response = self.client.get(
 			reverse(view_get_update_delete_user,kwargs={'id': 2}),
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code, status.HTTP_404_NOT_FOUND)
+		self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 	def test_delete_user(self):
 		response = self.client.delete(
 			reverse(view_get_update_delete_user,kwargs={'id': 2}),
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code, status.HTTP_404_NOT_FOUND)
+		self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 		response = self.client.delete(
 			reverse(view_get_update_delete_user,kwargs={'id': 1}),
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
 		user = User.objects.get(id = 1)
 		self.assertFalse(user.is_active)
 
@@ -252,7 +252,7 @@ class UserViewTest(AbstractTest):
 			reverse(view_get_update_delete_user,kwargs={'id': 1}),
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_401_UNAUTHORIZED)
+		self.assertEqual(response.status_code,status.HTTP_401_UNAUTHORIZED)
 		try:
 			self.get_token('mail_for_tests@mail.com','password')
 			self.fail('That account is inactive')
@@ -266,7 +266,7 @@ class UserViewTest(AbstractTest):
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code, status.HTTP_404_NOT_FOUND)
+		self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 		response = self.client.patch(
 			reverse(view_get_update_delete_user,kwargs={'id': 1}),
@@ -274,13 +274,13 @@ class UserViewTest(AbstractTest):
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 		user = UserProfile.objects.get(id=1)
-		self.assertEquals(user.first_name,'Foo Name update')
-		self.assertEquals(user.last_name,'Last Name update')
-		self.assertEquals(user.email,'mail_updated@mail.com2')
-		self.assertEquals(user.username,'mail_updated@mail.com2')
+		self.assertEqual(user.first_name,'Foo Name update')
+		self.assertEqual(user.last_name,'Last Name update')
+		self.assertEqual(user.email,'mail_updated@mail.com2')
+		self.assertEqual(user.username,'mail_updated@mail.com2')
 
 	def test_patch_user_not_finance(self):
 		response = self.client.patch(
@@ -289,13 +289,13 @@ class UserViewTest(AbstractTest):
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 		user = UserProfile.objects.get(id=1)
-		self.assertEquals(user.first_name,'Foo Name update')
-		self.assertEquals(user.last_name,'Last Name update')
-		self.assertEquals(user.email,'mail_updated@mail.com2')
-		self.assertEquals(user.username,'mail_updated@mail.com2')
+		self.assertEqual(user.first_name,'Foo Name update')
+		self.assertEqual(user.last_name,'Last Name update')
+		self.assertEqual(user.email,'mail_updated@mail.com2')
+		self.assertEqual(user.username,'mail_updated@mail.com2')
 
 	def test_patch_user_conflict(self):
 		response = self.client.post(
@@ -304,11 +304,11 @@ class UserViewTest(AbstractTest):
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_201_CREATED)
-		self.assertEquals(len(mail.outbox),1)
-		self.assertEquals(mail.outbox[0].subject,'[Fondo Montañez] Activación de cuenta')
-		self.assertEquals(len(mail.outbox[0].to),1)
-		self.assertEquals(mail.outbox[0].to[0],'mail@mail.com')
+		self.assertEqual(response.status_code,status.HTTP_201_CREATED)
+		self.assertEqual(len(mail.outbox),1)
+		self.assertEqual(mail.outbox[0].subject,'[Fondo Montañez] Activación de cuenta')
+		self.assertEqual(len(mail.outbox[0].to),1)
+		self.assertEqual(mail.outbox[0].to[0],'mail@mail.com')
 
 		response = self.client.patch(
 			reverse(view_get_update_delete_user,kwargs={'id': 1}),
@@ -316,7 +316,7 @@ class UserViewTest(AbstractTest):
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code, status.HTTP_409_CONFLICT)
+		self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 
 		response = self.client.patch(
 			reverse(view_get_update_delete_user,kwargs={'id': 1}),
@@ -324,7 +324,7 @@ class UserViewTest(AbstractTest):
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code, status.HTTP_409_CONFLICT)
+		self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 
 	def test_activation_successful(self):
 		response = self.client.post(
@@ -333,11 +333,11 @@ class UserViewTest(AbstractTest):
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_201_CREATED)
-		self.assertEquals(len(mail.outbox),1)
-		self.assertEquals(mail.outbox[0].subject,'[Fondo Montañez] Activación de cuenta')
-		self.assertEquals(len(mail.outbox[0].to),1)
-		self.assertEquals(mail.outbox[0].to[0],'mail@mail.com')
+		self.assertEqual(response.status_code,status.HTTP_201_CREATED)
+		self.assertEqual(len(mail.outbox),1)
+		self.assertEqual(mail.outbox[0].subject,'[Fondo Montañez] Activación de cuenta')
+		self.assertEqual(len(mail.outbox[0].to),1)
+		self.assertEqual(mail.outbox[0].to[0],'mail@mail.com')
 
 		user = UserProfile.objects.get(identification = 123)
 		obj = {
@@ -351,10 +351,10 @@ class UserViewTest(AbstractTest):
 			data = json.dumps(obj),
 			content_type='application/json',
 		)
-		self.assertEquals(response.status_code,status.HTTP_200_OK)
+		self.assertEqual(response.status_code,status.HTTP_200_OK)
 
 		user = UserProfile.objects.get(identification = 123)
-		self.assertEquals(user.is_active,True)
+		self.assertEqual(user.is_active,True)
 		self.assertTrue('pbkdf2_sha256' in user.password)
 
 	def test_activation_unsuccessful(self):
@@ -364,11 +364,11 @@ class UserViewTest(AbstractTest):
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_201_CREATED)
-		self.assertEquals(len(mail.outbox),1)
-		self.assertEquals(mail.outbox[0].subject,'[Fondo Montañez] Activación de cuenta')
-		self.assertEquals(len(mail.outbox[0].to),1)
-		self.assertEquals(mail.outbox[0].to[0],'mail@mail.com')
+		self.assertEqual(response.status_code,status.HTTP_201_CREATED)
+		self.assertEqual(len(mail.outbox),1)
+		self.assertEqual(mail.outbox[0].subject,'[Fondo Montañez] Activación de cuenta')
+		self.assertEqual(len(mail.outbox[0].to),1)
+		self.assertEqual(mail.outbox[0].to[0],'mail@mail.com')
 
 		user = UserProfile.objects.get(identification = 123)
 		obj = {
@@ -382,10 +382,10 @@ class UserViewTest(AbstractTest):
 			data = json.dumps(obj),
 			content_type='application/json',
 		)
-		self.assertEquals(response.status_code,status.HTTP_404_NOT_FOUND)
+		self.assertEqual(response.status_code,status.HTTP_404_NOT_FOUND)
 
 		user = UserProfile.objects.get(identification = 123)
-		self.assertEquals(user.is_active,False)
+		self.assertEqual(user.is_active,False)
 		self.assertFalse('pbkdf2_sha256' in user.password)
 
 	def test_logout(self):
@@ -393,12 +393,12 @@ class UserViewTest(AbstractTest):
 			reverse(view_logout),
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_200_OK)
+		self.assertEqual(response.status_code,status.HTTP_200_OK)
 		response = self.client.post(
 			reverse(view_logout),
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_401_UNAUTHORIZED)
+		self.assertEqual(response.status_code,status.HTTP_401_UNAUTHORIZED)
 
 	def create_test_file(self):
 		try:
@@ -441,25 +441,25 @@ class UserViewTest(AbstractTest):
 			**self.get_auth_header(self.token)
 		)
 
-		self.assertEquals(response.status_code,status.HTTP_200_OK)
+		self.assertEqual(response.status_code,status.HTTP_200_OK)
 
 		user_finance = UserFinance.objects.get(user_id=5)
-		self.assertEquals(user_finance.balance_contributions,100)
-		self.assertEquals(user_finance.total_quota,1000)
-		self.assertEquals(user_finance.contributions,200)
-		self.assertEquals(user_finance.utilized_quota,300)
-		self.assertEquals(user_finance.available_quota,700)
+		self.assertEqual(user_finance.balance_contributions,100)
+		self.assertEqual(user_finance.total_quota,1000)
+		self.assertEqual(user_finance.contributions,200)
+		self.assertEqual(user_finance.utilized_quota,300)
+		self.assertEqual(user_finance.available_quota,700)
 
 		user_finance = UserFinance.objects.get(user_id=6)
-		self.assertEquals(user_finance.balance_contributions,400)
-		self.assertEquals(user_finance.total_quota,1000)
-		self.assertEquals(user_finance.contributions,500)
-		self.assertEquals(user_finance.utilized_quota,600)
-		self.assertEquals(user_finance.available_quota,400)
+		self.assertEqual(user_finance.balance_contributions,400)
+		self.assertEqual(user_finance.total_quota,1000)
+		self.assertEqual(user_finance.contributions,500)
+		self.assertEqual(user_finance.utilized_quota,600)
+		self.assertEqual(user_finance.available_quota,400)
 
 		user_finance = UserFinance.objects.get(user_id=7)
-		self.assertEquals(user_finance.balance_contributions,700)
-		self.assertEquals(user_finance.total_quota,1000)
-		self.assertEquals(user_finance.contributions,800)
-		self.assertEquals(user_finance.utilized_quota,900)
-		self.assertEquals(user_finance.available_quota,100)
+		self.assertEqual(user_finance.balance_contributions,700)
+		self.assertEqual(user_finance.total_quota,1000)
+		self.assertEqual(user_finance.contributions,800)
+		self.assertEqual(user_finance.utilized_quota,900)
+		self.assertEqual(user_finance.available_quota,100)

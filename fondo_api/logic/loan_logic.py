@@ -200,10 +200,13 @@ TODO: improve creating a map with keys and indexes
 '''
 @transaction.atomic
 def bulk_update_loans(obj):
+	loan_ids = []
 	for line in obj['file']:
 		data = line.decode('utf-8').strip().split("\t")
 		info = {}
-		info['id'] = int(data[0])
+		loan_id = int(data[0])
+		loan_ids.append(loan_id)
+		info['id'] = loan_id
 		info['total_payment']=int(round(float(data[1]),0))
 		info['minimum_payment']=int(round(float(data[2]),0))
 		date = data[3].strip().split("/")
@@ -215,5 +218,12 @@ def bulk_update_loans(obj):
 		try:
 			update_loan_detail(info)
 		except LoanDetail.DoesNotExist:
-			logger.error('Loan with id: {}, not exists'.format(info['id']))
+			logger.error('Loan with id: {}, not exists'.format(loan_id))
 			continue
+	# auto closing loans
+	loans = get_loans(None,None,True,1,False)['list']
+	for loan in loans:
+		loan_id = loan['id']
+		if loan_id not in loan_ids:
+			logger.info('Auto closing loan with id {}'.format(loan_id))
+			update_loan(loan_id,3)

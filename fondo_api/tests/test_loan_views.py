@@ -56,19 +56,19 @@ class LoanViewTest(AbstractTest):
 			**self.get_auth_header(self.token)
 		)
 
-		self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+		self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 		loan = Loan.objects.get(user_id = 1)
-		self.assertEquals(response.data['id'],loan.id)
-		self.assertEquals(loan.value,100)
-		self.assertEquals(loan.get_fee_display(),'MONTHLY')
-		self.assertEquals(loan.get_state_display(),'WAITING_APPROVAL')
-		self.assertEquals(loan.rate,Decimal(0.02).quantize(self.THREEPLACES))
-		self.assertEquals(loan.disbursement_date.year, 2017)
-		self.assertEquals(loan.disbursement_date.month, 12)
-		self.assertEquals(loan.disbursement_date.day, 9)
-		self.assertEquals(loan.comments,'')
-		self.assertEquals(loan.payment,0)
-		self.assertEquals(loan.get_payment_display(),'CASH')
+		self.assertEqual(response.data['id'],loan.id)
+		self.assertEqual(loan.value,100)
+		self.assertEqual(loan.get_fee_display(),'MONTHLY')
+		self.assertEqual(loan.get_state_display(),'WAITING_APPROVAL')
+		self.assertEqual(loan.rate,Decimal(0.02).quantize(self.THREEPLACES))
+		self.assertEqual(loan.disbursement_date.year, 2017)
+		self.assertEqual(loan.disbursement_date.month, 12)
+		self.assertEqual(loan.disbursement_date.day, 9)
+		self.assertEqual(loan.comments,'')
+		self.assertEqual(loan.payment,0)
+		self.assertEqual(loan.get_payment_display(),'CASH')
 
 	def test_post_loan_2(self):
 		response = self.client.post(
@@ -78,19 +78,19 @@ class LoanViewTest(AbstractTest):
 			**self.get_auth_header(self.token)
 		)
 
-		self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+		self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 		loan = Loan.objects.get(user_id = 1)
-		self.assertEquals(response.data['id'],loan.id)
-		self.assertEquals(loan.value,200)
-		self.assertEquals(loan.get_fee_display(),'MONTHLY')
-		self.assertEquals(loan.get_state_display(),'WAITING_APPROVAL')
-		self.assertEquals(loan.rate,Decimal(0.025).quantize(self.THREEPLACES))
-		self.assertEquals(loan.disbursement_date.year, 2017)
-		self.assertEquals(loan.disbursement_date.month, 11)
-		self.assertEquals(loan.disbursement_date.day, 9)
-		self.assertEquals(loan.comments,'')
-		self.assertEquals(loan.payment,1)
-		self.assertEquals(loan.get_payment_display(),'BANK_ACCOUNT')
+		self.assertEqual(response.data['id'],loan.id)
+		self.assertEqual(loan.value,200)
+		self.assertEqual(loan.get_fee_display(),'MONTHLY')
+		self.assertEqual(loan.get_state_display(),'WAITING_APPROVAL')
+		self.assertEqual(loan.rate,Decimal(0.025).quantize(self.THREEPLACES))
+		self.assertEqual(loan.disbursement_date.year, 2017)
+		self.assertEqual(loan.disbursement_date.month, 11)
+		self.assertEqual(loan.disbursement_date.day, 9)
+		self.assertEqual(loan.comments,'')
+		self.assertEqual(loan.payment,1)
+		self.assertEqual(loan.get_payment_display(),'BANK_ACCOUNT')
 
 	def test_post_loan_3(self):
 		response = self.client.post(
@@ -100,19 +100,19 @@ class LoanViewTest(AbstractTest):
 			**self.get_auth_header(self.token)
 		)
 
-		self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+		self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 		loan = Loan.objects.get(user_id = 1)
-		self.assertEquals(response.data['id'],loan.id)
-		self.assertEquals(loan.value,300)
-		self.assertEquals(loan.get_fee_display(),'MONTHLY')
-		self.assertEquals(loan.get_state_display(),'WAITING_APPROVAL')
-		self.assertEquals(loan.rate,Decimal(0.03).quantize(self.THREEPLACES))
-		self.assertEquals(loan.disbursement_date.year, 2018)
-		self.assertEquals(loan.disbursement_date.month, 1)
-		self.assertEquals(loan.disbursement_date.day, 1)
-		self.assertEquals(loan.comments,'')
-		self.assertEquals(loan.payment,0)
-		self.assertEquals(loan.get_payment_display(),'CASH')
+		self.assertEqual(response.data['id'],loan.id)
+		self.assertEqual(loan.value,300)
+		self.assertEqual(loan.get_fee_display(),'MONTHLY')
+		self.assertEqual(loan.get_state_display(),'WAITING_APPROVAL')
+		self.assertEqual(loan.rate,Decimal(0.03).quantize(self.THREEPLACES))
+		self.assertEqual(loan.disbursement_date.year, 2018)
+		self.assertEqual(loan.disbursement_date.month, 1)
+		self.assertEqual(loan.disbursement_date.day, 1)
+		self.assertEqual(loan.comments,'')
+		self.assertEqual(loan.payment,0)
+		self.assertEqual(loan.get_payment_display(),'CASH')
 
 	def test_post_loan_error(self):
 		response = self.client.post(
@@ -122,9 +122,9 @@ class LoanViewTest(AbstractTest):
 			**self.get_auth_header(self.token)
 		)
 
-		self.assertEquals(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
-		self.assertEquals(response.data['message'],'User does not have available quota')
-		self.assertEquals(len(Loan.objects.filter(user_id = 1)),0)
+		self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+		self.assertEqual(response.data['message'],'User does not have available quota')
+		self.assertEqual(len(Loan.objects.filter(user_id = 1)),0)
 
 	def test_get_loans_paginator(self):
 		for i in range(25):
@@ -134,35 +134,35 @@ class LoanViewTest(AbstractTest):
 				content_type='application/json',
 				**self.get_auth_header(self.token)
 			)
-		self.assertEquals(len(Loan.objects.all()),25)
+		self.assertEqual(len(Loan.objects.all()),25)
 		response = self.client.get(
 			reverse(view_get_post_loans),
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_200_OK)
-		self.assertEquals(len(response.data['list']),10)
-		self.assertEquals(response.data['num_pages'],3)
+		self.assertEqual(response.status_code,status.HTTP_200_OK)
+		self.assertEqual(len(response.data['list']),10)
+		self.assertEqual(response.data['num_pages'],3)
 		response = self.client.get(
 			"%s?page=0" % reverse(view_get_post_loans),
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_400_BAD_REQUEST)
-		self.assertEquals(response.data['message'],'Page number must be greater or equal than 0')
+		self.assertEqual(response.status_code,status.HTTP_400_BAD_REQUEST)
+		self.assertEqual(response.data['message'],'Page number must be greater or equal than 0')
 		response = self.client.get(
 			"%s?page=3" % reverse(view_get_post_loans),
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_200_OK)
-		self.assertEquals(len(response.data['list']),5)
-		self.assertEquals(response.data['num_pages'],3)
+		self.assertEqual(response.status_code,status.HTTP_200_OK)
+		self.assertEqual(len(response.data['list']),5)
+		self.assertEqual(response.data['num_pages'],3)
 
 		response = self.client.get(
 			"%s?page=4" % reverse(view_get_post_loans),
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_200_OK)
-		self.assertEquals(len(response.data['list']),0)
-		self.assertEquals(response.data['num_pages'],3)
+		self.assertEqual(response.status_code,status.HTTP_200_OK)
+		self.assertEqual(len(response.data['list']),0)
+		self.assertEqual(response.data['num_pages'],3)
 
 	def test_get_loans_not_paginator(self):
 		for i in range(25):
@@ -172,13 +172,13 @@ class LoanViewTest(AbstractTest):
 				content_type='application/json',
 				**self.get_auth_header(self.token)
 			)
-		self.assertEquals(len(Loan.objects.all()),25)
+		self.assertEqual(len(Loan.objects.all()),25)
 		response = self.client.get(
 			"%s?paginate=false" % reverse(view_get_post_loans),
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_200_OK)
-		self.assertEquals(len(response.data['list']),25)
+		self.assertEqual(response.status_code,status.HTTP_200_OK)
+		self.assertEqual(len(response.data['list']),25)
 		self.assertFalse(hasattr(response.data,'num_pages'))
 
 	def test_get_loans(self):
@@ -223,8 +223,8 @@ class LoanViewTest(AbstractTest):
 			reverse(view_get_post_loans),
 			**self.get_auth_header(token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_200_OK)
-		self.assertEquals(len(response.data['list']),1)
+		self.assertEqual(response.status_code,status.HTTP_200_OK)
+		self.assertEqual(len(response.data['list']),1)
 		for loan in response.data['list']:
 			self.assertIsNotNone(loan['user_full_name'])
 			self.assertIsNotNone(loan['state'])
@@ -240,8 +240,8 @@ class LoanViewTest(AbstractTest):
 			reverse(view_get_post_loans),
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_200_OK)
-		self.assertEquals(len(response.data['list']),2)
+		self.assertEqual(response.status_code,status.HTTP_200_OK)
+		self.assertEqual(len(response.data['list']),2)
 		for loan in response.data['list']:
 			self.assertIsNotNone(loan['user_full_name'])
 			self.assertIsNotNone(loan['state'])
@@ -257,15 +257,15 @@ class LoanViewTest(AbstractTest):
 			"%s?all_loans=true" % reverse(view_get_post_loans),
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_200_OK)
-		self.assertEquals(len(response.data['list']),3)
+		self.assertEqual(response.status_code,status.HTTP_200_OK)
+		self.assertEqual(len(response.data['list']),3)
 
 		response = self.client.get(
 			"%s?all_loans=true" % reverse(view_get_post_loans),
 			**self.get_auth_header(token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_200_OK)
-		self.assertEquals(len(response.data['list']),1)
+		self.assertEqual(response.status_code,status.HTTP_200_OK)
+		self.assertEqual(len(response.data['list']),1)
 
 	def test_get_loans_filter(self):
 		self.client.post(
@@ -284,24 +284,24 @@ class LoanViewTest(AbstractTest):
 			"%s?state=5" % reverse(view_get_post_loans),
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_400_BAD_REQUEST)
-		self.assertEquals(response.data['message'],'State must be between 0 and 4')
+		self.assertEqual(response.status_code,status.HTTP_400_BAD_REQUEST)
+		self.assertEqual(response.data['message'],'State must be between 0 and 4')
 
 		response = self.client.get(
 			"%s?state=1" % reverse(view_get_post_loans),
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_200_OK)
-		self.assertEquals(len(response.data['list']),0)
+		self.assertEqual(response.status_code,status.HTTP_200_OK)
+		self.assertEqual(len(response.data['list']),0)
 
 		response = self.client.get(
 			"%s?state=0" % reverse(view_get_post_loans),
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_200_OK)
-		self.assertEquals(len(response.data['list']),2)
+		self.assertEqual(response.status_code,status.HTTP_200_OK)
+		self.assertEqual(len(response.data['list']),2)
 		for loan in response.data['list']:
-			self.assertEquals(loan['state'],0)
+			self.assertEqual(loan['state'],0)
 
 	def test_get_loans_filter_all(self):
 		self.client.post(
@@ -321,10 +321,10 @@ class LoanViewTest(AbstractTest):
 			"%s?state=0&all_loans=true" % reverse(view_get_post_loans),
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_200_OK)
-		self.assertEquals(len(response.data['list']),2)
+		self.assertEqual(response.status_code,status.HTTP_200_OK)
+		self.assertEqual(len(response.data['list']),2)
 		for loan in response.data['list']:
-			self.assertEquals(loan['state'],0)
+			self.assertEqual(loan['state'],0)
 
 	def test_update_loan_approved_monthly(self):
 		self.client.post(
@@ -341,17 +341,17 @@ class LoanViewTest(AbstractTest):
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_200_OK)
-		self.assertEquals(response.data['total_payment'],228)
-		self.assertEquals(response.data['minimum_payment'],25)
-		self.assertEquals(response.data['payday_limit'],'9 dic. 2017')
-		self.assertEquals(len(mail.outbox),1)
-		self.assertEquals(mail.outbox[0].subject,'[Fondo Montañez] Solicitud de crédito')
-		self.assertEquals(len(mail.outbox[0].to),1)
-		self.assertEquals(mail.outbox[0].to[0],'mail_for_tests@mail.com')
+		self.assertEqual(response.status_code,status.HTTP_200_OK)
+		self.assertEqual(response.data['total_payment'],228)
+		self.assertEqual(response.data['minimum_payment'],25)
+		self.assertEqual(response.data['payday_limit'],'9 dic. 2017')
+		self.assertEqual(len(mail.outbox),1)
+		self.assertEqual(mail.outbox[0].subject,'[Fondo Montañez] Solicitud de crédito')
+		self.assertEqual(len(mail.outbox[0].to),1)
+		self.assertEqual(mail.outbox[0].to[0],'mail_for_tests@mail.com')
 		content = mail.outbox[0].body
 		mimetype = mail.outbox[0].content_subtype
-		self.assertEquals(mimetype,'html')
+		self.assertEqual(mimetype,'html')
 		subcontent = 'crédito número: {},'.format(loan.id)
 		self.assertTrue(subcontent in content)
 		subcontent = '<strong>APROBADA</strong>'
@@ -360,30 +360,30 @@ class LoanViewTest(AbstractTest):
 		self.assertTrue(subcontent in content)
 
 		loan = Loan.objects.get(user_id = 1)
-		self.assertEquals(loan.state,1)
-		self.assertEquals(loan.get_state_display(),'APPROVED')
+		self.assertEqual(loan.state,1)
+		self.assertEqual(loan.get_state_display(),'APPROVED')
 
 		response = self.client.get(
 			reverse(view_get_update_loan,kwargs={'id': loan.id}),
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code, status.HTTP_200_OK)
-		self.assertEquals(response.data['loan']['id'],loan.id)
-		self.assertEquals(response.data['loan']['value'],200)
-		self.assertEquals(response.data['loan']['timelimit'],10)
-		self.assertEquals(response.data['loan']['disbursement_date'],'9 nov. 2017')
-		self.assertEquals(response.data['loan']['payment'],1)
-		self.assertEquals(response.data['loan']['fee'],0)
-		self.assertEquals(response.data['loan']['comments'],'')
-		self.assertEquals(response.data['loan']['state'],1)
-		self.assertEquals(response.data['loan']['user_full_name'],'Foo Name Foo Last Name')
-		self.assertEquals(Decimal(response.data['loan']['rate']).quantize(self.THREEPLACES),Decimal(0.025).quantize(self.THREEPLACES))
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(response.data['loan']['id'],loan.id)
+		self.assertEqual(response.data['loan']['value'],200)
+		self.assertEqual(response.data['loan']['timelimit'],10)
+		self.assertEqual(response.data['loan']['disbursement_date'],'9 nov. 2017')
+		self.assertEqual(response.data['loan']['payment'],1)
+		self.assertEqual(response.data['loan']['fee'],0)
+		self.assertEqual(response.data['loan']['comments'],'')
+		self.assertEqual(response.data['loan']['state'],1)
+		self.assertEqual(response.data['loan']['user_full_name'],'Foo Name Foo Last Name')
+		self.assertEqual(Decimal(response.data['loan']['rate']).quantize(self.THREEPLACES),Decimal(0.025).quantize(self.THREEPLACES))
 		self.assertIsNotNone(response.data['loan']['created_at'])
 
-		self.assertEquals(response.data['loan_detail']['total_payment'],228)
-		self.assertEquals(response.data['loan_detail']['minimum_payment'],25)
-		self.assertEquals(response.data['loan_detail']['payday_limit'],'9 dic. 2017')
-		self.assertEquals(response.data['loan_detail']['from_date'],'9 nov. 2017')
+		self.assertEqual(response.data['loan_detail']['total_payment'],228)
+		self.assertEqual(response.data['loan_detail']['minimum_payment'],25)
+		self.assertEqual(response.data['loan_detail']['payday_limit'],'9 dic. 2017')
+		self.assertEqual(response.data['loan_detail']['from_date'],'9 nov. 2017')
 
 	def test_update_loan_approved_unique(self):
 		self.loan_with_quota_fee_10['fee']=1
@@ -402,17 +402,17 @@ class LoanViewTest(AbstractTest):
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_200_OK)
-		self.assertEquals(response.data['total_payment'],278)
-		self.assertEquals(response.data['minimum_payment'],278)
-		self.assertEquals(response.data['payday_limit'],'9 dic. 2018')
-		self.assertEquals(len(mail.outbox),1)
-		self.assertEquals(mail.outbox[0].subject,'[Fondo Montañez] Solicitud de crédito')
-		self.assertEquals(len(mail.outbox[0].to),1)
-		self.assertEquals(mail.outbox[0].to[0],'mail_for_tests@mail.com')
+		self.assertEqual(response.status_code,status.HTTP_200_OK)
+		self.assertEqual(response.data['total_payment'],278)
+		self.assertEqual(response.data['minimum_payment'],278)
+		self.assertEqual(response.data['payday_limit'],'9 dic. 2018')
+		self.assertEqual(len(mail.outbox),1)
+		self.assertEqual(mail.outbox[0].subject,'[Fondo Montañez] Solicitud de crédito')
+		self.assertEqual(len(mail.outbox[0].to),1)
+		self.assertEqual(mail.outbox[0].to[0],'mail_for_tests@mail.com')
 		content = mail.outbox[0].body
 		mimetype = mail.outbox[0].content_subtype
-		self.assertEquals(mimetype,'html')
+		self.assertEqual(mimetype,'html')
 		subcontent = 'crédito número: {},'.format(loan.id)
 		self.assertTrue(subcontent in content)
 		subcontent = '<strong>APROBADA</strong>'
@@ -421,30 +421,30 @@ class LoanViewTest(AbstractTest):
 		self.assertTrue(subcontent in content)
 
 		loan = Loan.objects.get(user_id = 1)
-		self.assertEquals(loan.state,1)
-		self.assertEquals(loan.get_state_display(),'APPROVED')
+		self.assertEqual(loan.state,1)
+		self.assertEqual(loan.get_state_display(),'APPROVED')
 
 		response = self.client.get(
 			reverse(view_get_update_loan,kwargs={'id': loan.id}),
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code, status.HTTP_200_OK)
-		self.assertEquals(response.data['loan']['id'],loan.id)
-		self.assertEquals(response.data['loan']['value'],200)
-		self.assertEquals(response.data['loan']['timelimit'],13)
-		self.assertEquals(response.data['loan']['disbursement_date'],'9 nov. 2017')
-		self.assertEquals(response.data['loan']['payment'],1)
-		self.assertEquals(response.data['loan']['fee'],1)
-		self.assertEquals(response.data['loan']['comments'],'')
-		self.assertEquals(response.data['loan']['state'],1)
-		self.assertEquals(response.data['loan']['user_full_name'],'Foo Name Foo Last Name')
-		self.assertEquals(Decimal(response.data['loan']['rate']).quantize(self.THREEPLACES),Decimal(0.03).quantize(self.THREEPLACES))
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(response.data['loan']['id'],loan.id)
+		self.assertEqual(response.data['loan']['value'],200)
+		self.assertEqual(response.data['loan']['timelimit'],13)
+		self.assertEqual(response.data['loan']['disbursement_date'],'9 nov. 2017')
+		self.assertEqual(response.data['loan']['payment'],1)
+		self.assertEqual(response.data['loan']['fee'],1)
+		self.assertEqual(response.data['loan']['comments'],'')
+		self.assertEqual(response.data['loan']['state'],1)
+		self.assertEqual(response.data['loan']['user_full_name'],'Foo Name Foo Last Name')
+		self.assertEqual(Decimal(response.data['loan']['rate']).quantize(self.THREEPLACES),Decimal(0.03).quantize(self.THREEPLACES))
 		self.assertIsNotNone(response.data['loan']['created_at'])
 
-		self.assertEquals(response.data['loan_detail']['total_payment'],278)
-		self.assertEquals(response.data['loan_detail']['minimum_payment'],278)
-		self.assertEquals(response.data['loan_detail']['payday_limit'],'9 dic. 2018')
-		self.assertEquals(response.data['loan_detail']['from_date'],'9 nov. 2017')
+		self.assertEqual(response.data['loan_detail']['total_payment'],278)
+		self.assertEqual(response.data['loan_detail']['minimum_payment'],278)
+		self.assertEqual(response.data['loan_detail']['payday_limit'],'9 dic. 2018')
+		self.assertEqual(response.data['loan_detail']['from_date'],'9 nov. 2017')
 
 	def test_update_loan_approved_repeat_email(self):
 		self.loan_with_quota_fee_10['fee']=1
@@ -482,19 +482,19 @@ class LoanViewTest(AbstractTest):
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_200_OK)
-		self.assertEquals(response.data['total_payment'],278)
-		self.assertEquals(response.data['minimum_payment'],278)
-		self.assertEquals(response.data['payday_limit'],'9 dic. 2018')
-		self.assertEquals(len(mail.outbox),1)
-		self.assertEquals(mail.outbox[0].subject,'[Fondo Montañez] Solicitud de crédito')
-		self.assertEquals(len(mail.outbox[0].to),1)
-		self.assertEquals(len(mail.outbox[0].bcc),1)
-		self.assertEquals(mail.outbox[0].to[0],'mail_for_tests_2@mail.com')
-		self.assertEquals(mail.outbox[0].bcc[0],'mail_for_tests@mail.com')
+		self.assertEqual(response.status_code,status.HTTP_200_OK)
+		self.assertEqual(response.data['total_payment'],278)
+		self.assertEqual(response.data['minimum_payment'],278)
+		self.assertEqual(response.data['payday_limit'],'9 dic. 2018')
+		self.assertEqual(len(mail.outbox),1)
+		self.assertEqual(mail.outbox[0].subject,'[Fondo Montañez] Solicitud de crédito')
+		self.assertEqual(len(mail.outbox[0].to),1)
+		self.assertEqual(len(mail.outbox[0].bcc),1)
+		self.assertEqual(mail.outbox[0].to[0],'mail_for_tests_2@mail.com')
+		self.assertEqual(mail.outbox[0].bcc[0],'mail_for_tests@mail.com')
 		content = mail.outbox[0].body
 		mimetype = mail.outbox[0].content_subtype
-		self.assertEquals(mimetype,'html')
+		self.assertEqual(mimetype,'html')
 		subcontent = 'crédito número: {},'.format(loan.id)
 		self.assertTrue(subcontent in content)
 		subcontent = '<strong>APROBADA</strong>'
@@ -503,8 +503,8 @@ class LoanViewTest(AbstractTest):
 		self.assertTrue(subcontent in content)
 
 		loan = Loan.objects.get(user_id = 2)
-		self.assertEquals(loan.state,1)
-		self.assertEquals(loan.get_state_display(),'APPROVED')
+		self.assertEqual(loan.state,1)
+		self.assertEqual(loan.get_state_display(),'APPROVED')
 
 	def test_update_loan_state(self):
 		self.client.post(
@@ -521,11 +521,11 @@ class LoanViewTest(AbstractTest):
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_200_OK)
+		self.assertEqual(response.status_code,status.HTTP_200_OK)
 
 		loan = Loan.objects.get(user_id = 1)
-		self.assertEquals(loan.state,3)
-		self.assertEquals(loan.get_state_display(),'PAID_OUT')
+		self.assertEqual(loan.state,3)
+		self.assertEqual(loan.get_state_display(),'PAID_OUT')
 
 	def test_update_loan_denied(self):
 		self.client.post(
@@ -542,22 +542,22 @@ class LoanViewTest(AbstractTest):
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_200_OK)
-		self.assertEquals(len(mail.outbox),1)
-		self.assertEquals(mail.outbox[0].subject,'[Fondo Montañez] Solicitud de crédito')
-		self.assertEquals(len(mail.outbox[0].to),1)
-		self.assertEquals(mail.outbox[0].to[0],'mail_for_tests@mail.com')
+		self.assertEqual(response.status_code,status.HTTP_200_OK)
+		self.assertEqual(len(mail.outbox),1)
+		self.assertEqual(mail.outbox[0].subject,'[Fondo Montañez] Solicitud de crédito')
+		self.assertEqual(len(mail.outbox[0].to),1)
+		self.assertEqual(mail.outbox[0].to[0],'mail_for_tests@mail.com')
 		content = mail.outbox[0].body
 		mimetype = mail.outbox[0].content_subtype
-		self.assertEquals(mimetype,'html')
+		self.assertEqual(mimetype,'html')
 		subcontent = 'crédito número: {},'.format(loan.id)
 		self.assertTrue(subcontent in content)
 		subcontent = '<strong>RECHAZADA</strong>'
 		self.assertTrue(subcontent in content)
 
 		loan = Loan.objects.get(user_id = 1)
-		self.assertEquals(loan.state,2)
-		self.assertEquals(loan.get_state_display(),'DENIED')
+		self.assertEqual(loan.state,2)
+		self.assertEqual(loan.get_state_display(),'DENIED')
 
 	def test_update_loan_denied_repeat_email(self):
 		user = UserProfile.objects.create_user(
@@ -593,24 +593,24 @@ class LoanViewTest(AbstractTest):
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_200_OK)
-		self.assertEquals(len(mail.outbox),1)
-		self.assertEquals(mail.outbox[0].subject,'[Fondo Montañez] Solicitud de crédito')
-		self.assertEquals(len(mail.outbox[0].to),1)
-		self.assertEquals(len(mail.outbox[0].bcc),1)
-		self.assertEquals(mail.outbox[0].to[0],'mail_for_tests_2@mail.com')
-		self.assertEquals(mail.outbox[0].bcc[0],'mail_for_tests@mail.com')
+		self.assertEqual(response.status_code,status.HTTP_200_OK)
+		self.assertEqual(len(mail.outbox),1)
+		self.assertEqual(mail.outbox[0].subject,'[Fondo Montañez] Solicitud de crédito')
+		self.assertEqual(len(mail.outbox[0].to),1)
+		self.assertEqual(len(mail.outbox[0].bcc),1)
+		self.assertEqual(mail.outbox[0].to[0],'mail_for_tests_2@mail.com')
+		self.assertEqual(mail.outbox[0].bcc[0],'mail_for_tests@mail.com')
 		content = mail.outbox[0].body
 		mimetype = mail.outbox[0].content_subtype
-		self.assertEquals(mimetype,'html')
+		self.assertEqual(mimetype,'html')
 		subcontent = 'crédito número: {},'.format(loan.id)
 		self.assertTrue(subcontent in content)
 		subcontent = '<strong>RECHAZADA</strong>'
 		self.assertTrue(subcontent in content)
 
 		loan = Loan.objects.get(user_id = 2)
-		self.assertEquals(loan.state,2)
-		self.assertEquals(loan.get_state_display(),'DENIED')
+		self.assertEqual(loan.state,2)
+		self.assertEqual(loan.get_state_display(),'DENIED')
 
 	def test_update_loan_not_found(self):
 		self.client.post(
@@ -627,8 +627,8 @@ class LoanViewTest(AbstractTest):
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_404_NOT_FOUND)
-		self.assertEquals(response.data['message'],'Loan does not exist')
+		self.assertEqual(response.status_code,status.HTTP_404_NOT_FOUND)
+		self.assertEqual(response.data['message'],'Loan does not exist')
 
 	def test_update_loan_exceeded(self):
 		self.client.post(
@@ -645,8 +645,8 @@ class LoanViewTest(AbstractTest):
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_400_BAD_REQUEST)
-		self.assertEquals(response.data['message'],'State must be less or equal than 3')
+		self.assertEqual(response.status_code,status.HTTP_400_BAD_REQUEST)
+		self.assertEqual(response.data['message'],'State must be less or equal than 3')
 
 	def test_get_loan(self):
 		self.client.post(
@@ -661,17 +661,17 @@ class LoanViewTest(AbstractTest):
 			reverse(view_get_update_loan,kwargs={'id': loan.id}),
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code, status.HTTP_200_OK)
-		self.assertEquals(response.data['loan']['id'],loan.id)
-		self.assertEquals(response.data['loan']['value'],200)
-		self.assertEquals(response.data['loan']['timelimit'],10)
-		self.assertEquals(response.data['loan']['disbursement_date'],'9 nov. 2017')
-		self.assertEquals(response.data['loan']['payment'],1)
-		self.assertEquals(response.data['loan']['fee'],0)
-		self.assertEquals(response.data['loan']['comments'],'')
-		self.assertEquals(response.data['loan']['state'],0)
-		self.assertEquals(response.data['loan']['user_full_name'],'Foo Name Foo Last Name')
-		self.assertEquals(Decimal(response.data['loan']['rate']).quantize(self.THREEPLACES),Decimal(0.025).quantize(self.THREEPLACES))
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(response.data['loan']['id'],loan.id)
+		self.assertEqual(response.data['loan']['value'],200)
+		self.assertEqual(response.data['loan']['timelimit'],10)
+		self.assertEqual(response.data['loan']['disbursement_date'],'9 nov. 2017')
+		self.assertEqual(response.data['loan']['payment'],1)
+		self.assertEqual(response.data['loan']['fee'],0)
+		self.assertEqual(response.data['loan']['comments'],'')
+		self.assertEqual(response.data['loan']['state'],0)
+		self.assertEqual(response.data['loan']['user_full_name'],'Foo Name Foo Last Name')
+		self.assertEqual(Decimal(response.data['loan']['rate']).quantize(self.THREEPLACES),Decimal(0.025).quantize(self.THREEPLACES))
 		self.assertIsNotNone(response.data['loan']['created_at'])
 
 	def test_get_loan_not_found(self):
@@ -679,7 +679,7 @@ class LoanViewTest(AbstractTest):
 			reverse(view_get_update_loan,kwargs={'id': 2}),
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code, status.HTTP_404_NOT_FOUND)
+		self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 	def create_test_file(self):
 		try:
@@ -687,14 +687,14 @@ class LoanViewTest(AbstractTest):
 			file.write("1\t1234\t5678\t1/1/2018\t13\t24\t2/2/2018\r\n")
 			file.write("2\t4321\t8765\t2/1/2018\t45\t56\t3/3/2018\r\n")
 			file.write("3\t1\t2\t3/1/2017\t4\t5\t1/1/2017\r\n")
-			file.write("4\t1\t2\t3/1/2017\t4\t5\t3/3/2017\r\n")
+			file.write("5\t1\t2\t3/1/2017\t4\t5\t3/3/2017\r\n")
 		finally:
 			file.close()
 		return file
 
 	def test_bulk_update_loans(self):
 		user = UserProfile.objects.get(id=1)
-		for i in range(3):
+		for i in range(4):
 			loan = Loan.objects.create(
 				id=i+1,
 				value=100,
@@ -702,6 +702,7 @@ class LoanViewTest(AbstractTest):
 				disbursement_date= '2000-1-1',
 				comments='',
 				payment=0,
+				state=1,
 				fee= 0,
 				rate=0,
 				user=user
@@ -721,57 +722,63 @@ class LoanViewTest(AbstractTest):
 			**self.get_auth_header(self.token)
 		)
 
-		self.assertEquals(response.status_code,status.HTTP_200_OK)
+		self.assertEqual(response.status_code,status.HTTP_200_OK)
 
 		loan_detail = LoanDetail.objects.get(loan_id=1)
-		self.assertEquals(loan_detail.total_payment,1234)
-		self.assertEquals(loan_detail.minimum_payment,5678)
-		self.assertEquals(loan_detail.payday_limit.year,2018)
-		self.assertEquals(loan_detail.payday_limit.month,1)
-		self.assertEquals(loan_detail.payday_limit.day,1)
-		self.assertEquals(loan_detail.interests,13)
-		self.assertEquals(loan_detail.capital_balance,24)
-		self.assertEquals(loan_detail.from_date.year,2018)
-		self.assertEquals(loan_detail.from_date.month,2)
-		self.assertEquals(loan_detail.from_date.day,2)
+		self.assertEqual(loan_detail.total_payment,1234)
+		self.assertEqual(loan_detail.minimum_payment,5678)
+		self.assertEqual(loan_detail.payday_limit.year,2018)
+		self.assertEqual(loan_detail.payday_limit.month,1)
+		self.assertEqual(loan_detail.payday_limit.day,1)
+		self.assertEqual(loan_detail.interests,13)
+		self.assertEqual(loan_detail.capital_balance,24)
+		self.assertEqual(loan_detail.from_date.year,2018)
+		self.assertEqual(loan_detail.from_date.month,2)
+		self.assertEqual(loan_detail.from_date.day,2)
+		self.assertEqual(loan_detail.loan.state, 1)
 
 		loan_detail = LoanDetail.objects.get(loan_id=2)
-		self.assertEquals(loan_detail.total_payment,4321)
-		self.assertEquals(loan_detail.minimum_payment,8765)
-		self.assertEquals(loan_detail.payday_limit.year,2018)
-		self.assertEquals(loan_detail.payday_limit.month,1)
-		self.assertEquals(loan_detail.payday_limit.day,2)
-		self.assertEquals(loan_detail.interests,45)
-		self.assertEquals(loan_detail.capital_balance,56)
-		self.assertEquals(loan_detail.from_date.year,2018)
-		self.assertEquals(loan_detail.from_date.month,3)
-		self.assertEquals(loan_detail.from_date.day,3)
+		self.assertEqual(loan_detail.total_payment,4321)
+		self.assertEqual(loan_detail.minimum_payment,8765)
+		self.assertEqual(loan_detail.payday_limit.year,2018)
+		self.assertEqual(loan_detail.payday_limit.month,1)
+		self.assertEqual(loan_detail.payday_limit.day,2)
+		self.assertEqual(loan_detail.interests,45)
+		self.assertEqual(loan_detail.capital_balance,56)
+		self.assertEqual(loan_detail.from_date.year,2018)
+		self.assertEqual(loan_detail.from_date.month,3)
+		self.assertEqual(loan_detail.from_date.day,3)
+		self.assertEqual(loan_detail.loan.state, 1)
 
 		loan_detail = LoanDetail.objects.get(loan_id=3)
-		self.assertEquals(loan_detail.total_payment,1)
-		self.assertEquals(loan_detail.minimum_payment,2)
-		self.assertEquals(loan_detail.payday_limit.year,2017)
-		self.assertEquals(loan_detail.payday_limit.month,1)
-		self.assertEquals(loan_detail.payday_limit.day,3)
-		self.assertEquals(loan_detail.interests,4)
-		self.assertEquals(loan_detail.capital_balance,5)
-		self.assertEquals(loan_detail.from_date.year,2017)
-		self.assertEquals(loan_detail.from_date.month,1)
-		self.assertEquals(loan_detail.from_date.day,1)
+		self.assertEqual(loan_detail.total_payment,1)
+		self.assertEqual(loan_detail.minimum_payment,2)
+		self.assertEqual(loan_detail.payday_limit.year,2017)
+		self.assertEqual(loan_detail.payday_limit.month,1)
+		self.assertEqual(loan_detail.payday_limit.day,3)
+		self.assertEqual(loan_detail.interests,4)
+		self.assertEqual(loan_detail.capital_balance,5)
+		self.assertEqual(loan_detail.from_date.year,2017)
+		self.assertEqual(loan_detail.from_date.month,1)
+		self.assertEqual(loan_detail.from_date.day,1)
+		self.assertEqual(loan_detail.loan.state, 1)
+
+		loan_detail = LoanDetail.objects.get(loan_id=3)
+		self.assertEqual(loan_detail.loan.state, 1)
 
 	def test_loan_app_not_found(self):
 		response = self.client.post(
 			reverse(view_loan_apps,kwargs={'id': 2,'app':'notFound'}),
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_404_NOT_FOUND)
+		self.assertEqual(response.status_code,status.HTTP_404_NOT_FOUND)
 
 	def test_payment_projection_date_none(self):
 		response = self.client.post(
 			reverse(view_loan_apps,kwargs={'id': 1,'app':'paymentProjection'}),
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code,status.HTTP_400_BAD_REQUEST)
+		self.assertEqual(response.status_code,status.HTTP_400_BAD_REQUEST)
 
 	def test_payment_projection(self):
 		response = self.client.post(
@@ -794,9 +801,9 @@ class LoanViewTest(AbstractTest):
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code, status.HTTP_200_OK)
-		self.assertEquals(response.data['capital_balance'],200)
-		self.assertEquals(response.data['interests'],0)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(response.data['capital_balance'],200)
+		self.assertEqual(response.data['interests'],0)
 
 		response = self.client.post(
 			reverse(view_loan_apps,kwargs={'id': loan.id,'app':'paymentProjection'}),
@@ -804,9 +811,9 @@ class LoanViewTest(AbstractTest):
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code, status.HTTP_200_OK)
-		self.assertEquals(response.data['capital_balance'],200)
-		self.assertEquals(response.data['interests'],1)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(response.data['capital_balance'],200)
+		self.assertEqual(response.data['interests'],1)
 
 		response = self.client.post(
 			reverse(view_loan_apps,kwargs={'id': loan.id,'app':'paymentProjection'}),
@@ -814,6 +821,6 @@ class LoanViewTest(AbstractTest):
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
-		self.assertEquals(response.status_code, status.HTTP_200_OK)
-		self.assertEquals(response.data['capital_balance'],200)
-		self.assertEquals(response.data['interests'],5)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(response.data['capital_balance'],200)
+		self.assertEqual(response.data['interests'],5)

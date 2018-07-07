@@ -2,6 +2,9 @@ from datetime import date
 from ..models import ActivityYear, Activity, ActivityUser, UserProfile
 from django.db import IntegrityError, transaction
 from ..serializers import ActivityYearSerializer, ActivityGeneralSerializer, ActivityDetailSerializer
+import logging
+
+logger = logging.getLogger(__name__)
 
 def create_year():
     year = date.today().year
@@ -28,12 +31,8 @@ def create_activity(data, id_year):
     activity.value = int(data['value'])
     activity.year_id = id_year
     activity.date = data['date']
-    try:
-        activity.save()
-        add_users(activity)
-    except IntegrityError:
-        return False
-    return True
+    activity.save()
+    add_users(activity)
 
 def add_users(activity):
     users = UserProfile.objects.filter(is_active = True).order_by('id')
