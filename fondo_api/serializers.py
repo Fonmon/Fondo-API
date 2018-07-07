@@ -1,7 +1,7 @@
 from rest_framework import serializers
-from .models import UserProfile,UserFinance,Loan,LoanDetail
-
-dateFormat = "%d %b, %Y"
+from .models import UserProfile,UserFinance,Loan,LoanDetail,ActivityYear,Activity, ActivityUser
+from babel.dates import format_date
+from django.conf import settings
 
 class UserProfileSerializer(serializers.ModelSerializer):
 	full_name = serializers.SerializerMethodField()
@@ -22,8 +22,7 @@ class UserFinanceSerializer(serializers.ModelSerializer):
 class LoanSerializer(serializers.ModelSerializer):
 	user_full_name = serializers.SerializerMethodField()
 	created_at = serializers.SerializerMethodField()
-	disbursement_date = serializers.DateField(format=dateFormat)
-	# created_at = serializers.DateTimeField(format=dateFormat)
+	disbursement_date = serializers.SerializerMethodField()
 	class Meta:
 		model = Loan
 		fields = ('value','timelimit','disbursement_date', 'payment',
@@ -33,12 +32,43 @@ class LoanSerializer(serializers.ModelSerializer):
 		return '{} {}'.format(obj.user.first_name, obj.user.last_name)
 
 	def get_created_at(self, obj):
-		return obj.created_at.strftime(dateFormat)
+		return format_date(obj.created_at,locale=settings.LANGUAGE_LOCALE)
+	
+	def get_disbursement_date(self, obj):
+		return format_date(obj.disbursement_date,locale=settings.LANGUAGE_LOCALE)
 
 class LoanDetailSerializer(serializers.ModelSerializer):
-	payday_limit = serializers.DateField(format=dateFormat)
-	from_date = serializers.DateField(format=dateFormat)
+	payday_limit = serializers.SerializerMethodField()
+	from_date = serializers.SerializerMethodField()
 	class Meta:
 		model = LoanDetail
 		fields = ('minimum_payment', 'total_payment','payday_limit','interests',
 			'capital_balance','from_date')
+	
+	def get_payday_limit(self, obj):
+		return format_date(obj.payday_limit,locale=settings.LANGUAGE_LOCALE)
+
+	def get_from_date(self, obj):
+		return format_date(obj.from_date,locale=settings.LANGUAGE_LOCALE)
+
+class ActivityYearSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = ActivityYear
+		fields = ('id','year')
+
+class ActivityGeneralSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = Activity
+		fields = ('id','name')
+
+class ActivityUserSerializer(serializers.ModelSerializer):
+	user = UserProfileSerializer()
+	class Meta:
+		model = ActivityUser
+		fields = ('id','state','user')
+
+class ActivityDetailSerializer(serializers.ModelSerializer):
+	users = ActivityUserSerializer(source='activityuser_set',many=True)
+	class Meta:
+		model = Activity
+		fields = ('id','name','date','value','users')

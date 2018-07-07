@@ -5,11 +5,12 @@ from ..serializers import LoanSerializer,LoanDetailSerializer
 from dateutil.relativedelta import relativedelta
 from .sender_mails import *
 from decimal import Decimal
-import locale
+from babel.dates import format_date
+from babel.numbers import decimal, format_decimal, format_number
+from django.conf import settings
 import logging
 
 LOANS_PER_PAGE = 10
-locale.setlocale(locale.LC_ALL, '')
 logger = logging.getLogger(__name__)
 
 def create_loan(user_id,obj):
@@ -121,16 +122,17 @@ def generate_table(loan):
 			first_interests = int(round(interests,0))
 			payday_limit = payment_date
 		total_payment += payment_value
-		table += '<tr>'
-		table += '<td>{}</td>'.format(i)
-		table += '<td>${}</td>'.format(locale.format('%d',round(initial_balance,2),True))
-		table += '<td>{}</td>'.format(initial_date_display.strftime("%d %b, %Y"))
-		table += '<td>${}</td>'.format(locale.format('%d',round(interests,2),True))
-		table += '<td>${}</td>'.format(locale.format('%d',round(constant_payment,2),True))
-		table += '<td>{}</td>'.format(payment_date.strftime("%d %b, %Y"))
-		table += '<td>${}</td>'.format(locale.format('%d',round(payment_value,2),True))
-		table += '<td>${}</td>'.format(locale.format('%d',round(final_balance,2),True))
-		table += '</tr>'
+		with decimal.localcontext(decimal.Context(rounding=decimal.ROUND_HALF_DOWN)):
+			table += '<tr>'
+			table += '<td>{}</td>'.format(i)
+			table += '<td>${}</td>'.format(format_number(format_decimal(round(initial_balance,2),format='#'),locale=settings.LANGUAGE_LOCALE))
+			table += '<td>{}</td>'.format(format_date(initial_date_display,locale=settings.LANGUAGE_LOCALE))
+			table += '<td>${}</td>'.format(format_number(format_decimal(round(interests,2),format='#'),locale=settings.LANGUAGE_LOCALE))
+			table += '<td>${}</td>'.format(format_number(format_decimal(round(constant_payment,2),format='#'),locale=settings.LANGUAGE_LOCALE))
+			table += '<td>{}</td>'.format(format_date(payment_date,locale=settings.LANGUAGE_LOCALE))
+			table += '<td>${}</td>'.format(format_number(format_decimal(round(payment_value,2),format='#'),locale=settings.LANGUAGE_LOCALE))
+			table += '<td>${}</td>'.format(format_number(format_decimal(round(final_balance,2),format='#'),locale=settings.LANGUAGE_LOCALE))
+			table += '</tr>'
 		initial_balance = final_balance
 		initial_date_display = payment_date
 	table += '</table>'
@@ -196,11 +198,15 @@ TODO: improve creating a map with keys and indexes
 * Capital balance
 * From date
 '''
+@transaction.atomic
 def bulk_update_loans(obj):
+	loan_ids = []
 	for line in obj['file']:
 		data = line.decode('utf-8').strip().split("\t")
 		info = {}
-		info['id'] = int(data[0])
+		loan_id = int(data[0])
+		loan_ids.append(loan_id)
+		info['id'] = loan_id
 		info['total_payment']=int(round(float(data[1]),0))
 		info['minimum_payment']=int(round(float(data[2]),0))
 		date = data[3].strip().split("/")
@@ -212,5 +218,12 @@ def bulk_update_loans(obj):
 		try:
 			update_loan_detail(info)
 		except LoanDetail.DoesNotExist:
-			logger.error('Loan with id: {}, not exists'.format(info['id']))
+			logger.error('Loan with id: {}, not exists'.format(loan_id))
 			continue
+	# auto closing loans
+	loans = get_loans(None,None,True,1,False)['list']
+	for loan in loans:
+		loan_id = loan['id']
+		if loan_id not in loan_ids:
+			logger.info('Auto closing loan with id {}'.format(loan_id))
+			update_loan(loan_id,3)

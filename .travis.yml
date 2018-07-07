@@ -9,10 +9,6 @@ services:
 before_script:
   - psql -c "CREATE DATABASE test_fondo_api;" -U postgres
   - python3 manage.py makemigrations fondo_api && python3 manage.py migrate
-addons:
-  apt:
-    packages:
-      - language-pack-es
 env:
   global:
     - POSTGRES_DATABASE=test_fondo_api
@@ -21,8 +17,6 @@ env:
     - POSTGRES_PASSWORD=
     - POSTGRES_PORT=5432
     - DJANGO_SETTINGS_MODULE=api.settings.development
-    - LC_ALL=es_CO.UTF-8
-    - LANG=es_CO.UTF-8
 script:
   - coverage run --branch --source='.' manage.py test && coverage report -m --omit="*env*,*tests*,api/wsgi.py,fondo_api/apps.py,manage.py"
 deploy:

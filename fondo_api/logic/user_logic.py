@@ -4,6 +4,8 @@ from django.db import IntegrityError,transaction
 from rest_framework.authtoken.models import Token 
 from django.core.paginator import Paginator
 from ..serializers import UserProfileSerializer
+from babel.dates import format_date
+from django.conf import settings
 import binascii,os
 import logging
 from . import sender_mails
@@ -15,8 +17,8 @@ def generate_key():
 	return binascii.hexlify(os.urandom(25)).decode()
 
 def create_user(obj):
-	with transaction.atomic():
-		try:
+	try:
+		with transaction.atomic():
 			user = UserProfile.objects.create_user(
 				identification = obj['identification'],
 				role = obj['role'],
@@ -27,19 +29,19 @@ def create_user(obj):
 				key_activation = generate_key(),
 				is_active = False
 			)
-		except IntegrityError:
-			return (False,'Identification/email already exists')
-		UserFinance.objects.create(
-			contributions = 0,
-			balance_contributions = 0,
-			total_quota = 0,
-			available_quota = 0,
-			utilized_quota = 0,
-			user = user
-		)
-		if not sender_mails.send_activation_mail(user):
-			transaction.set_rollback(True)
-			return (False, 'Invalid email');
+			UserFinance.objects.create(
+				contributions = 0,
+				balance_contributions = 0,
+				total_quota = 0,
+				available_quota = 0,
+				utilized_quota = 0,
+				user = user
+			)
+			if not sender_mails.send_activation_mail(user):
+				transaction.set_rollback(True)
+				return (False, 'Invalid email');
+	except IntegrityError:
+		return (False,'Identification/email already exists')
 	return (True,'Success')
 
 def get_users(page=1):
@@ -72,7 +74,7 @@ def get_user(id):
 		'total_quota': user_finance.total_quota,
 		'available_quota': user_finance.available_quota,
 		'utilized_quota': user_finance.utilized_quota,
-		'last_modified': user_finance.last_modified.strftime("%d %b, %Y")
+		'last_modified': format_date(user_finance.last_modified,locale=settings.LANGUAGE_LOCALE)
 	})
 
 def inactive_user(id):
@@ -85,21 +87,20 @@ def inactive_user(id):
 	return True
 
 def update_user(id,obj):
-	with transaction.atomic():
-		try:
+	try:
+		with transaction.atomic():
 			user = update_user_finance(id,None,obj);
-		except UserFinance.DoesNotExist:
-			return (False,404)
-		user.first_name = obj['first_name']
-		user.last_name = obj['last_name']
-		user.email = obj['email']
-		user.username = obj['email']
-		user.identification = obj['identification']
-		user.role = obj['role']
-		try:
+			user.first_name = obj['first_name']
+			user.last_name = obj['last_name']
+			user.email = obj['email']
+			user.username = obj['email']
+			user.identification = obj['identification']
+			user.role = obj['role']
 			user.save()
-		except IntegrityError:
-			return (False,409)
+	except UserFinance.DoesNotExist:
+		return (False,404)
+	except IntegrityError:
+		return (False,409)
 	return (True,200)
 
 def update_user_finance(id,identification,obj):
@@ -143,6 +144,7 @@ def activate_user(id,obj):
 * contributions
 * utilized_quota
 '''
+@transaction.atomic
 def bulk_update_users(obj):
 	for line in obj['file']:
 		data = line.decode('utf-8').strip().split("\t")
