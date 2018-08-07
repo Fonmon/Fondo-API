@@ -16,27 +16,3 @@ DEBUG = False
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 # SECURE_BROWSER_XSS_FILTER = True
-
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'filters': {
-        'require_debug_false': {
-            '()':'django.utils.log.RequireDebugFalse'
-        }
-    },
-    'handlers': {
-        'console': {
-            'level': 'INFO',
-            'filters': ['require_debug_false'],
-            'class': 'logging.StreamHandler'
-        }
-    },
-    'loggers': {
-        '': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': True
-        }
-    }
-}
