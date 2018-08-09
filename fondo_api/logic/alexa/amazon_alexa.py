@@ -1,5 +1,12 @@
-import os, re
+import os, re, base64, hashlib
+import urllib.request
 from datetime import datetime
+from cryptography import x509
+from cryptography.x509.oid import NameOID
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric.padding import PKCS1v15, PSS, OAEP
+from cryptography.hazmat.primitives.hashes import SHA1
+from cryptography.exceptions import InvalidSignature
 
 class AmazonAlexa:
     REQUEST_TYPES = [
@@ -14,8 +21,12 @@ class AmazonAlexa:
     SIGNATURE_TYPE = "RSA"
     ECHO_API_DOMAIN_NAME = "echo-api.amazon.com"
 
+    HEADER_SIGNATURE_URL = "HTTP_SIGNATURECERTCHAINURL"
+    HEDAER_SIGNATURE = "HTTP_SIGNATURE"
+
     def __init__(self):
-        self.certificate_cache = None # TODO: add certificate to cache
+        # TODO: verify that objects are not remove and created for each request
+        self.certificate_cache = None
 
     def verify_authenticity(self):
         try:
@@ -24,6 +35,7 @@ class AmazonAlexa:
             self.verify_signature_cert_url()
             self.verify_signature()
         except:
+            self.certificate_cache = None
             raise
         else:
             skill_id = os.environ.get('AWS_SKILL_ID')
@@ -47,7 +59,7 @@ class AmazonAlexa:
             raise Exception(400, 'Timestamp has exceed the limit of 150 seconds')
 
     def verify_signature_cert_url(self):
-        url = self.request.META.get('HTTP_SIGNATURECERTCHAINURL', None)
+        url = self.request.META.get(AmazonAlexa.HEADER_SIGNATURE_URL, None)
         regex = re.compile(
             r'^https://'
             r's3.amazonaws.com'
@@ -59,7 +71,24 @@ class AmazonAlexa:
             raise Exception(400, 'Header SignatureCertChainUrl is not as expected')
 
     def verify_signature(self):
-        pass
+        try:
+            if self.certificate_cache is None:
+                stream = urllib.request.urlopen(self.request.META.get(AmazonAlexa.HEADER_SIGNATURE_URL))
+                self.certificate_cache = stream.read()
+            cert_x509=x509.load_pem_x509_certificate(self.certificate_cache, default_backend())
+            if not cert_x509.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value == 'echo-api.amazon.com':
+                raise Exception(400, "The domain is not correct")
+            # if cert_x509.has_expired():
+            #     raise Exception(400, "The certificate has expired")
+
+            public_key = cert_x509.public_key()
+            body = str(self.data).encode(encoding=AmazonAlexa.CHARACTER_ENCODING)
+            base64_decode = base64.b64decode(self.request.META.get(AmazonAlexa.HEDAER_SIGNATURE))
+            
+            public_key.verify(base64_decode, body, PKCS1v15(), SHA1())
+        except Exception as exception:
+            logger.error('Error verifying signature')
+            raise Exception(500, "Internal error")
 
     def process(self):
         if not (hasattr(self,'request') or hasattr(self,'data')):

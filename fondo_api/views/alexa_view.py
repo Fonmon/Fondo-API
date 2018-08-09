@@ -25,6 +25,7 @@ class AlexaView(APIView):
             switcher = {
                 400: status.HTTP_400_BAD_REQUEST,
                 403: status.HTTP_403_FORBIDDEN,
-                422: status.HTTP_422_UNPROCESSABLE_ENTITY
+                422: status.HTTP_422_UNPROCESSABLE_ENTITY,
+                500: status.HTTP_500_INTERNAL_SERVER_ERROR
             }
             return Response(message, status=switcher.get(type, status.HTTP_400_BAD_REQUEST))
