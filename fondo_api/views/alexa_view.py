@@ -16,6 +16,7 @@ class AlexaView(APIView):
         try:
             logger.info('Alexa signature url: %s',request.META.get('HTTP_SIGNATURECERTCHAINURL'))
             logger.info('Alexa signature: %s',request.META.get('HTTP_SIGNATURE'))
+            logger.info('Alexa body: %s', request.body)
 
             self.aws_alexa.set_request(request)
             response = self.aws_alexa.process()
