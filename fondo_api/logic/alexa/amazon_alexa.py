@@ -1,4 +1,4 @@
-import os, re, base64, hashlib, requests, json
+import os, re, base64, hashlib, json
 import urllib.request, logging
 from datetime import datetime
 from OpenSSL import crypto
