@@ -12,6 +12,8 @@ class AlexaView(APIView):
 
     def post(self,request):
         try:
+            logger.info(request.META)
+
             aws_alexa.set_request(request)
             obj = aws_alexa.process()
             return Response(obj, status=status.HTTP_200_OK)
