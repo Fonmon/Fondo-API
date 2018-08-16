@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 aws_alexa = AmazonAlexa()
 
 class AlexaView(APIView):
-    # permission_classes = []
+    permission_classes = []
 
     def post(self,request):
         try:
