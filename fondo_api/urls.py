@@ -3,8 +3,11 @@ from .views.loan_view import LoanView
 from .views.user_view import UserView
 from .views.activity_view import ActivityView
 from .views.alexa_view import AlexaView
+from .views.auth_view import AuthView
 
 urlpatterns = [
+    url( r'^api/authorize/?$', AuthView.as_view(), name='view_auth' ),
+
     url( r'^api/loan/(?P<id>[0-9]+)/(?P<app>[a-zA-Z]+)$', LoanView.view_loan_apps, name='view_loan_apps' ),
     url( r'^api/loan/(?P<id>[0-9]+)$', LoanView.view_get_update_loan, name='view_get_update_loan' ),
     url( r'^api/loan/?$', LoanView.view_get_post_loans, name='view_get_post_loans' ),
