@@ -57,5 +57,5 @@ class AlexaResponse(object):
         return self
 
     def add_directive(self, directive):
-        self.response.directives.push(directive)
+        self.response.directives.append(directive)
         return self
