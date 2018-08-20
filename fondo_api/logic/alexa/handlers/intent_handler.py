@@ -16,7 +16,6 @@ class IntentHandler(AbstractRequestHandler):
         if complete:
             text = "We have finished"
         response = AlexaResponse(complete)\
-            .set_output_speech(SpeechEnum.PLAIN_TEXT, text=text)\
             .set_card(CardEnum.STANDARD, "Fake intent", "Fake content intent", "Fake text intent")\
             .add_image_to_card("https://fonmon.minagle.com/static/media/ffm_256.d76444a7.png","https://fonmon.minagle.com/static/media/ffm_256.d76444a7.png")\
             .add_directive(Directive("Dialog.Delegate"))
