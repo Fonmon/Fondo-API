@@ -23,11 +23,16 @@ class OutputSpeech(object):
         self.ssml = ssml
         self.text = text
 
+class Directive(object):
+    def __init__(self, type):
+        self.type = type
+
 class Response(object):
     def __init__(self, shouldEndSession=True):
         self.outputSpeech = None
         self.card = None
         self.reprompt = None
+        self.directives = []
         self.shouldEndSession = shouldEndSession
 
 class AlexaResponse(object):
@@ -49,4 +54,8 @@ class AlexaResponse(object):
 
     def set_reprompt(self, type, ssml="", text=""):
         self.response.reprompt = OutputSpeech(type,ssml,text)
+        return self
+
+    def add_directive(self, directive):
+        self.response.directives.push(directive)
         return self

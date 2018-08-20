@@ -1,7 +1,9 @@
 import os, re, urllib.request, logging, base64
+from rest_framework.authtoken.models import Token
 from datetime import datetime
 from OpenSSL import crypto
 from .handlers.launch_handler import LaunchHandler
+from .handlers.intent_handler import IntentHandler
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +25,7 @@ class AmazonAlexa:
     def verify_authenticity(self):
         try:
             self.verify_request_obj()
+            self.verify_token()
             self.verify_timestamp()
             self.verify_signature_cert_url()
             self.verify_signature()
@@ -38,10 +41,19 @@ class AmazonAlexa:
         if 'session' not in self.data or \
            'application' not in self.data['session'] or \
            'applicationId' not in self.data['session']['application'] or \
+           'user' not in self.data['session'] or \
+           'accessToken' not in self.data['session']['user'] or \
            'request' not in self.data or \
            'type' not in self.data['request'] or \
            'timestamp' not in self.data['request']:
            raise Exception(422, 'Request object is bad formed')
+
+    def verify_token(self):
+        key = self.data['session']['user']['accessToken']
+        try:
+            Token.objects.get(key = key)
+        except Token.DoesNotExist:
+            raise Exception(401, 'Authentication error')
 
     def verify_timestamp(self):
         request_date = datetime.strptime(self.data['request']['timestamp'], '%Y-%m-%dT%H:%M:%SZ')
@@ -88,7 +100,17 @@ class AmazonAlexa:
             raise Exception('set_request must be called first')
         try:
             self.verify_authenticity()
-            handler = LaunchHandler(self.data)
+            handler = None
+            request_type = self.data['request']['type']
+            if not request_type in AmazonAlexa.REQUEST_TYPES:
+                raise Exception(422, 'Request type is unrecognized')
+            
+            if request_type == AmazonAlexa.REQUEST_TYPES[0]:
+                handler = LaunchHandler(self.data)
+            elif request_type == AmazonAlexa.REQUEST_TYPES[1]:
+                handler = IntentHandler(self.data)
+            else:
+                return None
             return handler.handle()
         except Exception as exception:
             raise

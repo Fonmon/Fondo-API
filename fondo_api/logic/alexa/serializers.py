@@ -18,11 +18,15 @@ class CardSerializer(serializers.Serializer):
     def get_type(self, obj):
         return obj.type.value
 
+class DirectiveSerializer(serializers.Serializer):
+    type = serializers.CharField(max_length=50)
+
 class ResponseSerializer(serializers.Serializer):
     outputSpeech = OutputSpeechSerializer()
     card = CardSerializer()
     reprompt = OutputSpeechSerializer()
     shouldEndSession = serializers.BooleanField()
+    directives = DirectiveSerializer(many=True)
 
 class AlexaResponseSerializer(serializers.Serializer):
     version = serializers.CharField(max_length=5)

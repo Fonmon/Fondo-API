@@ -22,6 +22,7 @@ class AlexaView(APIView):
                 type, message = exception.args
                 switcher = {
                     400: status.HTTP_400_BAD_REQUEST,
+                    401: status.HTTP_401_UNAUTHORIZED,
                     403: status.HTTP_403_FORBIDDEN,
                     422: status.HTTP_422_UNPROCESSABLE_ENTITY,
                     500: status.HTTP_500_INTERNAL_SERVER_ERROR
