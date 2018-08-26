@@ -20,6 +20,7 @@ class CardSerializer(serializers.Serializer):
 
 class DirectiveSerializer(serializers.Serializer):
     type = serializers.CharField(max_length=50)
+    updatedIntent = serializers.DictField(child=serializers.CharField(max_length=8000))
 
 class ResponseSerializer(serializers.Serializer):
     outputSpeech = OutputSpeechSerializer()

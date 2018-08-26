@@ -27,6 +27,10 @@ class Directive(object):
     def __init__(self, type):
         self.type = type
 
+    def add_updated_intent(self, intent):
+        self.updatedIntent = intent
+        return self
+
 class Response(object):
     def __init__(self, shouldEndSession=True):
         self.outputSpeech = None

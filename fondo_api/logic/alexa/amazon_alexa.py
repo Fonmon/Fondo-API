@@ -51,7 +51,8 @@ class AmazonAlexa:
     def verify_token(self):
         key = self.data['session']['user']['accessToken']
         try:
-            Token.objects.get(key = key)
+            token = Token.objects.get(key = key)
+            self.user_id = token.user.id
         except Token.DoesNotExist:
             raise Exception(401, 'Authentication error')
 
@@ -106,9 +107,9 @@ class AmazonAlexa:
                 raise Exception(422, 'Request type is unrecognized')
             
             if request_type == AmazonAlexa.REQUEST_TYPES[0]:
-                handler = LaunchHandler(self.data)
+                handler = LaunchHandler(self.data, self.user_id)
             elif request_type == AmazonAlexa.REQUEST_TYPES[1]:
-                handler = IntentHandler(self.data)
+                handler = IntentHandler(self.data, self.user_id)
             else:
                 return None
             return handler.handle()

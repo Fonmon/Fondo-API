@@ -4,8 +4,8 @@ from ..serializers import AlexaResponseSerializer
 from ..model.enums import SpeechEnum, CardEnum
 
 class LaunchHandler(AbstractRequestHandler):
-    def __init__(self, data):
-        super().__init__(data)
+    def __init__(self, data, user_id):
+        super().__init__(data, user_id)
 
     def handle(self):
         response = AlexaResponse(False)\
