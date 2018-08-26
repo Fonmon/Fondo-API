@@ -26,6 +26,7 @@ class OutputSpeech(object):
 class Directive(object):
     def __init__(self, type):
         self.type = type
+        self.updatedIntent = None
 
     def add_updated_intent(self, intent):
         self.updatedIntent = intent
