@@ -15,20 +15,22 @@ class IntentHandler(AbstractRequestHandler):
         ]
 
     def handle(self):
-        complete, loan_or_intent = self.process_slots()
-        text = ""
         response = AlexaResponse(False)\
             .set_card(CardEnum.STANDARD, "Fake intent", "Fake content intent", "Fake text intent")\
             .add_image_to_card("https://fonmon.minagle.com/static/media/ffm_256.d76444a7.png","https://fonmon.minagle.com/static/media/ffm_256.d76444a7.png")
         
-        if complete:
+        if 'dialogState' in self.data['request'] and self.data['request']['dialogState'] == 'COMPLETED':
             success, message = create_loan(self.user_id, loan_or_intent)
             if success:
                 message = 'Loan has been created successfully, its number is {}'.format(message)
-            # response.add_directive(Directive("Dialog.Delegate"))
             response.set_output_speech(SpeechEnum.PLAIN_TEXT, text=message)
         else:
-            response.add_directive(Directive("Dialog.Delegate").add_updated_intent(loan_or_intent))
+            complete, loan_or_intent = self.process_slots()
+            
+            if complete:
+                response.add_directive(Directive("Dialog.Delegate"))
+            else:
+                response.add_directive(Directive("Dialog.Delegate").add_updated_intent(loan_or_intent))
             
         serializer = AlexaResponseSerializer(response)
         return serializer.data
