@@ -41,7 +41,7 @@ class Response(object):
         self.shouldEndSession = shouldEndSession
 
 class AlexaResponse(object):
-    def __init__(self, shouldEndSession=True):
+    def __init__(self, shouldEndSession=False):
         self.version = "1.0"
         self.response = Response(shouldEndSession=shouldEndSession)
     
@@ -64,3 +64,6 @@ class AlexaResponse(object):
     def add_directive(self, directive):
         self.response.directives.append(directive)
         return self
+
+    def set_shouldEndSession(self, value):
+        self.response.shouldEndSession = value
