@@ -21,10 +21,11 @@ class IntentHandler(AbstractRequestHandler):
             .set_card(CardEnum.STANDARD, "Fake intent", "Fake content intent", "Fake text intent")\
             .add_image_to_card("https://fonmon.minagle.com/static/media/ffm_256.d76444a7.png","https://fonmon.minagle.com/static/media/ffm_256.d76444a7.png")
         
-        # if complete:
-        #     create_loan(self.user_id, loan_or_intent)
-        # else:
-        response.add_directive(Directive("Dialog.Delegate").add_updated_intent(loan_or_intent))
+        if complete:
+            # create_loan(self.user_id, loan_or_intent)
+            response.add_directive(Directive("Dialog.Delegate"))
+        else:
+            response.add_directive(Directive("Dialog.Delegate").add_updated_intent(loan_or_intent))
             
         serializer = AlexaResponseSerializer(response)
         return serializer.data
