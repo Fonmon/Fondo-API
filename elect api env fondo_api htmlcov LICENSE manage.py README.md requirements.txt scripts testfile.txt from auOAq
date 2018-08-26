@@ -1,0 +1,36 @@
+                         List of relations
+ Schema |               Name                |   Type   |   Owner   
+--------+-----------------------------------+----------+-----------
+ public | auth_group                        | table    | fondouser
+ public | auth_group_id_seq                 | sequence | fondouser
+ public | auth_group_permissions            | table    | fondouser
+ public | auth_group_permissions_id_seq     | sequence | fondouser
+ public | auth_permission                   | table    | fondouser
+ public | auth_permission_id_seq            | sequence | fondouser
+ public | auth_user                         | table    | fondouser
+ public | auth_user_groups                  | table    | fondouser
+ public | auth_user_groups_id_seq           | sequence | fondouser
+ public | auth_user_id_seq                  | sequence | fondouser
+ public | auth_user_user_permissions        | table    | fondouser
+ public | auth_user_user_permissions_id_seq | sequence | fondouser
+ public | authtoken_token                   | table    | fondouser
+ public | django_content_type               | table    | fondouser
+ public | django_content_type_id_seq        | sequence | fondouser
+ public | django_migrations                 | table    | fondouser
+ public | django_migrations_id_seq          | sequence | fondouser
+ public | django_session                    | table    | fondouser
+ public | fondo_api_activity                | table    | fondouser
+ public | fondo_api_activity_id_seq         | sequence | fondouser
+ public | fondo_api_activityuser            | table    | fondouser
+ public | fondo_api_activityuser_id_seq     | sequence | fondouser
+ public | fondo_api_activityyear            | table    | fondouser
+ public | fondo_api_activityyear_id_seq     | sequence | fondouser
+ public | fondo_api_loan                    | table    | fondouser
+ public | fondo_api_loan_id_seq             | sequence | fondouser
+ public | fondo_api_loandetail              | table    | fondouser
+ public | fondo_api_loandetail_id_seq       | sequence | fondouser
+ public | fondo_api_userfinance             | table    | fondouser
+ public | fondo_api_userfinance_id_seq      | sequence | fondouser
+ public | fondo_api_userprofile             | table    | fondouser
+(31 rows)
+

@@ -93,7 +93,7 @@ class AmazonAlexa:
                 decoded_signature = base64.b64decode(self.headers.get(AmazonAlexa.HEDAER_SIGNATURE))
                 crypto.verify(cert_x509, decoded_signature, self.body, 'sha1')
             except Exception as ex:
-                logger.error('Error verifying signature, exception: %s', exception)
+                logger.error('Error verifying signature, exception: %s', ex)
                 raise Exception(500, "Internal error verifying signature")
 
     def process(self):

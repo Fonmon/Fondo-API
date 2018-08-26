@@ -1,3 +1,4 @@
+import json
 from rest_framework import serializers
 
 class OutputSpeechSerializer(serializers.Serializer):
@@ -20,7 +21,10 @@ class CardSerializer(serializers.Serializer):
 
 class DirectiveSerializer(serializers.Serializer):
     type = serializers.CharField(max_length=50)
-    updatedIntent = serializers.DictField(child=serializers.CharField(max_length=8000))
+    updatedIntent = serializers.SerializerMethodField()
+
+    def get_updatedIntent(self, obj):
+        return obj.updatedIntent
 
 class ResponseSerializer(serializers.Serializer):
     outputSpeech = OutputSpeechSerializer()

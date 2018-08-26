@@ -1,7 +1,10 @@
+import logging
 from .abstract_handler import AbstractRequestHandler
 from ..model.models import AlexaResponse, Directive
 from ..serializers import AlexaResponseSerializer
 from ..model.enums import SpeechEnum, CardEnum
+
+logger = logging.getLogger(__name__)
 
 class IntentHandler(AbstractRequestHandler):
     def __init__(self, data, user_id):
