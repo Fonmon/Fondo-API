@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from ..logic.alexa.amazon_alexa import AmazonAlexa
-import logging
+import logging, traceback
 
 logger = logging.getLogger(__name__)
 aws_alexa = AmazonAlexa()
@@ -21,7 +21,7 @@ class AlexaView(APIView):
             return Response(obj, status=status.HTTP_200_OK)
         except Exception as exception:
             logger.error('Exception in Alexa: %s', exception)
-            print(exception)
+            traceback.print_exc()
             if len(exception.args) == 2:
                 type, message = exception.args
                 switcher = {
