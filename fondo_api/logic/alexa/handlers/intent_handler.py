@@ -22,8 +22,11 @@ class IntentHandler(AbstractRequestHandler):
             .add_image_to_card("https://fonmon.minagle.com/static/media/ffm_256.d76444a7.png","https://fonmon.minagle.com/static/media/ffm_256.d76444a7.png")
         
         if complete:
-            # create_loan(self.user_id, loan_or_intent)
-            response.add_directive(Directive("Dialog.Delegate"))
+            success, message = create_loan(self.user_id, loan_or_intent)
+            if success:
+                message = 'Loan has been created successfully, its number is {}'.format(message)
+            # response.add_directive(Directive("Dialog.Delegate"))
+            response.set_output_speech(SpeechEnum.PLAIN_TEXT, text=message)
         else:
             response.add_directive(Directive("Dialog.Delegate").add_updated_intent(loan_or_intent))
             
