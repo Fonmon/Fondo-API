@@ -24,6 +24,9 @@ def create_loan(user_id,obj):
 		rate = 0.025
 	elif 12 < obj['timelimit'] and obj['timelimit'] <= 24:
 		rate = 0.03
+	elif obj['timelimit'] > 24:
+		rate = 0.03
+		obj['timelimit'] = 24
 	newLoan = Loan.objects.create(
 		value = obj['value'],
 		timelimit = obj['timelimit'],

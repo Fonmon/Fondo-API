@@ -28,6 +28,7 @@ class AlexaView(APIView):
                     400: status.HTTP_400_BAD_REQUEST,
                     401: status.HTTP_401_UNAUTHORIZED,
                     403: status.HTTP_403_FORBIDDEN,
+                    405: status.HTTP_405_METHOD_NOT_ALLOWED,
                     422: status.HTTP_422_UNPROCESSABLE_ENTITY,
                     500: status.HTTP_500_INTERNAL_SERVER_ERROR
                 }
