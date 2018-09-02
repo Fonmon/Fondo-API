@@ -15,15 +15,15 @@ class RequestLoanIntent:
     def handle(self):
         complete, loan_or_intent = self.process_slots()
         response = AlexaResponse()\
-            .set_card(CardEnum.STANDARD, "Request a loan", "", "Allows you to request a loan easily from Alexa")\
             .add_image_to_card(self.skill_banner, self.skill_banner)
         
         if 'dialogState' in self.data['request'] and self.data['request']['dialogState'] == 'COMPLETED':
             success, message = create_loan(self.user_id, loan_or_intent)
             if success:
                 message = 'Loan has been created successfully, its number is {}'.format(message)
-            response.set_output_speech(SpeechEnum.PLAIN_TEXT, text=message)
-            response.set_shouldEndSession(True)
+            response.set_output_speech(SpeechEnum.PLAIN_TEXT, text=message)\
+                    .set_card(CardEnum.STANDARD, "Request a loan", "", message)\
+                    .set_shouldEndSession(True)
         else:
             directive = Directive("Dialog.Delegate")
             if not complete:

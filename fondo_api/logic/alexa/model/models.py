@@ -67,3 +67,4 @@ class AlexaResponse(object):
 
     def set_shouldEndSession(self, value):
         self.response.shouldEndSession = value
+        return self
