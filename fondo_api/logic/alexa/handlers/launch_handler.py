@@ -10,8 +10,8 @@ class LaunchHandler(AbstractRequestHandler):
     def handle(self):
         response = AlexaResponse(False)\
             .set_output_speech(SpeechEnum.PLAIN_TEXT, text="Welcome to family Montañez fund assistant, what can I help you?")\
-            .set_card(CardEnum.STANDARD, "Fake title", "Fake content", "Fake text")\
-            .add_image_to_card("https://fonmon.minagle.com/static/media/ffm_256.d76444a7.png","https://fonmon.minagle.com/static/media/ffm_256.d76444a7.png")
+            .set_card(CardEnum.STANDARD, "Fonmon Voice Assistant", "", "Family assistant for recurring tasks")\
+            .add_image_to_card(self.skill_banner, self.skill_banner)
             
         serializer = AlexaResponseSerializer(response)
         return serializer.data

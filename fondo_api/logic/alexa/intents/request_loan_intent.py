@@ -7,15 +7,16 @@ from ....logic.loan_logic import create_loan
 logger = logging.getLogger(__name__)
 
 class RequestLoanIntent:
-    def __init__(self, data, user_id):
+    def __init__(self, data, user_id, skill_banner):
         self.data = data
         self.user_id = user_id
+        self.skill_banner = skill_banner
 
     def handle(self):
         complete, loan_or_intent = self.process_slots()
         response = AlexaResponse()\
-            .set_card(CardEnum.STANDARD, "Fake intent", "Fake content intent", "Fake text intent")\
-            .add_image_to_card("https://fonmon.minagle.com/static/media/ffm_256.d76444a7.png","https://fonmon.minagle.com/static/media/ffm_256.d76444a7.png")
+            .set_card(CardEnum.STANDARD, "Request a loan", "", "Allows you to request a loan easily from Alexa")\
+            .add_image_to_card(self.skill_banner, self.skill_banner)
         
         if 'dialogState' in self.data['request'] and self.data['request']['dialogState'] == 'COMPLETED':
             success, message = create_loan(self.user_id, loan_or_intent)

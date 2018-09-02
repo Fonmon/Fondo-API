@@ -8,7 +8,7 @@ class IntentHandler(AbstractRequestHandler):
     def __init__(self, data, user_id):
         super().__init__(data, user_id)
         self.intents = {
-            'RequestLoan': RequestLoanIntent(data, user_id)
+            'RequestLoan': RequestLoanIntent(data, user_id, self.skill_banner)
         }
 
     def handle(self):
