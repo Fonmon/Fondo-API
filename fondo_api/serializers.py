@@ -68,7 +68,11 @@ class ActivityUserSerializer(serializers.ModelSerializer):
 		fields = ('id','state','user')
 
 class ActivityDetailSerializer(serializers.ModelSerializer):
-	users = ActivityUserSerializer(source='activityuser_set',many=True)
+	users = serializers.SerializerMethodField()
 	class Meta:
 		model = Activity
 		fields = ('id','name','date','value','users')
+
+	def get_users(self, obj):
+		serializer = ActivityUserSerializer(obj.activityuser_set.order_by('user_id'), many=True)
+		return serializer.data
