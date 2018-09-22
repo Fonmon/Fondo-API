@@ -142,6 +142,7 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(response.status_code,status.HTTP_200_OK)
 		self.assertEqual(len(response.data['list']),10)
 		self.assertEqual(response.data['num_pages'],3)
+		self.assertEqual(response.data['count'], 25)
 		response = self.client.get(
 			"%s?page=0" % reverse(view_get_post_loans),
 			**self.get_auth_header(self.token)
@@ -155,6 +156,7 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(response.status_code,status.HTTP_200_OK)
 		self.assertEqual(len(response.data['list']),5)
 		self.assertEqual(response.data['num_pages'],3)
+		self.assertEqual(response.data['count'], 25)
 
 		response = self.client.get(
 			"%s?page=4" % reverse(view_get_post_loans),
@@ -163,6 +165,7 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(response.status_code,status.HTTP_200_OK)
 		self.assertEqual(len(response.data['list']),0)
 		self.assertEqual(response.data['num_pages'],3)
+		self.assertEqual(response.data['count'], 25)
 
 	def test_get_loans_not_paginator(self):
 		for i in range(25):
