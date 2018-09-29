@@ -54,10 +54,10 @@ def get_loans(user_id,page,all_loans=False,state=4, paginate=True):
 	if paginate:
 		paginator = Paginator(loans,LOANS_PER_PAGE)
 		if page > paginator.num_pages:
-			return {'list':[], 'num_pages':paginator.num_pages}
+			return {'list':[], 'num_pages':paginator.num_pages, 'count': paginator.count}
 		page_return = paginator.page(page)
 		serializer = LoanSerializer(page_return.object_list,many=True)
-		return {'list':serializer.data, 'num_pages':paginator.num_pages}
+		return {'list':serializer.data, 'num_pages':paginator.num_pages, 'count': paginator.count}
 	serializer = LoanSerializer(loans,many=True)
 	return {'list':serializer.data}
 

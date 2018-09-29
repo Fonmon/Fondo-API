@@ -39,6 +39,14 @@ class LoanViewTest(AbstractTest):
 			'payment':0,
 			'fee': 0
 		}
+		self.loan_with_quota_fee_30 = {
+			'value':300,
+			'timelimit': 30,
+			'disbursement_date': '2018-1-1',
+			'comments':'',
+			'payment':0,
+			'fee': 0
+		}
 		self.loan_with_not_quota = {
 			'value':600,
 			'timelimit': 8,
@@ -114,6 +122,29 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(loan.payment,0)
 		self.assertEqual(loan.get_payment_display(),'CASH')
 
+	def test_post_loan_4(self):
+		response = self.client.post(
+			reverse(view_get_post_loans),
+			data = json.dumps(self.loan_with_quota_fee_30),
+			content_type='application/json',
+			**self.get_auth_header(self.token)
+		)
+
+		self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+		loan = Loan.objects.get(user_id = 1)
+		self.assertEqual(response.data['id'],loan.id)
+		self.assertEqual(loan.value,300)
+		self.assertEqual(loan.get_fee_display(),'MONTHLY')
+		self.assertEqual(loan.get_state_display(),'WAITING_APPROVAL')
+		self.assertEqual(loan.rate,Decimal(0.03).quantize(self.THREEPLACES))
+		self.assertEqual(loan.disbursement_date.year, 2018)
+		self.assertEqual(loan.disbursement_date.month, 1)
+		self.assertEqual(loan.disbursement_date.day, 1)
+		self.assertEqual(loan.comments,'')
+		self.assertEqual(loan.payment,0)
+		self.assertEqual(loan.get_payment_display(),'CASH')
+		self.assertEqual(loan.timelimit, 24)
+
 	def test_post_loan_error(self):
 		response = self.client.post(
 			reverse(view_get_post_loans),
@@ -142,6 +173,7 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(response.status_code,status.HTTP_200_OK)
 		self.assertEqual(len(response.data['list']),10)
 		self.assertEqual(response.data['num_pages'],3)
+		self.assertEqual(response.data['count'], 25)
 		response = self.client.get(
 			"%s?page=0" % reverse(view_get_post_loans),
 			**self.get_auth_header(self.token)
@@ -155,6 +187,7 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(response.status_code,status.HTTP_200_OK)
 		self.assertEqual(len(response.data['list']),5)
 		self.assertEqual(response.data['num_pages'],3)
+		self.assertEqual(response.data['count'], 25)
 
 		response = self.client.get(
 			"%s?page=4" % reverse(view_get_post_loans),
@@ -163,6 +196,7 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(response.status_code,status.HTTP_200_OK)
 		self.assertEqual(len(response.data['list']),0)
 		self.assertEqual(response.data['num_pages'],3)
+		self.assertEqual(response.data['count'], 25)
 
 	def test_get_loans_not_paginator(self):
 		for i in range(25):

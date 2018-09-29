@@ -48,10 +48,10 @@ def get_users(page=1):
 	users = UserProfile.objects.filter(is_active = True).order_by('id')
 	paginator = Paginator(users,USERS_PER_PAGE)
 	if page > paginator.num_pages:
-		return {'list':[], 'num_pages':paginator.num_pages}
+		return {'list':[], 'num_pages':paginator.num_pages, 'count': paginator.count}
 	page_return = paginator.page(page)
 	serializer = UserProfileSerializer(page_return.object_list,many=True)
-	return {'list':serializer.data, 'num_pages':paginator.num_pages}
+	return {'list':serializer.data, 'num_pages':paginator.num_pages, 'count': paginator.count}
 
 '''
 TODO: make a serializer for returning this data
