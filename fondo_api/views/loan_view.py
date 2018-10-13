@@ -11,8 +11,19 @@ class LoanView:
 		if app == 'paymentProjection':
 			if 'to_date' not in request.data:
 				return Response(status = status.HTTP_400_BAD_REQUEST)
-			to_date = datetime.strptime(request.data['to_date'],'%Y-%m-%d').date()
-			return Response(payment_projection(id,to_date),status = status.HTTP_200_OK)
+			try:
+				to_date = datetime.strptime(request.data['to_date'],'%Y-%m-%d').date()
+			except:
+				return Response(status = status.HTTP_400_BAD_REQUEST)
+			response = payment_projection(id,to_date)
+			if response is not None:
+				return Response(response, status = status.HTTP_200_OK)
+			return Response(response, status = status.HTTP_404_NOT_FOUND)
+		if app == 'refinance':
+			response = refinance_loan(id, request.data, request.user.id)
+			if response is not None:
+				return Response({ 'id': response }, status = status.HTTP_200_OK)
+			return Response(status = status.HTTP_400_BAD_REQUEST)
 		return Response(status = status.HTTP_404_NOT_FOUND)
 
 	@api_view(['GET','PATCH'])

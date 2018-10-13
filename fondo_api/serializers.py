@@ -23,10 +23,12 @@ class LoanSerializer(serializers.ModelSerializer):
 	user_full_name = serializers.SerializerMethodField()
 	created_at = serializers.SerializerMethodField()
 	disbursement_date = serializers.SerializerMethodField()
+	is_refinanced = serializers.SerializerMethodField()
 	class Meta:
 		model = Loan
 		fields = ('value','timelimit','disbursement_date', 'payment',
-			'created_at','fee','comments','state','user_full_name','id','rate')
+			'created_at','fee','comments','state','user_full_name','id','rate',
+			'is_refinanced', 'refinanced_loan', 'user_id')
 
 	def get_user_full_name(self, obj):
 		return '{} {}'.format(obj.user.first_name, obj.user.last_name)
@@ -36,6 +38,9 @@ class LoanSerializer(serializers.ModelSerializer):
 	
 	def get_disbursement_date(self, obj):
 		return format_date(obj.disbursement_date,locale=settings.LANGUAGE_LOCALE)
+
+	def get_is_refinanced(self, obj):
+		return obj.prev_loan != None
 
 class LoanDetailSerializer(serializers.ModelSerializer):
 	payday_limit = serializers.SerializerMethodField()

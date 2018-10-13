@@ -37,7 +37,8 @@ class Loan(models.Model):
 	)
 	PAYMENT_TYPES = (
 		(0,'CASH'),
-		(1,'BANK_ACCOUNT')
+		(1,'BANK_ACCOUNT'),
+		(2,'REFINANCED')
 	)
 	value = models.BigIntegerField()
 	timelimit = models.IntegerField()
@@ -49,6 +50,8 @@ class Loan(models.Model):
 	state = models.IntegerField(choices=LOAN_STATES, default=0)
 	rate = models.DecimalField(max_digits=5,decimal_places=3)
 	user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+	prev_loan = models.ForeignKey('self', on_delete=models.SET_NULL, null=True)
+	refinanced_loan = models.BigIntegerField(null=True)
 
 class LoanDetail(models.Model):
 	total_payment = models.BigIntegerField(default = 0)
