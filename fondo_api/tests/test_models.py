@@ -83,6 +83,8 @@ class LoanTest(TestCase):
 		self.assertEqual(loan.payment,0)
 		self.assertEqual(loan.get_payment_display(),'CASH')
 		self.assertIsNone(loan.comments)
+		self.assertIsNone(loan.prev_loan)
+		self.assertIsNone(loan.refinanced_loan)
 
 	def test_many_loans(self):
 		user = UserProfile.objects.get(identification = 1234567890)

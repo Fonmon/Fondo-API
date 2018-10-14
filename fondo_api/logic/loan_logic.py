@@ -190,12 +190,10 @@ def refinance_loan(loan_id, new_loan, user_id):
 		new_loan['comments'] = '{}. {}'.format(comment, new_loan['comments'])
 		new_loan['payment'] = 2
 
-		success, new_loan_id = create_loan(user_id, new_loan, True, loan)
-		if success:
-			loan.refinanced_loan = new_loan_id
-			loan.save()
-			return new_loan_id
-		return None
+		state, new_loan_id = create_loan(user_id, new_loan, True, loan)
+		loan.refinanced_loan = new_loan_id
+		loan.save()
+		return new_loan_id
 	except Loan.DoesNotExist:
 		return None
 
