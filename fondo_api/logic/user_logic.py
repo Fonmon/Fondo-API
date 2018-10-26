@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.db import IntegrityError,transaction
 from rest_framework.authtoken.models import Token 
 from django.core.paginator import Paginator
-from ..serializers import UserProfileSerializer
+from ..serializers import UserProfileSerializer, UserFullInfoSerializer
 from babel.dates import format_date
 from django.conf import settings
 import binascii,os
@@ -53,29 +53,13 @@ def get_users(page=1):
 	serializer = UserProfileSerializer(page_return.object_list,many=True)
 	return {'list':serializer.data, 'num_pages':paginator.num_pages, 'count': paginator.count}
 
-'''
-TODO: make a serializer for returning this data
-'''
 def get_user(id):
 	try:
 		user_finance = UserFinance.objects.get(user_id = id)
 	except UserFinance.DoesNotExist:
 		return (False,{})
-	user = user_finance.user
-	return (True,{
-		'id': user.id,
-		'identification': user.identification,
-		'first_name': user.first_name,
-		'last_name': user.last_name,
-		'email': user.email,
-		'role': user.role,
-		'contributions': user_finance.contributions,
-		'balance_contributions': user_finance.balance_contributions,
-		'total_quota': user_finance.total_quota,
-		'available_quota': user_finance.available_quota,
-		'utilized_quota': user_finance.utilized_quota,
-		'last_modified': format_date(user_finance.last_modified,locale=settings.LANGUAGE_LOCALE)
-	})
+	serializer = UserFullInfoSerializer(user_finance)
+	return (True, serializer.data)
 
 def inactive_user(id):
 	try:

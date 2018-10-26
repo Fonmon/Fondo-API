@@ -821,16 +821,16 @@ class LoanViewTest(AbstractTest):
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
-		loan = Loan.objects.get(user_id = 1)
+		loan_id = response.data['id']
 		response = self.client.patch(
-			reverse(view_get_update_loan,kwargs={'id': loan.id}),
+			reverse(view_get_update_loan,kwargs={'id': loan_id}),
 			data = '{"state":1}',
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
 
 		response = self.client.post(
-			reverse(view_loan_apps,kwargs={'id': loan.id,'app':'paymentProjection'}),
+			reverse(view_loan_apps,kwargs={'id': loan_id,'app':'paymentProjection'}),
 			data='{"to_date":"2017-11-09"}',
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -840,7 +840,7 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(response.data['interests'],0)
 
 		response = self.client.post(
-			reverse(view_loan_apps,kwargs={'id': loan.id,'app':'paymentProjection'}),
+			reverse(view_loan_apps,kwargs={'id': loan_id,'app':'paymentProjection'}),
 			data='{"to_date":"2017-11-15"}',
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -850,7 +850,7 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(response.data['interests'],1)
 
 		response = self.client.post(
-			reverse(view_loan_apps,kwargs={'id': loan.id,'app':'paymentProjection'}),
+			reverse(view_loan_apps,kwargs={'id': loan_id,'app':'paymentProjection'}),
 			data='{"to_date":"2017-12-09"}',
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -858,3 +858,229 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
 		self.assertEqual(response.data['capital_balance'],200)
 		self.assertEqual(response.data['interests'],5)
+
+	def test_payment_projection_empty_date(self):
+		response = self.client.post(
+			reverse(view_loan_apps,kwargs={'id': 1,'app':'paymentProjection'}),
+			data='{"to_date": ""}',
+			content_type='application/json',
+			**self.get_auth_header(self.token)
+		)
+		self.assertEqual(response.status_code,status.HTTP_400_BAD_REQUEST)
+
+	def test_payment_projection_loan_not_found(self):
+		response = self.client.post(
+			reverse(view_loan_apps,kwargs={'id': 111,'app':'paymentProjection'}),
+			data='{"to_date":"2017-11-15"}',
+			content_type='application/json',
+			**self.get_auth_header(self.token)
+		)
+		self.assertEqual(response.status_code,status.HTTP_404_NOT_FOUND)
+
+	def test_refinance_loan_not_found(self):
+		response = self.client.post(
+			reverse(view_loan_apps,kwargs={'id': 111,'app':'refinance'}),
+			**self.get_auth_header(self.token)
+		)
+		self.assertEqual(response.status_code,status.HTTP_400_BAD_REQUEST)
+
+	def test_refinance_loan_invalid_state(self):
+		response = self.client.post(
+			reverse(view_get_post_loans),
+			data = json.dumps(self.loan_with_quota_fee_10),
+			content_type='application/json',
+			**self.get_auth_header(self.token)
+		)
+		loan_id = response.data['id']
+		response = self.client.post(
+			reverse(view_loan_apps,kwargs={'id': loan_id,'app':'refinance'}),
+			**self.get_auth_header(self.token)
+		)
+		self.assertEqual(response.status_code,status.HTTP_400_BAD_REQUEST)
+
+	def test_refinance_loan(self):
+		response = self.client.post(
+			reverse(view_get_post_loans),
+			data = json.dumps(self.loan_with_quota_fee_10),
+			content_type='application/json',
+			**self.get_auth_header(self.token)
+		)
+		loan_id = response.data['id']
+		self.client.patch(
+			reverse(view_get_update_loan,kwargs={'id': loan_id}),
+			data = '{"state":1}',
+			content_type='application/json',
+			**self.get_auth_header(self.token)
+		)
+
+
+		data = {
+			"disbursement_date": "2017-12-09",
+			"includeInterests": False,
+			"comments": "Suite test",
+			"timelimit": 12,
+			"fee": 0
+		}
+		response = self.client.post(
+			reverse(view_loan_apps,kwargs={'id': loan_id,'app':'refinance'}),
+			data=json.dumps(data),
+			content_type='application/json',
+			**self.get_auth_header(self.token)
+		)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertIsNotNone(response.data['id'])
+		
+		new_loan = Loan.objects.get(id = response.data['id'])
+		loan = Loan.objects.get(id = loan_id)
+
+		self.assertEqual(new_loan.disbursement_date.year, 2017)
+		self.assertEqual(new_loan.disbursement_date.month, 12)
+		self.assertEqual(new_loan.disbursement_date.day, 9)
+		self.assertEqual(new_loan.comments, 'Refinanciación del crédito #{}, cuyo valor no incluye intereses. Suite test'.format(loan.id))
+		self.assertEqual(new_loan.value, 200)
+		self.assertEqual(new_loan.timelimit, 12)
+		self.assertEqual(new_loan.payment, 2)
+		self.assertEqual(new_loan.fee, 0)
+		self.assertEqual(new_loan.state, 0)
+		self.assertEqual(new_loan.rate, Decimal(0.025).quantize(self.THREEPLACES))
+		self.assertIsNone(new_loan.refinanced_loan)
+		self.assertIsNotNone(new_loan.prev_loan)
+		self.assertEqual(new_loan.prev_loan.id, loan.id)
+		self.assertEqual(loan.refinanced_loan, new_loan.id)
+
+	def test_refinance_loan_include_interests(self):
+		response = self.client.post(
+			reverse(view_get_post_loans),
+			data = json.dumps(self.loan_with_quota_fee_10),
+			content_type='application/json',
+			**self.get_auth_header(self.token)
+		)
+		loan_id = response.data['id']
+		self.client.patch(
+			reverse(view_get_update_loan,kwargs={'id': loan_id}),
+			data = '{"state":1}',
+			content_type='application/json',
+			**self.get_auth_header(self.token)
+		)
+
+
+		data = {
+			"disbursement_date": "2017-12-09",
+			"includeInterests": True,
+			"comments": "Suite test",
+			"timelimit": 12,
+			"fee": 0
+		}
+		response = self.client.post(
+			reverse(view_loan_apps,kwargs={'id': loan_id,'app':'refinance'}),
+			data=json.dumps(data),
+			content_type='application/json',
+			**self.get_auth_header(self.token)
+		)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertIsNotNone(response.data['id'])
+		
+		new_loan = Loan.objects.get(id = response.data['id'])
+		loan = Loan.objects.get(id = loan_id)
+
+		self.assertEqual(new_loan.disbursement_date.year, 2017)
+		self.assertEqual(new_loan.disbursement_date.month, 12)
+		self.assertEqual(new_loan.disbursement_date.day, 9)
+		self.assertEqual(new_loan.comments, 'Refinanciación del crédito #{}, cuyo valor incluye intereses. Suite test'.format(loan.id))
+		self.assertEqual(new_loan.value, 205)
+		self.assertEqual(new_loan.timelimit, 12)
+		self.assertEqual(new_loan.payment, 2)
+		self.assertEqual(new_loan.fee, 0)
+		self.assertEqual(new_loan.state, 0)
+		self.assertEqual(new_loan.rate, Decimal(0.025).quantize(self.THREEPLACES))
+		self.assertIsNone(new_loan.refinanced_loan)
+		self.assertIsNotNone(new_loan.prev_loan)
+		self.assertEqual(new_loan.prev_loan.id, loan.id)
+		self.assertEqual(loan.refinanced_loan, new_loan.id)
+
+	def test_refinance_loan_update_approved(self):
+		response = self.client.post(
+			reverse(view_get_post_loans),
+			data = json.dumps(self.loan_with_quota_fee_10),
+			content_type='application/json',
+			**self.get_auth_header(self.token)
+		)
+		loan_id = response.data['id']
+		self.client.patch(
+			reverse(view_get_update_loan,kwargs={'id': loan_id}),
+			data = '{"state":1}',
+			content_type='application/json',
+			**self.get_auth_header(self.token)
+		)
+
+		data = {
+			"disbursement_date": "2017-12-09",
+			"includeInterests": True,
+			"comments": "Suite test",
+			"timelimit": 12,
+			"fee": 0
+		}
+		response = self.client.post(
+			reverse(view_loan_apps,kwargs={'id': loan_id,'app':'refinance'}),
+			data=json.dumps(data),
+			content_type='application/json',
+			**self.get_auth_header(self.token)
+		)
+		new_loan_id = response.data['id']
+		response = self.client.patch(
+			reverse(view_get_update_loan,kwargs={'id': new_loan_id}),
+			data = '{"state":1}',
+			content_type='application/json',
+			**self.get_auth_header(self.token)
+		)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+		loan = Loan.objects.get(id = loan_id)
+		new_loan = Loan.objects.get(id = new_loan_id)
+
+		self.assertEqual(loan.state, 3)
+		self.assertEqual(new_loan.state, 1)
+
+	def test_refinance_loan_update_denied(self):
+		response = self.client.post(
+			reverse(view_get_post_loans),
+			data = json.dumps(self.loan_with_quota_fee_10),
+			content_type='application/json',
+			**self.get_auth_header(self.token)
+		)
+		loan_id = response.data['id']
+		self.client.patch(
+			reverse(view_get_update_loan,kwargs={'id': loan_id}),
+			data = '{"state":1}',
+			content_type='application/json',
+			**self.get_auth_header(self.token)
+		)
+
+		data = {
+			"disbursement_date": "2017-12-09",
+			"includeInterests": True,
+			"comments": "Suite test",
+			"timelimit": 12,
+			"fee": 0
+		}
+		response = self.client.post(
+			reverse(view_loan_apps,kwargs={'id': loan_id,'app':'refinance'}),
+			data=json.dumps(data),
+			content_type='application/json',
+			**self.get_auth_header(self.token)
+		)
+		new_loan_id = response.data['id']
+		response = self.client.patch(
+			reverse(view_get_update_loan,kwargs={'id': new_loan_id}),
+			data = '{"state":2}',
+			content_type='application/json',
+			**self.get_auth_header(self.token)
+		)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+		loan = Loan.objects.get(id = loan_id)
+		new_loan = Loan.objects.get(id = new_loan_id)
+
+		self.assertEqual(loan.state, 1)
+		self.assertIsNone(loan.refinanced_loan)
+		self.assertEqual(new_loan.state, 2)

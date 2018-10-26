@@ -8,14 +8,15 @@ from decimal import Decimal
 from babel.dates import format_date
 from babel.numbers import decimal, format_decimal, format_number
 from django.conf import settings
+from datetime import datetime
 import logging
 
 LOANS_PER_PAGE = 10
 logger = logging.getLogger(__name__)
 
-def create_loan(user_id,obj):
+def create_loan(user_id, obj, refinance = False, prev_loan = None):
 	user_finance = UserFinance.objects.get(user_id = user_id)
-	if obj['value'] > user_finance.available_quota:
+	if obj['value'] > user_finance.available_quota and not refinance:
 		return (False, 'User does not have available quota')
 	user = user_finance.user
 	# Calculate rate with timelimit
@@ -27,6 +28,7 @@ def create_loan(user_id,obj):
 	elif obj['timelimit'] > 24:
 		rate = 0.03
 		obj['timelimit'] = 24
+
 	newLoan = Loan.objects.create(
 		value = obj['value'],
 		timelimit = obj['timelimit'],
@@ -35,7 +37,8 @@ def create_loan(user_id,obj):
 		payment = obj['payment'],
 		comments = obj['comments'],
 		rate = rate,
-		user = user
+		user = user,
+		prev_loan = prev_loan
 	)
 	return (True, newLoan.id)
 
@@ -83,11 +86,17 @@ def update_loan(id,state):
 		loan.save()
 		if state == 1:
 			table, detail = generate_table(loan)
+			if loan.prev_loan is not None:
+				loan.prev_loan.state = 3
+				loan.prev_loan.save()
 			loan_detail = create_loan_detail(loan, detail)
 			send_change_state_loan(loan,'approved',table)
 			return (True,LoanDetailSerializer(loan_detail).data)
 		if state == 2:
 			send_change_state_loan(loan,'denied')
+			if loan.prev_loan is not None:
+				loan.prev_loan.refinanced_loan = None
+				loan.prev_loan.save()
 	return (True,'')
 
 def generate_table(loan):
@@ -153,13 +162,40 @@ def calculate_interests(loan,initial_balance,payment_date,initial_date_display):
 	return interests
 
 def payment_projection(loan_id, to_date):
-	loan_detail = LoanDetail.objects.get(loan_id=loan_id)
-	loan = loan_detail.loan
-	interests = calculate_interests(loan,loan_detail.capital_balance,to_date,loan_detail.from_date)
-	return {
-		'interests': int(round(interests,0)),
-		'capital_balance': loan_detail.capital_balance
-	}
+	try:
+		loan_detail = LoanDetail.objects.get(loan_id=loan_id)
+		loan = loan_detail.loan
+		interests = calculate_interests(loan,loan_detail.capital_balance,to_date,loan_detail.from_date)
+		return {
+			'interests': int(round(interests,0)),
+			'capital_balance': loan_detail.capital_balance
+		}
+	except LoanDetail.DoesNotExist:
+		return None
+
+def refinance_loan(loan_id, new_loan, user_id):
+	try:
+		loan = Loan.objects.get(id=loan_id)
+		if loan.state != 1 or user_id != loan.user.id:
+			return None
+		to_date = datetime.strptime(new_loan['disbursement_date'],'%Y-%m-%d').date()
+		payment = payment_projection(loan_id, to_date)
+		new_loan['value'] = payment['capital_balance']
+		comment = 'Refinanciación del crédito #{}, cuyo valor'.format(loan_id)
+		if new_loan['includeInterests']:
+			new_loan['value'] += payment['interests']
+			comment = '{} incluye intereses'.format(comment)
+		else:
+			comment = '{} no incluye intereses'.format(comment)
+		new_loan['comments'] = '{}. {}'.format(comment, new_loan['comments'])
+		new_loan['payment'] = 2
+
+		state, new_loan_id = create_loan(user_id, new_loan, True, loan)
+		loan.refinanced_loan = new_loan_id
+		loan.save()
+		return new_loan_id
+	except Loan.DoesNotExist:
+		return None
 
 def get_loan(id):
 	try:
