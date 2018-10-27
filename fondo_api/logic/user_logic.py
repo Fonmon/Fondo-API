@@ -108,16 +108,19 @@ def update_user_finance(id,identification,obj):
 	return user_finance.user
 
 def activate_user(id,obj):
+	if 'key' not in obj or obj['key'] == '':
+		return False
 	try:
 		user = UserProfile.objects.get(
 			id=id,
 			key_activation=obj['key'],
 			identification=obj['identification']
 		)
-	except UserProfile.DoesNotExist:
+	except:
 		return False
 	user.set_password(obj['password'])
 	user.is_active = True
+	user.key_activation = None
 	user.save()
 	return True
 

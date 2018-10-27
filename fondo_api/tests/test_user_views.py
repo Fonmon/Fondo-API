@@ -358,8 +358,9 @@ class UserViewTest(AbstractTest):
 		user = UserProfile.objects.get(identification = 123)
 		self.assertEqual(user.is_active,True)
 		self.assertTrue('pbkdf2_sha256' in user.password)
+		self.assertIsNone(user.key_activation)
 
-	def test_activation_unsuccessful(self):
+	def test_activation_unsuccessful_1(self):
 		response = self.client.post(
 			reverse(view_get_post_users),
 			data = json.dumps(self.object_json),
@@ -389,6 +390,70 @@ class UserViewTest(AbstractTest):
 		user = UserProfile.objects.get(identification = 123)
 		self.assertEqual(user.is_active,False)
 		self.assertFalse('pbkdf2_sha256' in user.password)
+		self.assertIsNotNone(user.key_activation)
+
+	def test_activation_unsuccessful_2(self):
+		response = self.client.post(
+			reverse(view_get_post_users),
+			data = json.dumps(self.object_json),
+			content_type='application/json',
+			**self.get_auth_header(self.token)
+		)
+		self.assertEqual(response.status_code,status.HTTP_201_CREATED)
+		self.assertEqual(len(mail.outbox),1)
+		self.assertEqual(mail.outbox[0].subject,'[Fondo Montañez] Activación de cuenta')
+		self.assertEqual(len(mail.outbox[0].to),1)
+		self.assertEqual(mail.outbox[0].to[0],'mail@mail.com')
+
+		user = UserProfile.objects.get(identification = 123)
+		obj = {
+			'password':'newPassword123',
+			'identification':1234,
+			'key': ''
+		};
+
+		response = self.client.post(
+			reverse(view_activate_user,kwargs={'id': user.id}),
+			data = json.dumps(obj),
+			content_type='application/json',
+		)
+		self.assertEqual(response.status_code,status.HTTP_404_NOT_FOUND)
+
+		user = UserProfile.objects.get(identification = 123)
+		self.assertEqual(user.is_active,False)
+		self.assertFalse('pbkdf2_sha256' in user.password)
+		self.assertIsNotNone(user.key_activation)
+
+	def test_activation_unsuccessful_3(self):
+		response = self.client.post(
+			reverse(view_get_post_users),
+			data = json.dumps(self.object_json),
+			content_type='application/json',
+			**self.get_auth_header(self.token)
+		)
+		self.assertEqual(response.status_code,status.HTTP_201_CREATED)
+		self.assertEqual(len(mail.outbox),1)
+		self.assertEqual(mail.outbox[0].subject,'[Fondo Montañez] Activación de cuenta')
+		self.assertEqual(len(mail.outbox[0].to),1)
+		self.assertEqual(mail.outbox[0].to[0],'mail@mail.com')
+
+		user = UserProfile.objects.get(identification = 123)
+		obj = {
+			'password':'newPassword123',
+			'identification':1234
+		};
+
+		response = self.client.post(
+			reverse(view_activate_user,kwargs={'id': user.id}),
+			data = json.dumps(obj),
+			content_type='application/json',
+		)
+		self.assertEqual(response.status_code,status.HTTP_404_NOT_FOUND)
+
+		user = UserProfile.objects.get(identification = 123)
+		self.assertEqual(user.is_active,False)
+		self.assertFalse('pbkdf2_sha256' in user.password)
+		self.assertIsNotNone(user.key_activation)
 
 	def test_logout(self):
 		response = self.client.post(
