@@ -10,6 +10,7 @@ from babel.numbers import decimal, format_decimal, format_number
 from django.conf import settings
 from datetime import datetime
 import logging
+from .date_utils import days360
 
 LOANS_PER_PAGE = 10
 logger = logging.getLogger(__name__)
@@ -156,8 +157,9 @@ def generate_table(loan):
 	})
 
 def calculate_interests(loan,initial_balance,payment_date,initial_date_display):
-	diff_dates = relativedelta(payment_date, initial_date_display)
-	diff_days = (diff_dates.years*12*30) + (diff_dates.months*30) + diff_dates.days
+	# diff_dates = relativedelta(payment_date, initial_date_display)
+	# diff_days = (diff_dates.years*12*30) + (diff_dates.months*30) + diff_dates.days
+	diff_days = days360(initial_date_display, payment_date)
 	interests = ((initial_balance*loan.rate)/30)*diff_days
 	return interests
 
