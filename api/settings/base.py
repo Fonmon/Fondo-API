@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'rest_framework.authtoken',
+    'django.contrib.postgres'
 ]
 
 MIDDLEWARE = [
@@ -163,3 +164,5 @@ LOGGING = {
         }
     }
 }
+
+TEST_RUNNER = 'fondo_api.tests.runner.TestRunner'

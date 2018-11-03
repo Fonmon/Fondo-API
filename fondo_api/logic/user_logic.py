@@ -1,4 +1,4 @@
-from ..models import UserProfile,UserFinance
+from ..models import UserProfile,UserFinance,UserPreference
 from django.contrib.auth.models import User
 from django.db import IntegrityError,transaction
 from rest_framework.authtoken.models import Token 
@@ -37,6 +37,7 @@ def create_user(obj):
 				utilized_quota = 0,
 				user = user
 			)
+			UserPreference.objects.create( user = user )
 			if not sender_mails.send_activation_mail(user):
 				transaction.set_rollback(True)
 				return (False, 'Invalid email');
@@ -56,9 +57,10 @@ def get_users(page=1):
 def get_user(id):
 	try:
 		user_finance = UserFinance.objects.get(user_id = id)
-	except UserFinance.DoesNotExist:
+		user_preference = UserPreference.objects.get(user_id = id)
+	except:
 		return (False,{})
-	serializer = UserFullInfoSerializer(user_finance)
+	serializer = UserFullInfoSerializer((user_finance,user_preference))
 	return (True, serializer.data)
 
 def inactive_user(id):
@@ -70,10 +72,26 @@ def inactive_user(id):
 	user.save()
 	return True
 
-def update_user(id,obj):
+def update_user(id, obj):
+	if obj['type'] == 'personal':
+		return update_user_personal(id, obj['personal'])
+	if obj['type'] == 'finance':
+		return update_user_finance(id, None, obj['finance'])
+	return update_user_preferences(id, obj['preferences'])
+
+def update_user_preferences(id, obj):
+	try:
+		user_preference = UserPreference.objects.get(user_id = id)
+		user_preference.notifications = obj['notifications']
+		user_preference.save()
+	except:
+		return (False, 404)
+	return (True,200)
+
+def update_user_personal(id, obj):
 	try:
 		with transaction.atomic():
-			user = update_user_finance(id,None,obj);
+			user = UserProfile.objects.get(id = id)
 			user.first_name = obj['first_name']
 			user.last_name = obj['last_name']
 			user.email = obj['email']
@@ -81,7 +99,7 @@ def update_user(id,obj):
 			user.identification = obj['identification']
 			user.role = obj['role']
 			user.save()
-	except UserFinance.DoesNotExist:
+	except UserProfile.DoesNotExist:
 		return (False,404)
 	except IntegrityError:
 		return (False,409)
@@ -94,7 +112,7 @@ def update_user_finance(id,identification,obj):
 		else:
 			user_finance = UserFinance.objects.get(user__identification = identification)
 	except UserFinance.DoesNotExist:
-		raise
+		return (False,404)
 	if (user_finance.contributions != obj['contributions']
 		or user_finance.balance_contributions != obj['balance_contributions']
 		or user_finance.total_quota != obj['total_quota']
@@ -105,7 +123,7 @@ def update_user_finance(id,identification,obj):
 		user_finance.utilized_quota = obj['utilized_quota']
 		user_finance.available_quota = int(user_finance.total_quota) - int(user_finance.utilized_quota)
 		user_finance.save()
-	return user_finance.user
+	return (True,200)
 
 def activate_user(id,obj):
 	if 'key' not in obj or obj['key'] == '':
@@ -141,9 +159,9 @@ def bulk_update_users(obj):
 		info['total_quota']=int(round(float(data[2]),0))
 		info['contributions']=int(round(float(data[3]),0))
 		info['utilized_quota'] = int(round(float(data[4]),0))
-		try:
-			update_user_finance(None,identification,info)
-		except UserFinance.DoesNotExist:
+		
+		success, state = update_user_finance(None,identification,info)
+		if not success:
 			logger.error('User with identification: {}, not exists'.format(identification))
 			continue
 

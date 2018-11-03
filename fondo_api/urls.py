@@ -4,6 +4,7 @@ from .views.user_view import UserView
 from .views.activity_view import ActivityView
 from .views.alexa_view import AlexaView
 from .views.auth_view import AuthView
+from .views.notification_view import NotificationView
 
 urlpatterns = [
     url( r'^api/authorize/?$', AuthView.as_view(), name='view_auth' ),
@@ -22,4 +23,7 @@ urlpatterns = [
     url( r'^api/activity/(?P<id>[0-9]+)/?$', ActivityView.view_get_patch_delete_activity, name='view_get_patch_delete_activity'),
 
     url( r'^api/alexa/?$', AlexaView.as_view(), name='view_alexa'),
+
+    url( r'^api/notification/subscribe?$', NotificationView.view_notification_subscribe, name='view_notification_subscribe'),
+    url( r'^api/notification/unsubscribe?$', NotificationView.view_notification_unsubscribe, name='view_notification_unsubscribe'),
 ]

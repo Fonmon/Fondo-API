@@ -38,6 +38,12 @@ list_permissions = {
     },
     'view_logout': {
         'POST': 3
+    },
+    'view_notification_subscribe': {
+        'POST': 3
+    },
+    'view_notification_unsubscribe': {
+        'POST': 3
     }
 }
 
@@ -46,7 +52,10 @@ class APIRolePermission(permissions.BasePermission):
     def has_permission(self, request, view):
         view_name = view.__class__.__name__
         method = request.method
-        allowed_roles = list_permissions[view_name][method]
-        if isinstance(allowed_roles, list):
-            return request.user.userprofile.role in allowed_roles
-        return request.user.userprofile.role <= allowed_roles
+        try:
+            allowed_roles = list_permissions[view_name][method]
+            if isinstance(allowed_roles, list):
+                return request.user.userprofile.role in allowed_roles
+            return request.user.userprofile.role <= allowed_roles
+        except:
+            return False

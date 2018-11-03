@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.postgres.fields import HStoreField
 from django.contrib.auth.models import User
 from datetime import date
 
@@ -14,6 +15,10 @@ class UserProfile(User):
 	identification = models.BigIntegerField(unique=True)
 	role = models.IntegerField(choices=ROLES,default=3)
 	key_activation = models.CharField(null=True,max_length=100)
+
+class UserPreference(models.Model):
+	notifications = models.BooleanField(default=False)
+	user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
 
 class UserFinance(models.Model):
 	contributions = models.BigIntegerField()
@@ -81,3 +86,7 @@ class ActivityUser(models.Model):
 	user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
 	activity = models.ForeignKey(Activity,on_delete=models.CASCADE)
 	state = models.IntegerField(choices=STATE_TYPES, default=0)
+
+class NotificationSubscriptions(models.Model):
+	user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+	subscription = HStoreField()

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import UserProfile,UserFinance,Loan,LoanDetail,ActivityYear,Activity, ActivityUser
+from .models import UserProfile,UserFinance,Loan,LoanDetail,ActivityYear,Activity, ActivityUser, UserPreference
 from babel.dates import format_date
 from django.conf import settings
 
@@ -15,17 +15,41 @@ class UserProfileSerializer(serializers.ModelSerializer):
 	def get_full_name(self, obj):
 		return '{} {}'.format(obj.first_name, obj.last_name)
 
-class UserFullInfoSerializer(serializers.ModelSerializer):
-	user = UserProfileSerializer()
+class UserFinanceSerializer(serializers.ModelSerializer):
 	last_modified = serializers.SerializerMethodField()
 
 	class Meta:
 		model = UserFinance
 		fields = ('contributions','balance_contributions','total_quota','available_quota',
-				  'last_modified','utilized_quota', 'user')
-	
+				  'last_modified','utilized_quota')
+
 	def get_last_modified(self, obj):
 		return format_date(obj.last_modified,locale=settings.LANGUAGE_LOCALE)
+
+class UserPreferenceSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = UserPreference
+		fields = ('notifications',)
+
+class UserFullInfoSerializer(serializers.Serializer):
+	user = serializers.SerializerMethodField()
+	finance = serializers.SerializerMethodField()
+	preferences = serializers.SerializerMethodField()
+
+	class Meta:
+		fields = ('user', 'finance')
+
+	def get_user(self, obj):
+		serializer = UserProfileSerializer(obj[0].user)
+		return serializer.data
+
+	def get_finance(self, obj):
+		serializer = UserFinanceSerializer(obj[0])
+		return serializer.data
+
+	def get_preferences(self, obj):
+		serializer = UserPreferenceSerializer(obj[1])
+		return serializer.data
 
 class LoanSerializer(serializers.ModelSerializer):
 	user_full_name = serializers.SerializerMethodField()
