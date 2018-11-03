@@ -9,8 +9,8 @@ install:
 services:
   - postgresql
 before_script:
-  - psql -c "CREATE EXTENSION hstore;" -U postgres
   - psql -c "CREATE DATABASE test_fondo_api;" -U postgres
+  - psql -c "CREATE EXTENSION hstore;" -U postgres -d test_fondo_api
   - python3 manage.py makemigrations fondo_api && python3 manage.py migrate
 env:
   global:
