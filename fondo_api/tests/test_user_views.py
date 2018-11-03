@@ -389,6 +389,38 @@ class UserViewTest(AbstractTest):
 		)
 		self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 
+	def test_patch_preferences_not_found(self):
+		response = self.client.patch(
+			reverse(view_get_update_delete_user,kwargs={'id': 111}),
+			data='{"type": "preferences", "preferences":{"notifications": true}}',
+			content_type='application/json',
+			**self.get_auth_header(self.token)
+		)
+		self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+	def test_patch_preferences_notifications(self):
+		response = self.client.patch(
+			reverse(view_get_update_delete_user,kwargs={'id': 1}),
+			data='{"type": "preferences", "preferences":{"notifications": true}}',
+			content_type='application/json',
+			**self.get_auth_header(self.token)
+		)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+		user_preference = UserPreference.objects.get(user_id=1)
+		self.assertTrue(user_preference.notifications, True)
+
+		response = self.client.patch(
+			reverse(view_get_update_delete_user,kwargs={'id': 1}),
+			data='{"type": "preferences", "preferences":{"notifications": false}}',
+			content_type='application/json',
+			**self.get_auth_header(self.token)
+		)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+		user_preference = UserPreference.objects.get(user_id=1)
+		self.assertFalse(user_preference.notifications, False)
+
 	def test_activation_successful(self):
 		response = self.client.post(
 			reverse(view_get_post_users),

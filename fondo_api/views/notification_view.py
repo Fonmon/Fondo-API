@@ -8,12 +8,8 @@ class NotificationView:
     @api_view(['POST'])
     def view_notification_subscribe(request):
         print(request.data)
-        state = save_subscription(request.user.id, request.data)
-        if state == 200:
-            return Response(status = status.HTTP_200_OK)
-        elif state == 500:
-            return Response(status = status.HTTP_500_INTERNAL_SERVER_ERROR)
-        return Response(status = status.HTTP_404_NOT_FOUND)
+        save_subscription(request.user.id, request.data)
+        return Response(status = status.HTTP_200_OK)
 
     @api_view(['POST'])
     def view_notification_unsubscribe(request):

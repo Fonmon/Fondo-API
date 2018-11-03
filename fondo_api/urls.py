@@ -24,6 +24,6 @@ urlpatterns = [
 
     url( r'^api/alexa/?$', AlexaView.as_view(), name='view_alexa'),
 
-    url( r'^api/notification/subscribe?$', NotificationView.view_notification_subscribe, name='view_notification_subscribe'),
-    url( r'^api/notification/unsubscribe?$', NotificationView.view_notification_unsubscribe, name='view_notification_unsubscribe'),
+    url( r'^api/notification/subscribe/?$', NotificationView.view_notification_subscribe, name='view_notification_subscribe'),
+    url( r'^api/notification/unsubscribe/?$', NotificationView.view_notification_unsubscribe, name='view_notification_unsubscribe'),
 ]

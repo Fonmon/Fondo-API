@@ -1,18 +1,11 @@
 from ..models import NotificationSubscriptions, UserProfile
 
 def save_subscription(user_id, subscription):
-    try:
-        user = UserProfile.objects.get(id = user_id)
-        NotificationSubscriptions.objects.create(
-            user = user,
-            subscription = subscription
-        )
-    except UserProfile.DoesNotExist:
-        return 404
-    except Exception as ex:
-        print(ex)
-        return 500
-    return 200
+    user = UserProfile.objects.get(id = user_id)
+    NotificationSubscriptions.objects.create(
+        user = user,
+        subscription = subscription
+    )
 
 def unregister_subscription(user_id, subscription):
     try:
@@ -23,3 +16,9 @@ def unregister_subscription(user_id, subscription):
     except NotificationSubscriptions.DoesNotExist:
         return 404
     return 200
+
+def remove_all_subscriptions(user_id):
+    NotificationSubscriptions.objects.filter(user_id = user_id).delete()
+
+def send_notification():
+    pass

@@ -9,6 +9,7 @@ from django.conf import settings
 import binascii,os
 import logging
 from . import sender_mails
+from . import notifications_logic
 
 USERS_PER_PAGE = 10
 logger = logging.getLogger(__name__)
@@ -84,6 +85,8 @@ def update_user_preferences(id, obj):
 		user_preference = UserPreference.objects.get(user_id = id)
 		user_preference.notifications = obj['notifications']
 		user_preference.save()
+		if not user_preference.notifications:
+			notifications_logic.remove_all_subscriptions(id)
 	except:
 		return (False, 404)
 	return (True,200)
