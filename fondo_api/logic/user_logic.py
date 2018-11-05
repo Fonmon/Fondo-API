@@ -168,9 +168,9 @@ def bulk_update_users(obj):
 			logger.error('User with identification: {}, not exists'.format(identification))
 			continue
 
-def get_profile_emails(profiles):
+def get_profile_attr(profiles, attr):
 	users = UserProfile.objects.filter(role__in = profiles)
-	emails = []
+	list_attr = []
 	for user in users:
-		emails.append(user.email)
-	return emails
+		list_attr.append(getattr(user, attr))
+	return list_attr

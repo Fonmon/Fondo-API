@@ -1,4 +1,9 @@
+import json
 from ..models import NotificationSubscriptions, UserProfile
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+
+channel_layer = get_channel_layer()
 
 def save_subscription(user_id, subscription):
     user = UserProfile.objects.get(id = user_id)
@@ -20,5 +25,21 @@ def unregister_subscription(user_id, subscription):
 def remove_all_subscriptions(user_id):
     NotificationSubscriptions.objects.filter(user_id = user_id).delete()
 
-def send_notification():
-    pass
+def send_notification(user_ids, message):
+    notification_subscriptions = NotificationSubscriptions.objects.filter(user_id__in = user_ids)
+    if len(notification_subscriptions) == 0:
+        return
+    subscriptions = []
+    for notification_subscription in notification_subscriptions:
+        subscription = notification_subscription.subscription
+        subscription['keys'] = subscription['keys'].replace("'", '"')
+        subscription['keys'] = json.loads(subscription['keys'])
+        subscriptions.append(subscription)
+
+    content = {
+        'subscriptions': subscriptions,
+        'message': {
+            'body': message
+        }
+    }
+    async_to_sync(channel_layer.send)('notification-task', {'type': 'send_notification', 'content': content})

@@ -32,7 +32,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'rest_framework.authtoken',
-    'django.contrib.postgres'
+    'django.contrib.postgres',
+    'channels'
 ]
 
 MIDDLEWARE = [
@@ -69,6 +70,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'api.wsgi.application'
+ASGI_APPLICATION = 'fondo_api.routing.application'
 
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
@@ -166,3 +168,13 @@ LOGGING = {
 }
 
 TEST_RUNNER = 'fondo_api.tests.runner.TestRunner'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+
+        'CONFIG': {
+            'hosts': [(os.environ.get('REDIS_HOST'), 6379)]
+        }
+    }
+}
