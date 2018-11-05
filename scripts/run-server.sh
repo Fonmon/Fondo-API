@@ -18,5 +18,5 @@ if [ $1 == 'api' ]; then
 		--log-level=debug\
 		-w 3
 else
-	daphne -p 9902 api.asgi:application
+	python manage.py runworker notification-task
 fi
