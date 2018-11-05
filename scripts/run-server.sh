@@ -18,5 +18,5 @@ if [ $1 == 'api' ]; then
 		--log-level=debug\
 		-w 3
 else
-	daphne -p 9902 fondo_api.asgi:application
+	daphne -p 9902 api.asgi:application
 fi
