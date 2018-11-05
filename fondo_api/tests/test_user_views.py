@@ -44,52 +44,68 @@ class UserViewTest(AbstractTest):
 		}
 
 		self.object_json_user_update = {
-			'identification':123,
-			'first_name': 'Foo Name update',
-			'last_name': 'Last Name update',
-			'email': 'mail_updated@mail.com2',
-			'role': 2,
-			'contributions': 2000,
-			'balance_contributions': 2000,
-			'total_quota': 1000,
-			'utilized_quota': 500
+			'personal': {
+				'identification':123,
+				'first_name': 'Foo Name update',
+				'last_name': 'Last Name update',
+				'email': 'mail_updated@mail.com2',
+				'role': 2
+			},
+			'finance': {
+				'contributions': 2000,
+				'balance_contributions': 2000,
+				'total_quota': 1000,
+				'utilized_quota': 500
+			}
 		}
 
 		self.object_json_user_update_same_finance = {
-			'contributions': 2000,
-			'balance_contributions': 2000,
-			'total_quota':1000,
-			'available_quota': 500,
-			'utilized_quota':0,
-			'identification':123,
-			'first_name': 'Foo Name update',
-			'last_name': 'Last Name update',
-			'email': 'mail_updated@mail.com2',
-			'role': 2,
+			'finance': {
+				'contributions': 2000,
+				'balance_contributions': 2000,
+				'total_quota':1000,
+				'available_quota': 500,
+				'utilized_quota':0
+			},
+			'personal': {
+				'identification':123,
+				'first_name': 'Foo Name update',
+				'last_name': 'Last Name update',
+				'email': 'mail_updated@mail.com2',
+				'role': 2,
+			}
 		}
 
 		self.object_json_user_update_email_r = {
-			'identification':12312451241243,
-			'first_name': 'Foo Name update',
-			'last_name': 'Last Name update',
-			'email': 'mail@mail.com',
-			'role': 2,
-			'contributions': 2000,
-			'balance_contributions': 2000,
-			'total_quota': 1000,
-			'utilized_quota': 500
+			'personal': {
+				'identification':12312451241243,
+				'first_name': 'Foo Name update',
+				'last_name': 'Last Name update',
+				'email': 'mail@mail.com',
+				'role': 2
+			},
+			'finance': {
+				'contributions': 2000,
+				'balance_contributions': 2000,
+				'total_quota': 1000,
+				'utilized_quota': 500
+			}
 		}
 
 		self.object_json_user_update_identification_r = {
-			'identification':123,
-			'first_name': 'Foo Name update',
-			'last_name': 'Last Name update',
-			'email': 'mail2@m2ail.com',
-			'role': 2,
-			'contributions': 2000,
-			'balance_contributions': 2000,
-			'total_quota': 1000,
-			'utilized_quota': 500
+			'personal': {
+				'identification':123,
+				'first_name': 'Foo Name update',
+				'last_name': 'Last Name update',
+				'email': 'mail2@m2ail.com',
+				'role': 2
+			},
+			'finance': {
+				'contributions': 2000,
+				'balance_contributions': 2000,
+				'total_quota': 1000,
+				'utilized_quota': 500
+			}
 		}
 
 	def test_success_post(self):
@@ -203,11 +219,11 @@ class UserViewTest(AbstractTest):
 		self.assertEqual(response.data['user']['email'],'mail_for_tests@mail.com')
 		self.assertEqual(response.data['user']['role'],0)
 		self.assertEqual(response.data['user']['role_display'], 'ADMIN')
-		self.assertEqual(response.data['contributions'],2000)
-		self.assertEqual(response.data['balance_contributions'],2000)
-		self.assertEqual(response.data['total_quota'],1000)
-		self.assertEqual(response.data['available_quota'],500)
-		self.assertEqual(response.data['utilized_quota'],0)
+		self.assertEqual(response.data['finance']['contributions'],2000)
+		self.assertEqual(response.data['finance']['balance_contributions'],2000)
+		self.assertEqual(response.data['finance']['total_quota'],1000)
+		self.assertEqual(response.data['finance']['available_quota'],500)
+		self.assertEqual(response.data['finance']['utilized_quota'],0)
 
 	def test_get_session_user(self):
 		response = self.client.get(
@@ -222,11 +238,11 @@ class UserViewTest(AbstractTest):
 		self.assertEqual(response.data['user']['email'],'mail_for_tests@mail.com')
 		self.assertEqual(response.data['user']['role'],0)
 		self.assertEqual(response.data['user']['role_display'], 'ADMIN')
-		self.assertEqual(response.data['contributions'],2000)
-		self.assertEqual(response.data['balance_contributions'],2000)
-		self.assertEqual(response.data['total_quota'],1000)
-		self.assertEqual(response.data['available_quota'],500)
-		self.assertEqual(response.data['utilized_quota'],0)
+		self.assertEqual(response.data['finance']['contributions'],2000)
+		self.assertEqual(response.data['finance']['balance_contributions'],2000)
+		self.assertEqual(response.data['finance']['total_quota'],1000)
+		self.assertEqual(response.data['finance']['available_quota'],500)
+		self.assertEqual(response.data['finance']['utilized_quota'],0)
 
 	def test_get_user_not_found(self):
 		response = self.client.get(
@@ -262,6 +278,7 @@ class UserViewTest(AbstractTest):
 			pass
 
 	def test_patch_user(self):
+		self.object_json_user_update['type'] = 'personal'
 		response = self.client.patch(
 			reverse(view_get_update_delete_user,kwargs={'id': 2}),
 			data=json.dumps(self.object_json_user_update),
@@ -284,7 +301,33 @@ class UserViewTest(AbstractTest):
 		self.assertEqual(user.email,'mail_updated@mail.com2')
 		self.assertEqual(user.username,'mail_updated@mail.com2')
 
+	def test_patch_user_finance(self):
+		self.object_json_user_update['type'] = 'finance'
+		response = self.client.patch(
+			reverse(view_get_update_delete_user,kwargs={'id': 2}),
+			data=json.dumps(self.object_json_user_update),
+			content_type='application/json',
+			**self.get_auth_header(self.token)
+		)
+		self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+		response = self.client.patch(
+			reverse(view_get_update_delete_user,kwargs={'id': 1}),
+			data=json.dumps(self.object_json_user_update),
+			content_type='application/json',
+			**self.get_auth_header(self.token)
+		)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+		user_finance = UserFinance.objects.get(user_id=1)
+		self.assertEqual(user_finance.contributions, 2000)
+		self.assertEqual(user_finance.balance_contributions, 2000)
+		self.assertEqual(user_finance.total_quota, 1000)
+		self.assertEqual(user_finance.utilized_quota, 500)
+		self.assertEqual(user_finance.available_quota, 500)
+
 	def test_patch_user_not_finance(self):
+		self.object_json_user_update_same_finance['type'] = 'personal'
 		response = self.client.patch(
 			reverse(view_get_update_delete_user,kwargs={'id': 1}),
 			data=json.dumps(self.object_json_user_update_same_finance),
@@ -299,6 +342,21 @@ class UserViewTest(AbstractTest):
 		self.assertEqual(user.email,'mail_updated@mail.com2')
 		self.assertEqual(user.username,'mail_updated@mail.com2')
 
+		self.object_json_user_update_same_finance['type'] = 'finance'
+		response = self.client.patch(
+			reverse(view_get_update_delete_user,kwargs={'id': 1}),
+			data=json.dumps(self.object_json_user_update_same_finance),
+			content_type='application/json',
+			**self.get_auth_header(self.token)
+		)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		user_finance = UserFinance.objects.get(user_id=1)
+		self.assertEqual(user_finance.contributions, 2000)
+		self.assertEqual(user_finance.balance_contributions, 2000)
+		self.assertEqual(user_finance.total_quota, 1000)
+		self.assertEqual(user_finance.utilized_quota, 0)
+		self.assertEqual(user_finance.available_quota, 500)
+
 	def test_patch_user_conflict(self):
 		response = self.client.post(
 			reverse(view_get_post_users),
@@ -312,6 +370,7 @@ class UserViewTest(AbstractTest):
 		self.assertEqual(len(mail.outbox[0].to),1)
 		self.assertEqual(mail.outbox[0].to[0],'mail@mail.com')
 
+		self.object_json_user_update_identification_r['type'] = 'personal'
 		response = self.client.patch(
 			reverse(view_get_update_delete_user,kwargs={'id': 1}),
 			data=json.dumps(self.object_json_user_update_identification_r),
@@ -320,6 +379,8 @@ class UserViewTest(AbstractTest):
 		)
 		self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 
+
+		self.object_json_user_update_email_r['type'] = 'personal'
 		response = self.client.patch(
 			reverse(view_get_update_delete_user,kwargs={'id': 1}),
 			data=json.dumps(self.object_json_user_update_email_r),
@@ -327,6 +388,38 @@ class UserViewTest(AbstractTest):
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+
+	def test_patch_preferences_not_found(self):
+		response = self.client.patch(
+			reverse(view_get_update_delete_user,kwargs={'id': 111}),
+			data='{"type": "preferences", "preferences":{"notifications": true}}',
+			content_type='application/json',
+			**self.get_auth_header(self.token)
+		)
+		self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+	def test_patch_preferences_notifications(self):
+		response = self.client.patch(
+			reverse(view_get_update_delete_user,kwargs={'id': 1}),
+			data='{"type": "preferences", "preferences":{"notifications": true}}',
+			content_type='application/json',
+			**self.get_auth_header(self.token)
+		)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+		user_preference = UserPreference.objects.get(user_id=1)
+		self.assertTrue(user_preference.notifications, True)
+
+		response = self.client.patch(
+			reverse(view_get_update_delete_user,kwargs={'id': 1}),
+			data='{"type": "preferences", "preferences":{"notifications": false}}',
+			content_type='application/json',
+			**self.get_auth_header(self.token)
+		)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+		user_preference = UserPreference.objects.get(user_id=1)
+		self.assertFalse(user_preference.notifications, False)
 
 	def test_activation_successful(self):
 		response = self.client.post(
