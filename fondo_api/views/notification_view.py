@@ -7,13 +7,11 @@ class NotificationView:
 
     @api_view(['POST'])
     def view_notification_subscribe(request):
-        print(request.data)
         save_subscription(request.user.id, request.data)
         return Response(status = status.HTTP_200_OK)
 
     @api_view(['POST'])
     def view_notification_unsubscribe(request):
-        print(request.data)
         state = unregister_subscription(request.user.id, request.data)
         if state == 200:
             return Response(status = status.HTTP_200_OK)

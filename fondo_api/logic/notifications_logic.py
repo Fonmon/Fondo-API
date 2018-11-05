@@ -25,6 +25,10 @@ def unregister_subscription(user_id, subscription):
 def remove_all_subscriptions(user_id):
     NotificationSubscriptions.objects.filter(user_id = user_id).delete()
 
+def remove_invalid_subscriptions(subscriptions):
+    for subscription in subscriptions:
+        NotificationSubscriptions.objects.filter( subscription__endpoint = subscription['endpoint'] ).delete()
+
 def send_notification(user_ids, message):
     notification_subscriptions = NotificationSubscriptions.objects.filter(user_id__in = user_ids)
     if len(notification_subscriptions) == 0:

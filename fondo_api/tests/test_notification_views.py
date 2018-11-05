@@ -1,8 +1,10 @@
 import json
 from .abstract_test import AbstractTest
 from django.urls import reverse
+from mock import patch
 from rest_framework import status
 from ..models import *
+from ..logic.notifications_logic import send_notification
 
 view_notification_subscribe = 'view_notification_subscribe'
 view_notification_unsubscribe = 'view_notification_unsubscribe'
@@ -70,3 +72,16 @@ class NotificationViewTest(AbstractTest):
             **self.get_auth_header(self.token)
         )
         self.assertEqual(response.status_code,status.HTTP_404_NOT_FOUND)
+
+    @patch('requests.post',return_value=False)
+    def pending_test_send_notification(self, mock):
+        response = self.client.post(
+            reverse(view_notification_subscribe),
+            data = json.dumps(self.subscription_json),
+            content_type='application/json',
+            **self.get_auth_header(self.token)
+        )
+        self.assertEqual(response.status_code,status.HTTP_200_OK)
+        self.assertEqual(len(NotificationSubscriptions.objects.all()), 1)
+
+        send_notification([1], 'Test Notification Message')

@@ -1,6 +1,6 @@
 from django.test import TestCase
 from django.db import IntegrityError
-from ..models import UserProfile,UserFinance,Loan,LoanDetail
+from ..models import *
 from datetime import date
 
 class UserProfileTest(TestCase):
@@ -177,3 +177,40 @@ class LoanDetailTest(TestCase):
 		Loan.objects.filter(id = loan.id).delete()
 		loan_detail = LoanDetail.objects.filter(loan_id = loan.id)
 		self.assertEqual(len(loan_detail),0)
+
+class NotificationSubscriptionsTest(TestCase):
+
+	def setUp(self):
+		self.user = UserProfile.objects.create(
+			first_name = 'Foo Name',
+			last_name = 'Foo Last Name',
+			username = 'username',
+			identification = 1234567890
+		)
+
+	def pending_test_create_notification(self):
+		notification = NotificationSubscriptions.objects.create(
+			user = self.user,
+			subscription = {
+				'key1': 'value1',
+				'key2': 'value2'
+			}
+		)
+
+		self.assertEqual(notification.subscription['key1'], 'value1')
+		self.assertEqual(notification.subscription['key2'], 'value2')
+
+	def pending_test_query_notification(self):
+		NotificationSubscriptions.objects.create(
+			user = self.user,
+			subscription = {
+				'key1': 'value1',
+				'key2': 'value2'
+			}
+		)
+
+		notification = NotificationSubscriptions.objects.get( user_id = self.user.id )
+
+		self.assertEqual(notification.subscription['key1'], 'value1')
+		self.assertEqual(notification.subscription['key2'], 'value2')
+		self.assertEqual(notification.user_id, self.user.id)
