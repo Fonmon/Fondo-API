@@ -27,6 +27,7 @@ class AbstractTest(TestCase):
             available_quota= 500,
             user= user
         )
+        UserPreference.objects.create( user = user)
 
     def get_token(self,username, password):
         body = {

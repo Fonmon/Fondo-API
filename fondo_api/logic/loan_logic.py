@@ -1,15 +1,18 @@
+import logging
 from ..models import UserProfile,UserFinance,Loan,LoanDetail
 from django.db import IntegrityError,transaction
 from django.core.paginator import Paginator
 from ..serializers import LoanSerializer,LoanDetailSerializer
 from dateutil.relativedelta import relativedelta
 from .sender_mails import *
+from .notifications_logic import send_notification
+from .user_logic import get_profile_attr
 from decimal import Decimal
 from babel.dates import format_date
 from babel.numbers import decimal, format_decimal, format_number
 from django.conf import settings
 from datetime import datetime
-import logging
+from .date_utils import days360
 
 LOANS_PER_PAGE = 10
 logger = logging.getLogger(__name__)
@@ -40,6 +43,9 @@ def create_loan(user_id, obj, refinance = False, prev_loan = None):
 		user = user,
 		prev_loan = prev_loan
 	)
+
+	# send notification
+	send_notification(get_profile_attr([0,2], 'id'), "Ha sido creada una nueva solicitud de crédito", "/loan/{}".format(newLoan.id))
 	return (True, newLoan.id)
 
 def get_loans(user_id,page,all_loans=False,state=4, paginate=True):
@@ -156,8 +162,9 @@ def generate_table(loan):
 	})
 
 def calculate_interests(loan,initial_balance,payment_date,initial_date_display):
-	diff_dates = relativedelta(payment_date, initial_date_display)
-	diff_days = (diff_dates.years*12*30) + (diff_dates.months*30) + diff_dates.days
+	# diff_dates = relativedelta(payment_date, initial_date_display)
+	# diff_days = (diff_dates.years*12*30) + (diff_dates.months*30) + diff_dates.days
+	diff_days = days360(initial_date_display, payment_date)
 	interests = ((initial_balance*loan.rate)/30)*diff_days
 	return interests
 

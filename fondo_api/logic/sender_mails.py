@@ -37,7 +37,7 @@ def send_change_state_loan(loan,state,loan_table=None):
 	}
 	html_template = render_to_string('loans/{}_email.html'.format(state),params)
 	subject = render_to_string('loans/loan_subject.txt')
-	bcc_list = user_logic.get_profile_emails([0,2])
+	bcc_list = user_logic.get_profile_attr([0,2], 'email')
 	if loan.user.email in bcc_list:
 		bcc_list.remove(loan.user.email)
 	recipient_list = [loan.user.email]

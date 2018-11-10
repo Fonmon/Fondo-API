@@ -6,8 +6,17 @@
 
 cd /app
 
-python manage.py makemigrations fondo_api && python manage.py migrate
+if [ $# -ne 1 ]; then
+	echo 'One argument must to be provided. {api|worker}'
+	exit 1
+fi
 
-gunicorn --bind 0.0.0.0:8443 api.wsgi\
-	--log-level=debug\
-	-w 3
+if [ $1 == 'api' ]; then
+	python manage.py migrate
+
+	gunicorn --bind 0.0.0.0:8443 api.wsgi\
+		--log-level=debug\
+		-w 3
+else
+	python manage.py runworker notification-task
+fi
