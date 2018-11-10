@@ -45,7 +45,7 @@ def create_loan(user_id, obj, refinance = False, prev_loan = None):
 	)
 
 	# send notification
-	send_notification(get_profile_attr([0,2], 'id'), "Ha sido creada una nueva solicitud de crédito")
+	send_notification(get_profile_attr([0,2], 'id'), "Ha sido creada una nueva solicitud de crédito", "/loan/{}".format(newLoan.id))
 	return (True, newLoan.id)
 
 def get_loans(user_id,page,all_loans=False,state=4, paginate=True):

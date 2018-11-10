@@ -29,7 +29,7 @@ def remove_invalid_subscriptions(subscriptions):
     for subscription in subscriptions:
         NotificationSubscriptions.objects.filter( subscription__endpoint = subscription['endpoint'] ).delete()
 
-def send_notification(user_ids, message):
+def send_notification(user_ids, message, target):
     notification_subscriptions = NotificationSubscriptions.objects.filter(user_id__in = user_ids)
     if len(notification_subscriptions) == 0:
         return
@@ -43,7 +43,8 @@ def send_notification(user_ids, message):
     content = {
         'subscriptions': subscriptions,
         'message': {
-            'body': message
+            'body': message,
+            'target': target
         }
     }
     async_to_sync(channel_layer.send)('notification-task', {'type': 'send_notification', 'content': content})
