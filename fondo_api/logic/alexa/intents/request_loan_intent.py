@@ -46,10 +46,14 @@ class RequestLoanIntent:
                    resolutions['resolutionsPerAuthority'][0]['status']['code'] == 'ER_SUCCESS_MATCH':
                     value_slot = int(resolutions['resolutionsPerAuthority'][0]['values'][0]['value']['id'])
                 else:
-                    del intent['slots'][slot]['value']
-                    del intent['slots'][slot]['resolutions']
+                    intent['slots'][slot].pop('value')
+                    intent['slots'][slot].pop('resolutions')
                     return (False, intent)
             elif "value" not in slots[slot]:
+                return (False, intent)
+            elif slots[slot]['value'] == '?':
+                intent['slots'][slot].pop('value')
+                intent['slots'][slot].pop('source')
                 return (False, intent)
             else:
                 if slot == 'disbursement_date':
