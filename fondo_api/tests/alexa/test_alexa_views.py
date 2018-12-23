@@ -6,6 +6,7 @@ from ..abstract_test import AbstractTest
 from django.urls import reverse
 from rest_framework import status
 from decimal import Decimal
+from test.support import EnvironmentVarGuard
 
 from ...models import Loan
 from ...logic.alexa.amazon_alexa import AmazonAlexa
@@ -14,6 +15,8 @@ VIEW_ALEXA = "view_alexa"
 
 class AlexaViewTest(AbstractTest):
     def setUp(self):
+        self.env = EnvironmentVarGuard()
+        self.env.set('AWS_SKILL_ID', 'amzn1.ask.skill.ZZZZZ-ee0d-4b69-YYYY-LKJOIU49d049')
         self.create_user()
         self.token = self.get_token('mail_for_tests@mail.com','password')
         self.launch_object = {
@@ -22,7 +25,7 @@ class AlexaViewTest(AbstractTest):
                 "new": True,
                 "sessionId": "amzn1.echo-api.session.71cf5112-d7a4-4a5c-9e3a-70a24a4a45b1",
                 "application": {
-                    "applicationId": "amzn1.ask.skill.7e2ccd71-ee0d-4b69-88c4-230d0749d049"
+                    "applicationId": "amzn1.ask.skill.ZZZZZ-ee0d-4b69-YYYY-LKJOIU49d049"
                 },
                 "user": {
                     "userId": "amzn1.ask.account.AFSHI2YXWZP4VPEVRLPB3COH33UUZQNBGTWGI77G7WWM4HO5HLVGORZX4AF5QXVRHKSLTWOJU7B357WHRJK4VRQEZHSMG3GQOQZW6AUUSGRA6PLHYNYO54QBLRDJNXRIR7VK6VVWWSKNYJBJKS7D56UUIOGW3VW57EVT5JCGOUUAHAVIFUIIKP5PQEEP45Y2IYWJAMQZMG7QV6A",
@@ -35,7 +38,7 @@ class AlexaViewTest(AbstractTest):
                 },
                 "System": {
                     "application": {
-                        "applicationId": "amzn1.ask.skill.7e2ccd71-ee0d-4b69-88c4-230d0749d049"
+                        "applicationId": "amzn1.ask.skill.ZZZZZ-ee0d-4b69-YYYY-LKJOIU49d049"
                     },
                     "user": {
                         "userId": "amzn1.ask.account.AFSHI2YXWZP4VPEVRLPB3COH33UUZQNBGTWGI77G7WWM4HO5HLVGORZX4AF5QXVRHKSLTWOJU7B357WHRJK4VRQEZHSMG3GQOQZW6AUUSGRA6PLHYNYO54QBLRDJNXRIR7VK6VVWWSKNYJBJKS7D56UUIOGW3VW57EVT5JCGOUUAHAVIFUIIKP5PQEEP45Y2IYWJAMQZMG7QV6A",
@@ -84,7 +87,7 @@ class AlexaViewTest(AbstractTest):
                 "new": False,
                 "sessionId": "amzn1.echo-api.session.71cf5112-d7a4-4a5c-9e3a-70a24a4a45b1",
                 "application": {
-                    "applicationId": "amzn1.ask.skill.7e2ccd71-ee0d-4b69-88c4-230d0749d049"
+                    "applicationId": "amzn1.ask.skill.ZZZZZ-ee0d-4b69-YYYY-LKJOIU49d049"
                 },
                 "user": {
                     "userId": "amzn1.ask.account.AFSHI2YXWZP4VPEVRLPB3COH33UUZQNBGTWGI77G7WWM4HO5HLVGORZX4AF5QXVRHKSLTWOJU7B357WHRJK4VRQEZHSMG3GQOQZW6AUUSGRA6PLHYNYO54QBLRDJNXRIR7VK6VVWWSKNYJBJKS7D56UUIOGW3VW57EVT5JCGOUUAHAVIFUIIKP5PQEEP45Y2IYWJAMQZMG7QV6A",
@@ -97,7 +100,7 @@ class AlexaViewTest(AbstractTest):
                 },
                 "System": {
                     "application": {
-                        "applicationId": "amzn1.ask.skill.7e2ccd71-ee0d-4b69-88c4-230d0749d049"
+                        "applicationId": "amzn1.ask.skill.ZZZZZ-ee0d-4b69-YYYY-LKJOIU49d049"
                     },
                     "user": {
                         "userId": "amzn1.ask.account.AFSHI2YXWZP4VPEVRLPB3COH33UUZQNBGTWGI77G7WWM4HO5HLVGORZX4AF5QXVRHKSLTWOJU7B357WHRJK4VRQEZHSMG3GQOQZW6AUUSGRA6PLHYNYO54QBLRDJNXRIR7VK6VVWWSKNYJBJKS7D56UUIOGW3VW57EVT5JCGOUUAHAVIFUIIKP5PQEEP45Y2IYWJAMQZMG7QV6A",
@@ -172,7 +175,7 @@ class AlexaViewTest(AbstractTest):
                 "new": False,
                 "sessionId": "amzn1.echo-api.session.66e60a42-80eb-435d-a464-e311e14af87e",
                 "application": {
-                    "applicationId": "amzn1.ask.skill.7e2ccd71-ee0d-4b69-88c4-230d0749d049"
+                    "applicationId": "amzn1.ask.skill.ZZZZZ-ee0d-4b69-YYYY-LKJOIU49d049"
                 },
                 "user": {
                     "userId": "amzn1.ask.account.AFSHI2YXWZP4VPEVRLPB3COH33UUZQNBGTWGI77G7WWM4HO5HLVGORZX4AF5QXVRHKSLTWOJU7B357WHRJK4VRQEZHSMG3GQOQZW6AUUSGRA6PLHYNYO54QBLRDJNXRIR7VK6VVWWSKNYJBJKS7D56UUIOGW3VW57EVT5JCGOUUAHAVIFUIIKP5PQEEP45Y2IYWJAMQZMG7QV6A",
@@ -185,7 +188,7 @@ class AlexaViewTest(AbstractTest):
                 },
                 "System": {
                     "application": {
-                        "applicationId": "amzn1.ask.skill.7e2ccd71-ee0d-4b69-88c4-230d0749d049"
+                        "applicationId": "amzn1.ask.skill.ZZZZZ-ee0d-4b69-YYYY-LKJOIU49d049"
                     },
                     "user": {
                         "userId": "amzn1.ask.account.AFSHI2YXWZP4VPEVRLPB3COH33UUZQNBGTWGI77G7WWM4HO5HLVGORZX4AF5QXVRHKSLTWOJU7B357WHRJK4VRQEZHSMG3GQOQZW6AUUSGRA6PLHYNYO54QBLRDJNXRIR7VK6VVWWSKNYJBJKS7D56UUIOGW3VW57EVT5JCGOUUAHAVIFUIIKP5PQEEP45Y2IYWJAMQZMG7QV6A",
@@ -241,7 +244,7 @@ class AlexaViewTest(AbstractTest):
                             "resolutions": {
                                 "resolutionsPerAuthority": [
                                     {
-                                        "authority": "amzn1.er-authority.echo-sdk.amzn1.ask.skill.7e2ccd71-ee0d-4b69-88c4-230d0749d049.AMAZON.DeviceType",
+                                        "authority": "amzn1.er-authority.echo-sdk.amzn1.ask.skill.ZZZZZ-ee0d-4b69-YYYY-LKJOIU49d049.AMAZON.DeviceType",
                                         "status": {
                                             "code": "ER_SUCCESS_MATCH"
                                         },
@@ -270,7 +273,7 @@ class AlexaViewTest(AbstractTest):
                             "resolutions": {
                                 "resolutionsPerAuthority": [
                                     {
-                                        "authority": "amzn1.er-authority.echo-sdk.amzn1.ask.skill.7e2ccd71-ee0d-4b69-88c4-230d0749d049.AMAZON.EventType",
+                                        "authority": "amzn1.er-authority.echo-sdk.amzn1.ask.skill.ZZZZZ-ee0d-4b69-YYYY-LKJOIU49d049.AMAZON.EventType",
                                         "status": {
                                             "code": "ER_SUCCESS_NO_MATCH"
                                         }
@@ -297,7 +300,7 @@ class AlexaViewTest(AbstractTest):
                 "new": False,
                 "sessionId": "amzn1.echo-api.session.66e60a42-80eb-435d-a464-e311e14af87e",
                 "application": {
-                    "applicationId": "amzn1.ask.skill.7e2ccd71-ee0d-4b69-88c4-230d0749d049"
+                    "applicationId": "amzn1.ask.skill.ZZZZZ-ee0d-4b69-YYYY-LKJOIU49d049"
                 },
                 "user": {
                     "userId": "amzn1.ask.account.AFSHI2YXWZP4VPEVRLPB3COH33UUZQNBGTWGI77G7WWM4HO5HLVGORZX4AF5QXVRHKSLTWOJU7B357WHRJK4VRQEZHSMG3GQOQZW6AUUSGRA6PLHYNYO54QBLRDJNXRIR7VK6VVWWSKNYJBJKS7D56UUIOGW3VW57EVT5JCGOUUAHAVIFUIIKP5PQEEP45Y2IYWJAMQZMG7QV6A",
@@ -310,7 +313,7 @@ class AlexaViewTest(AbstractTest):
                 },
                 "System": {
                     "application": {
-                        "applicationId": "amzn1.ask.skill.7e2ccd71-ee0d-4b69-88c4-230d0749d049"
+                        "applicationId": "amzn1.ask.skill.ZZZZZ-ee0d-4b69-YYYY-LKJOIU49d049"
                     },
                     "user": {
                         "userId": "amzn1.ask.account.AFSHI2YXWZP4VPEVRLPB3COH33UUZQNBGTWGI77G7WWM4HO5HLVGORZX4AF5QXVRHKSLTWOJU7B357WHRJK4VRQEZHSMG3GQOQZW6AUUSGRA6PLHYNYO54QBLRDJNXRIR7VK6VVWWSKNYJBJKS7D56UUIOGW3VW57EVT5JCGOUUAHAVIFUIIKP5PQEEP45Y2IYWJAMQZMG7QV6A",
@@ -366,7 +369,7 @@ class AlexaViewTest(AbstractTest):
                             "resolutions": {
                                 "resolutionsPerAuthority": [
                                     {
-                                        "authority": "amzn1.er-authority.echo-sdk.amzn1.ask.skill.7e2ccd71-ee0d-4b69-88c4-230d0749d049.AMAZON.DeviceType",
+                                        "authority": "amzn1.er-authority.echo-sdk.amzn1.ask.skill.ZZZZZ-ee0d-4b69-YYYY-LKJOIU49d049.AMAZON.DeviceType",
                                         "status": {
                                             "code": "ER_SUCCESS_MATCH"
                                         },
@@ -395,7 +398,7 @@ class AlexaViewTest(AbstractTest):
                             "resolutions": {
                                 "resolutionsPerAuthority": [
                                     {
-                                        "authority": "amzn1.er-authority.echo-sdk.amzn1.ask.skill.7e2ccd71-ee0d-4b69-88c4-230d0749d049.AMAZON.EventType",
+                                        "authority": "amzn1.er-authority.echo-sdk.amzn1.ask.skill.ZZZZZ-ee0d-4b69-YYYY-LKJOIU49d049.AMAZON.EventType",
                                         "status": {
                                             "code": "ER_SUCCESS_MATCH"
                                         },
@@ -430,7 +433,7 @@ class AlexaViewTest(AbstractTest):
                 "new": False,
                 "sessionId": "amzn1.echo-api.session.8ceb6d6d-c2f6-4726-97f1-7e8811c0012b",
                 "application": {
-                    "applicationId": "amzn1.ask.skill.7e2ccd71-ee0d-4b69-88c4-230d0749d049"
+                    "applicationId": "amzn1.ask.skill.ZZZZZ-ee0d-4b69-YYYY-LKJOIU49d049"
                 },
                 "user": {
                     "userId": "amzn1.ask.account.AFSHI2YXWZP4VPEVRLPB3COH33UUZQNBGTWGI77G7WWM4HO5HLVGORZX4AF5QXVRHKSLTWOJU7B357WHRJK4VRQEZHSMG3GQOQZW6AUUSGRA6PLHYNYO54QBLRDJNXRIR7VK6VVWWSKNYJBJKS7D56UUIOGW3VW57EVT5JCGOUUAHAVIFUIIKP5PQEEP45Y2IYWJAMQZMG7QV6A",
@@ -443,7 +446,7 @@ class AlexaViewTest(AbstractTest):
                 },
                 "System": {
                     "application": {
-                        "applicationId": "amzn1.ask.skill.7e2ccd71-ee0d-4b69-88c4-230d0749d049"
+                        "applicationId": "amzn1.ask.skill.ZZZZZ-ee0d-4b69-YYYY-LKJOIU49d049"
                     },
                     "user": {
                         "userId": "amzn1.ask.account.AFSHI2YXWZP4VPEVRLPB3COH33UUZQNBGTWGI77G7WWM4HO5HLVGORZX4AF5QXVRHKSLTWOJU7B357WHRJK4VRQEZHSMG3GQOQZW6AUUSGRA6PLHYNYO54QBLRDJNXRIR7VK6VVWWSKNYJBJKS7D56UUIOGW3VW57EVT5JCGOUUAHAVIFUIIKP5PQEEP45Y2IYWJAMQZMG7QV6A",
@@ -499,7 +502,7 @@ class AlexaViewTest(AbstractTest):
                             "resolutions": {
                                 "resolutionsPerAuthority": [
                                     {
-                                        "authority": "amzn1.er-authority.echo-sdk.amzn1.ask.skill.7e2ccd71-ee0d-4b69-88c4-230d0749d049.AMAZON.DeviceType",
+                                        "authority": "amzn1.er-authority.echo-sdk.amzn1.ask.skill.ZZZZZ-ee0d-4b69-YYYY-LKJOIU49d049.AMAZON.DeviceType",
                                         "status": {
                                             "code": "ER_SUCCESS_MATCH"
                                         },
@@ -529,7 +532,7 @@ class AlexaViewTest(AbstractTest):
                             "resolutions": {
                                 "resolutionsPerAuthority": [
                                     {
-                                        "authority": "amzn1.er-authority.echo-sdk.amzn1.ask.skill.7e2ccd71-ee0d-4b69-88c4-230d0749d049.AMAZON.EventType",
+                                        "authority": "amzn1.er-authority.echo-sdk.amzn1.ask.skill.ZZZZZ-ee0d-4b69-YYYY-LKJOIU49d049.AMAZON.EventType",
                                         "status": {
                                             "code": "ER_SUCCESS_MATCH"
                                         },
