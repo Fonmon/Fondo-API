@@ -110,6 +110,8 @@ class AmazonAlexa:
                 handler = LaunchHandler(self.data, self.user_id)
             elif request_type == AmazonAlexa.REQUEST_TYPES[1]:
                 handler = IntentHandler(self.data, self.user_id)
+            else:
+                return None
             return handler.handle()
         except Exception as exception:
             raise
