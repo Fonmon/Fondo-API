@@ -2,7 +2,8 @@ import json
 from django.test import TestCase, Client
 from django.urls import reverse
 from decimal import Decimal
-from ..models import * 
+
+from fondo_api.models import * 
 
 class AbstractTest(TestCase):
     # initialize the APIClient app

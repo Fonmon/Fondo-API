@@ -1,8 +1,9 @@
-from datetime import date
-from ..models import ActivityYear, Activity, ActivityUser, UserProfile
-from django.db import IntegrityError, transaction
-from ..serializers import ActivityYearSerializer, ActivityGeneralSerializer, ActivityDetailSerializer
 import logging
+from datetime import date
+from django.db import IntegrityError, transaction
+
+from fondo_api.models import ActivityYear, Activity, ActivityUser, UserProfile
+from fondo_api.serializers import ActivityYearSerializer, ActivityGeneralSerializer, ActivityDetailSerializer
 
 logger = logging.getLogger(__name__)
 

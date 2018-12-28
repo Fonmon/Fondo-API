@@ -1,10 +1,11 @@
 import json
-from .abstract_test import AbstractTest
-from ..models import *
 from django.urls import reverse
 from django.test.client import encode_multipart
 from rest_framework import status
 from datetime import date
+
+from fondo_api.tests.abstract_test import AbstractTest
+from fondo_api.models import *
 
 view_get_post_years = 'view_get_post_years'
 view_get_post_activities = 'view_get_post_activities'

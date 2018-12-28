@@ -1,3 +1,5 @@
+import logging
+import os
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -6,7 +8,6 @@ from django.template.response import TemplateResponse
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import authenticate
 from django.http import HttpResponseRedirect
-import logging, os
 
 logger = logging.getLogger(__name__)
 

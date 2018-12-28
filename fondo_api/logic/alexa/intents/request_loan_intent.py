@@ -1,8 +1,9 @@
 import logging
-from ..model.models import AlexaResponse, Directive
-from ..serializers import AlexaResponseSerializer
-from ..model.enums import SpeechEnum, CardEnum
-from ....logic.loan_logic import create_loan
+
+from fondo_api.logic.alexa.model.models import AlexaResponse, Directive
+from fondo_api.logic.alexa.model.enums import SpeechEnum, CardEnum
+from fondo_api.logic.alexa.serializers import AlexaResponseSerializer
+from fondo_api.logic.loan_logic import create_loan
 
 logger = logging.getLogger(__name__)
 

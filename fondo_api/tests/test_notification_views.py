@@ -1,10 +1,11 @@
 import json
-from .abstract_test import AbstractTest
 from django.urls import reverse
 from mock import patch
 from rest_framework import status
-from ..models import *
-from ..logic.notifications_logic import send_notification
+
+from fondo_api.tests.abstract_test import AbstractTest
+from fondo_api.models import *
+from fondo_api.logic.notifications_logic import send_notification
 
 view_notification_subscribe = 'view_notification_subscribe'
 view_notification_unsubscribe = 'view_notification_unsubscribe'

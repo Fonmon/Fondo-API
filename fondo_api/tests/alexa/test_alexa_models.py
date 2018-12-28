@@ -1,6 +1,7 @@
 from django.test import TestCase
-from ...logic.alexa.model.models import *
-from ...logic.alexa.model.enums import *
+
+from fondo_api.logic.alexa.model.models import *
+from fondo_api.logic.alexa.model.enums import *
 
 class AlexaModelTest(TestCase):
     def test_card_error(self):

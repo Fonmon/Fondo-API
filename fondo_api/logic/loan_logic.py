@@ -1,18 +1,19 @@
 import logging
-from ..models import UserProfile,UserFinance,Loan,LoanDetail
 from django.db import IntegrityError,transaction
 from django.core.paginator import Paginator
-from ..serializers import LoanSerializer,LoanDetailSerializer
 from dateutil.relativedelta import relativedelta
-from .sender_mails import *
-from .notifications_logic import send_notification
-from .user_logic import get_profile_attr
 from decimal import Decimal
 from babel.dates import format_date
 from babel.numbers import decimal, format_decimal, format_number
 from django.conf import settings
 from datetime import datetime
-from .date_utils import days360
+
+from fondo_api.models import UserProfile,UserFinance,Loan,LoanDetail
+from fondo_api.serializers import LoanSerializer,LoanDetailSerializer
+from fondo_api.logic.sender_mails import *
+from fondo_api.logic.notifications_logic import send_notification
+from fondo_api.logic.user_logic import get_profile_attr
+from fondo_api.logic.date_utils import days360
 
 LOANS_PER_PAGE = 10
 logger = logging.getLogger(__name__)

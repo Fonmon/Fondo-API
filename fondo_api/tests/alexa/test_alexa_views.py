@@ -2,14 +2,14 @@ import json
 import copy
 from mock import patch, MagicMock
 from datetime import datetime
-from ..abstract_test import AbstractTest
 from django.urls import reverse
 from rest_framework import status
 from decimal import Decimal
 from test.support import EnvironmentVarGuard
 
-from ...models import Loan
-from ...logic.alexa.amazon_alexa import AmazonAlexa
+from fondo_api.tests.abstract_test import AbstractTest
+from fondo_api.models import Loan
+from fondo_api.logic.alexa.amazon_alexa import AmazonAlexa
 
 VIEW_ALEXA = "view_alexa"
 

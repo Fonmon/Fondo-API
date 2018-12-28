@@ -1,6 +1,10 @@
-import logging, requests, json, os
+import logging
+import requests
+import json
+import os
 from channels.consumer import SyncConsumer
-from ..logic.notifications_logic import remove_invalid_subscriptions
+
+from fondo_api.logic.notifications_logic import remove_invalid_subscriptions
 
 logger = logging.getLogger(__name__)
 

@@ -1,5 +1,6 @@
 from channels.routing import ChannelNameRouter, ProtocolTypeRouter
-from .tasks.consumers import NotificationTaskConsumer
+
+from fondo_api.tasks.consumers import NotificationTaskConsumer
 
 application = ProtocolTypeRouter({
     'channel': ChannelNameRouter({

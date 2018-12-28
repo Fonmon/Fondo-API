@@ -1,11 +1,12 @@
 import json
-from .abstract_test import AbstractTest
-from ..models import *
 from django.urls import reverse
 from django.core import mail
 from django.test.client import encode_multipart
 from rest_framework import status
 from decimal import Decimal
+
+from fondo_api.tests.abstract_test import AbstractTest
+from fondo_api.models import *
 
 view_get_update_loan = 'view_get_update_loan'
 view_get_post_loans = 'view_get_post_loans'

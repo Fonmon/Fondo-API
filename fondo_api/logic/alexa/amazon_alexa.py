@@ -1,9 +1,14 @@
-import os, re, urllib.request, logging, base64
+import os
+import re
+import urllib.request
+import logging
+import base64
 from rest_framework.authtoken.models import Token
 from datetime import datetime
 from OpenSSL import crypto
-from .handlers.launch_handler import LaunchHandler
-from .handlers.intent_handler import IntentHandler
+
+from fondo_api.logic.alexa.handlers.launch_handler import LaunchHandler
+from fondo_api.logic.alexa.handlers.intent_handler import IntentHandler
 
 logger = logging.getLogger(__name__)
 

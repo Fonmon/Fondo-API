@@ -1,7 +1,8 @@
 from django.test import TestCase
 from django.db import IntegrityError
-from ..models import *
 from datetime import date
+
+from fondo_api.models import *
 
 class UserProfileTest(TestCase):
 

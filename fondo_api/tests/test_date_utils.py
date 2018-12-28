@@ -1,6 +1,7 @@
 import datetime
 from django.test import TestCase
-from ..logic.date_utils import days360
+
+from fondo_api.logic.date_utils import days360
 
 class DateUtilsTest(TestCase):
     def test_case_nasd(self):
