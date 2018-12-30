@@ -19,7 +19,6 @@ class AuthView(APIView):
         context = {
             'form': form
         }
-        form.fields['username'].label = "Email"
         return TemplateResponse(request, 'auth/authorize.html', context)
 
     def post(self,request):
