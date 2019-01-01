@@ -1,8 +1,9 @@
 import logging
-from ..model.models import AlexaResponse, Directive
-from ..serializers import AlexaResponseSerializer
-from ..model.enums import SpeechEnum, CardEnum
-from ....logic.loan_logic import create_loan
+
+from fondo_api.logic.alexa.model.models import AlexaResponse, Directive
+from fondo_api.logic.alexa.model.enums import SpeechEnum, CardEnum
+from fondo_api.logic.alexa.serializers import AlexaResponseSerializer
+from fondo_api.logic.loan_logic import create_loan
 
 logger = logging.getLogger(__name__)
 
@@ -46,10 +47,14 @@ class RequestLoanIntent:
                    resolutions['resolutionsPerAuthority'][0]['status']['code'] == 'ER_SUCCESS_MATCH':
                     value_slot = int(resolutions['resolutionsPerAuthority'][0]['values'][0]['value']['id'])
                 else:
-                    del intent['slots'][slot]['value']
-                    del intent['slots'][slot]['resolutions']
+                    intent['slots'][slot].pop('value')
+                    intent['slots'][slot].pop('resolutions')
                     return (False, intent)
             elif "value" not in slots[slot]:
+                return (False, intent)
+            elif slots[slot]['value'] == '?':
+                intent['slots'][slot].pop('value')
+                intent['slots'][slot].pop('source')
                 return (False, intent)
             else:
                 if slot == 'disbursement_date':

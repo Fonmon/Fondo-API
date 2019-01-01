@@ -1,15 +1,17 @@
-from ..models import UserProfile,UserFinance,UserPreference
+import binascii
+import os
+import logging
 from django.contrib.auth.models import User
 from django.db import IntegrityError,transaction
-from rest_framework.authtoken.models import Token 
 from django.core.paginator import Paginator
-from ..serializers import UserProfileSerializer, UserFullInfoSerializer
-from babel.dates import format_date
 from django.conf import settings
-import binascii,os
-import logging
-from . import sender_mails
-from . import notifications_logic
+from rest_framework.authtoken.models import Token 
+from babel.dates import format_date
+
+from fondo_api.models import UserProfile,UserFinance,UserPreference
+from fondo_api.serializers import UserProfileSerializer, UserFullInfoSerializer
+from fondo_api.logic import sender_mails
+from fondo_api.logic import notifications_logic
 
 USERS_PER_PAGE = 10
 logger = logging.getLogger(__name__)

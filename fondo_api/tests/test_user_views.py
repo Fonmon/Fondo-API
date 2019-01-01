@@ -1,11 +1,12 @@
 import json
-from .abstract_test import AbstractTest
 from mock import patch
 from django.urls import reverse
 from django.test.client import encode_multipart
 from rest_framework import status
-from ..models import *
 from django.core import mail
+
+from fondo_api.models import *
+from fondo_api.tests.abstract_test import AbstractTest
 
 view_get_post_users = 'view_get_post_users'
 view_get_update_delete_user = 'view_get_update_delete_user'

@@ -1,7 +1,8 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from ..logic.activity_logic import *
+
+from fondo_api.logic.activity_logic import *
 
 class ActivityView:
     @api_view(['GET','POST'])

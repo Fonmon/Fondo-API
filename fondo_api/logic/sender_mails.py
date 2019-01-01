@@ -1,7 +1,8 @@
+import os
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
-import os
-from . import user_logic
+
+from fondo_api.logic import user_logic
 
 def send_mail(subject,body,recipient_list,bcc_list=[]):
 	mail = EmailMessage(

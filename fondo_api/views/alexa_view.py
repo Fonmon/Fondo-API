@@ -1,8 +1,10 @@
+import logging
+import traceback
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from ..logic.alexa.amazon_alexa import AmazonAlexa
-import logging, traceback
+
+from fondo_api.logic.alexa.amazon_alexa import AmazonAlexa
 
 logger = logging.getLogger(__name__)
 aws_alexa = AmazonAlexa()

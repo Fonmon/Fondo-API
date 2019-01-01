@@ -1,6 +1,7 @@
 import logging
-from .abstract_handler import AbstractRequestHandler
-from ..intents.request_loan_intent import RequestLoanIntent
+
+from fondo_api.logic.alexa.handlers.abstract_handler import AbstractRequestHandler
+from fondo_api.logic.alexa.intents.request_loan_intent import RequestLoanIntent
 
 logger = logging.getLogger(__name__)
 

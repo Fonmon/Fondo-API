@@ -1,7 +1,8 @@
 from rest_framework import serializers
-from .models import UserProfile,UserFinance,Loan,LoanDetail,ActivityYear,Activity, ActivityUser, UserPreference
 from babel.dates import format_date
 from django.conf import settings
+
+from fondo_api.models import *
 
 class UserProfileSerializer(serializers.ModelSerializer):
 	full_name = serializers.SerializerMethodField()

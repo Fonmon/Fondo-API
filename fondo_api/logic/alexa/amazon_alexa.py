@@ -1,9 +1,14 @@
-import os, re, urllib.request, logging, base64
+import os
+import re
+import urllib.request
+import logging
+import base64
 from rest_framework.authtoken.models import Token
 from datetime import datetime
 from OpenSSL import crypto
-from .handlers.launch_handler import LaunchHandler
-from .handlers.intent_handler import IntentHandler
+
+from fondo_api.logic.alexa.handlers.launch_handler import LaunchHandler
+from fondo_api.logic.alexa.handlers.intent_handler import IntentHandler
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +22,7 @@ class AmazonAlexa:
     ECHO_API_DOMAIN_NAME = "echo-api.amazon.com"
 
     HEADER_SIGNATURE_URL = "HTTP_SIGNATURECERTCHAINURL"
-    HEDAER_SIGNATURE = "HTTP_SIGNATURE"
+    HEADER_SIGNATURE = "HTTP_SIGNATURE"
 
     def __init__(self):
         self.certificate_cache = None
@@ -90,7 +95,7 @@ class AmazonAlexa:
             if cert_x509.has_expired():
                 raise Exception(400, "The certificate has expired")
             try:
-                decoded_signature = base64.b64decode(self.headers.get(AmazonAlexa.HEDAER_SIGNATURE))
+                decoded_signature = base64.b64decode(self.headers.get(AmazonAlexa.HEADER_SIGNATURE))
                 crypto.verify(cert_x509, decoded_signature, self.body, 'sha1')
             except Exception as ex:
                 logger.error('Error verifying signature, exception: %s', ex)
@@ -115,8 +120,6 @@ class AmazonAlexa:
             return handler.handle()
         except Exception as exception:
             raise
-        else:
-            return True
 
     def set_request(self, request):
         self.headers = request.META
