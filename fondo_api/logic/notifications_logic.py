@@ -8,10 +8,12 @@ channel_layer = get_channel_layer()
 
 def save_subscription(user_id, subscription):
     user = UserProfile.objects.get(id = user_id)
-    NotificationSubscriptions.objects.create(
-        user = user,
-        subscription = subscription
-    )
+    notifications = NotificationSubscriptions.objects.filter(subscription__endpoint = subscription['endpoint'])
+    if len(notifications) == 0:
+        NotificationSubscriptions.objects.create(
+            user = user,
+            subscription = subscription
+        )
 
 def unregister_subscription(user_id, subscription):
     try:
