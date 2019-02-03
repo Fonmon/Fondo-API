@@ -94,7 +94,7 @@ class LoanDetailSerializer(serializers.ModelSerializer):
 class ActivityYearSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = ActivityYear
-		fields = ('id','year')
+		fields = ('id', 'year', 'enable')
 
 class ActivityGeneralSerializer(serializers.ModelSerializer):
 	class Meta:

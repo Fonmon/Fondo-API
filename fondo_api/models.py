@@ -69,6 +69,7 @@ class LoanDetail(models.Model):
 
 class ActivityYear(models.Model):
 	year = models.BigIntegerField(default = 0, unique=True)
+	enable = models.BooleanField(default = True)
 
 class Activity(models.Model):
 	name = models.TextField(default="")
