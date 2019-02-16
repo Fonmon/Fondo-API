@@ -41,7 +41,9 @@ class ActivityViewTest(AbstractTest):
         self.assertEqual(response.status_code,status.HTTP_200_OK)
         self.assertEqual(len(response.data),2)
         self.assertEqual(response.data[0]['year'],2021)
+        self.assertTrue(response.data[0]['enable'])
         self.assertEqual(response.data[1]['year'],2020)
+        self.assertTrue(response.data[1]['enable'])
 
     def test_create_year(self):
         response = self.client.post(
@@ -54,12 +56,24 @@ class ActivityViewTest(AbstractTest):
         activity_years = ActivityYear.objects.all()
         self.assertEqual(len(activity_years),1)
         self.assertEqual(activity_years[0].year, year)
+        self.assertTrue(activity_years[0].enable)
 
         response = self.client.post(
 			reverse(view_get_post_years),
 			**self.get_auth_header(self.token)
 		)
         self.assertEqual(response.status_code,status.HTTP_304_NOT_MODIFIED)
+
+    def test_create_year_disabling_others(self):
+        ActivityYear.objects.create(year=2000)
+
+        response = self.client.post(
+			reverse(view_get_post_years),
+			**self.get_auth_header(self.token)
+		)
+        activity_year = ActivityYear.objects.filter(year = '2000')
+        self.assertFalse(activity_year[0].enable)
+
 
     def test_get_activities(self):
         activity_year_2020 = ActivityYear.objects.create(year=2020)

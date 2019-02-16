@@ -1,6 +1,7 @@
 import logging
 from datetime import date
 from django.db import IntegrityError, transaction
+from django.db.models import Q
 
 from fondo_api.models import ActivityYear, Activity, ActivityUser, UserProfile
 from fondo_api.serializers import ActivityYearSerializer, ActivityGeneralSerializer, ActivityDetailSerializer
@@ -10,6 +11,11 @@ logger = logging.getLogger(__name__)
 def create_year():
     year = date.today().year
     try:
+        years = ActivityYear.objects.filter(~Q(year = year)).order_by('-year')
+        if len(years) > 0:
+            last_year = years[0]
+            last_year.enable = False
+            last_year.save()
         ActivityYear.objects.create(year = year)
     except IntegrityError:
         return False
