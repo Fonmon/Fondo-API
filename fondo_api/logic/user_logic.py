@@ -85,9 +85,13 @@ def update_user(id, obj):
 def update_user_preferences(id, obj):
 	try:
 		user_preference = UserPreference.objects.get(user_id = id)
+		remove_notifications = user_preference.notifications != obj['notifications']
+
 		user_preference.notifications = obj['notifications']
+		user_preference.primary_color = obj['primary_color']
+		user_preference.secondary_color = obj['secondary_color']
 		user_preference.save()
-		if not user_preference.notifications:
+		if remove_notifications and not user_preference.notifications:
 			notifications_logic.remove_all_subscriptions(id)
 	except:
 		return (False, 404)

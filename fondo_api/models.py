@@ -18,6 +18,8 @@ class UserProfile(User):
 
 class UserPreference(models.Model):
 	notifications = models.BooleanField(default=False)
+	primary_color = models.CharField(max_length=15, default="#800000")
+	secondary_color = models.CharField(max_length=15, default="#c83737")
 	user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
 
 class UserFinance(models.Model):

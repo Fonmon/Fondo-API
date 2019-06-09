@@ -30,7 +30,7 @@ class UserFinanceSerializer(serializers.ModelSerializer):
 class UserPreferenceSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = UserPreference
-		fields = ('notifications',)
+		fields = ('notifications', 'primary_color', 'secondary_color')
 
 class UserFullInfoSerializer(serializers.Serializer):
 	user = serializers.SerializerMethodField()
