@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from babel.dates import format_date
 from django.conf import settings
+from django.utils import timezone
 
 from fondo_api.models import *
 
@@ -68,7 +69,8 @@ class LoanSerializer(serializers.ModelSerializer):
 		return '{} {}'.format(obj.user.first_name, obj.user.last_name)
 
 	def get_created_at(self, obj):
-		return format_date(obj.created_at,locale=settings.LANGUAGE_LOCALE)
+		created_at = timezone.localtime(obj.created_at)
+		return format_date(created_at,locale=settings.LANGUAGE_LOCALE)
 	
 	def get_disbursement_date(self, obj):
 		return format_date(obj.disbursement_date,locale=settings.LANGUAGE_LOCALE)
