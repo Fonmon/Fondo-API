@@ -24,7 +24,7 @@ script:
   - coverage run --branch --source='.' manage.py test && coverage report -m --omit="*env*,*tests*,api/wsgi.py,fondo_api/apps.py,manage.py,*migrations*,fondo_api/routing.py,api/asgi.py"
 deploy:
   - provider: script
-    script: sh $TRAVIS_BUILD_DIR/scripts/trigger-deploy.sh $TRAVIS_COMMIT i-0feb65e210a1d6181 $TRAVIS_BRANCH
+    script: sh $TRAVIS_BUILD_DIR/scripts/trigger-deploy.sh $TRAVIS_COMMIT i-02fd1798f1ce6963a $TRAVIS_BRANCH
     skip_cleanup: true
     on:
       branch: master
