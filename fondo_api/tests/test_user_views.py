@@ -402,7 +402,8 @@ class UserViewTest(AbstractTest):
 	def test_patch_preferences_notifications(self):
 		response = self.client.patch(
 			reverse(view_get_update_delete_user,kwargs={'id': 1}),
-			data='{"type": "preferences", "preferences":{"notifications": true}}',
+			data='''{"type": "preferences", "preferences":{"notifications": true, "primary_color": "#fff", 
+					"secondary_color": "#000"}}''',
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
@@ -413,7 +414,8 @@ class UserViewTest(AbstractTest):
 
 		response = self.client.patch(
 			reverse(view_get_update_delete_user,kwargs={'id': 1}),
-			data='{"type": "preferences", "preferences":{"notifications": false}}',
+			data='''{"type": "preferences", "preferences":{"notifications": false, "primary_color": "#fff", 
+					"secondary_color": "#000"}}''',
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
