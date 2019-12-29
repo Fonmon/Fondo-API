@@ -86,6 +86,7 @@ class LoanTest(TestCase):
 		self.assertIsNone(loan.comments)
 		self.assertIsNone(loan.prev_loan)
 		self.assertIsNone(loan.refinanced_loan)
+		self.assertIsNone(loan.disbursement_value)
 
 	def test_many_loans(self):
 		user = UserProfile.objects.get(identification = 1234567890)

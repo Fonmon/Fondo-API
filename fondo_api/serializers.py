@@ -63,7 +63,7 @@ class LoanSerializer(serializers.ModelSerializer):
 		model = Loan
 		fields = ('value','timelimit','disbursement_date', 'payment',
 			'created_at','fee','comments','state','user_full_name','id','rate',
-			'is_refinanced', 'refinanced_loan', 'user_id')
+			'is_refinanced', 'refinanced_loan', 'user_id', 'disbursement_value')
 
 	def get_user_full_name(self, obj):
 		return '{} {}'.format(obj.user.first_name, obj.user.last_name)

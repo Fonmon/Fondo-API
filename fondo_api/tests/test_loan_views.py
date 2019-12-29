@@ -22,15 +22,17 @@ class LoanViewTest(AbstractTest):
 			'disbursement_date': '2017-12-9',
 			'comments':'',
 			'payment':0,
-			'fee': 0
+			'fee': 0,
+			'disbursement_value': 105
 		}
 		self.loan_with_quota_fee_10 = {
-			'value':200,
+			'value': 200,
 			'timelimit': 10,
 			'disbursement_date': '2017-11-9',
 			'comments':'',
 			'payment':1,
-			'fee': 0
+			'fee': 0,
+			'disbursement_value': 205
 		}
 		self.loan_with_quota_fee_20 = {
 			'value':300,
@@ -38,7 +40,8 @@ class LoanViewTest(AbstractTest):
 			'disbursement_date': '2018-1-1',
 			'comments':'',
 			'payment':0,
-			'fee': 0
+			'fee': 0,
+			'disbursement_value': 305
 		}
 		self.loan_with_quota_fee_30 = {
 			'value':300,
@@ -46,7 +49,8 @@ class LoanViewTest(AbstractTest):
 			'disbursement_date': '2018-1-1',
 			'comments':'',
 			'payment':0,
-			'fee': 0
+			'fee': 0,
+			'disbursement_value': 305
 		}
 		self.loan_with_not_quota = {
 			'value':600,
@@ -54,7 +58,8 @@ class LoanViewTest(AbstractTest):
 			'disbursement_date': '2017-12-9',
 			'comments':'',
 			'payment':0,
-			'fee': 0
+			'fee': 0,
+			'disbursement_value': 605
 		}
 
 	def test_post_loan_1(self):
@@ -78,6 +83,7 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(loan.comments,'')
 		self.assertEqual(loan.payment,0)
 		self.assertEqual(loan.get_payment_display(),'CASH')
+		self.assertEqual(loan.disbursement_value, 105)
 
 	def test_post_loan_2(self):
 		response = self.client.post(
@@ -100,6 +106,7 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(loan.comments,'')
 		self.assertEqual(loan.payment,1)
 		self.assertEqual(loan.get_payment_display(),'BANK_ACCOUNT')
+		self.assertEqual(loan.disbursement_value, 205)
 
 	def test_post_loan_3(self):
 		response = self.client.post(
@@ -122,6 +129,7 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(loan.comments,'')
 		self.assertEqual(loan.payment,0)
 		self.assertEqual(loan.get_payment_display(),'CASH')
+		self.assertEqual(loan.disbursement_value, 305)
 
 	def test_post_loan_4(self):
 		response = self.client.post(
@@ -145,6 +153,7 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(loan.payment,0)
 		self.assertEqual(loan.get_payment_display(),'CASH')
 		self.assertEqual(loan.timelimit, 24)
+		self.assertEqual(loan.disbursement_value, 305)
 
 	def test_post_loan_error(self):
 		response = self.client.post(
@@ -270,6 +279,7 @@ class LoanViewTest(AbstractTest):
 			self.assertIsNotNone(loan['rate'])
 			self.assertIsNotNone(loan['id'])
 			self.assertIsNotNone(loan['created_at'])
+			self.assertIsNotNone(loan['disbursement_value'])
 
 		response = self.client.get(
 			reverse(view_get_post_loans),
@@ -287,6 +297,7 @@ class LoanViewTest(AbstractTest):
 			self.assertIsNotNone(loan['rate'])
 			self.assertIsNotNone(loan['id'])
 			self.assertIsNotNone(loan['created_at'])
+			self.assertIsNotNone(loan['disbursement_value'])
 
 		response = self.client.get(
 			"%s?all_loans=true" % reverse(view_get_post_loans),
@@ -708,6 +719,7 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(response.data['loan']['user_full_name'],'Foo Name Foo Last Name')
 		self.assertEqual(Decimal(response.data['loan']['rate']).quantize(self.THREEPLACES),Decimal(0.025).quantize(self.THREEPLACES))
 		self.assertIsNotNone(response.data['loan']['created_at'])
+		self.assertEqual(response.data['loan']['disbursement_value'], 205)
 
 	def test_get_loan_not_found(self):
 		response = self.client.get(
@@ -914,7 +926,6 @@ class LoanViewTest(AbstractTest):
 			**self.get_auth_header(self.token)
 		)
 
-
 		data = {
 			"disbursement_date": "2017-12-09",
 			"includeInterests": False,
@@ -948,6 +959,8 @@ class LoanViewTest(AbstractTest):
 		self.assertIsNotNone(new_loan.prev_loan)
 		self.assertEqual(new_loan.prev_loan.id, loan.id)
 		self.assertEqual(loan.refinanced_loan, new_loan.id)
+		self.assertEqual(loan.disbursement_value, 205)
+		self.assertIsNone(new_loan.disbursement_value)
 
 	def test_refinance_loan_include_interests(self):
 		response = self.client.post(
@@ -963,7 +976,6 @@ class LoanViewTest(AbstractTest):
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
-
 
 		data = {
 			"disbursement_date": "2017-12-09",
@@ -998,6 +1010,8 @@ class LoanViewTest(AbstractTest):
 		self.assertIsNotNone(new_loan.prev_loan)
 		self.assertEqual(new_loan.prev_loan.id, loan.id)
 		self.assertEqual(loan.refinanced_loan, new_loan.id)
+		self.assertEqual(loan.disbursement_value, 205)
+		self.assertIsNone(new_loan.disbursement_value)
 
 	def test_refinance_loan_update_approved(self):
 		response = self.client.post(

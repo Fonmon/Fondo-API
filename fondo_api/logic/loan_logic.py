@@ -42,7 +42,8 @@ def create_loan(user_id, obj, refinance = False, prev_loan = None):
 		comments = obj['comments'],
 		rate = rate,
 		user = user,
-		prev_loan = prev_loan
+		prev_loan = prev_loan,
+		disbursement_value = obj['disbursement_value']
 	)
 
 	# send notification
@@ -197,6 +198,7 @@ def refinance_loan(loan_id, new_loan, user_id):
 			comment = '{} no incluye intereses'.format(comment)
 		new_loan['comments'] = '{}. {}'.format(comment, new_loan['comments'])
 		new_loan['payment'] = 2
+		new_loan['disbursement_value'] = None
 
 		state, new_loan_id = create_loan(user_id, new_loan, True, loan)
 		loan.refinanced_loan = new_loan_id
