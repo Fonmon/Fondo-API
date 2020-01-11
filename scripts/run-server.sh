@@ -18,5 +18,5 @@ if [ $1 == 'api' ]; then
 		--log-level=debug\
 		-w 3
 else
-	python manage.py runworker notification-task
+	celery -A api worker -l info
 fi

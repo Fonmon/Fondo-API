@@ -1,10 +1,6 @@
 import json
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
-
+import fondo_api.tasks.tasks as tasks
 from fondo_api.models import NotificationSubscriptions, UserProfile
-
-channel_layer = get_channel_layer()
 
 def save_subscription(user_id, subscription):
     user = UserProfile.objects.get(id = user_id)
@@ -50,4 +46,4 @@ def send_notification(user_ids, message, target):
             'target': target
         }
     }
-    async_to_sync(channel_layer.send)('notification-task', {'type': 'send_notification', 'content': content})
+    tasks.send_notification.delay({'type': 'send_notification', 'content': content})
