@@ -69,7 +69,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'api.wsgi.application'
-ASGI_APPLICATION = 'fondo_api.routing.application'
 
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
@@ -171,17 +170,3 @@ TEST_RUNNER = 'fondo_api.tests.runner.TestRunner'
 # CELERY
 BROKER_URL = 'redis://{}:6379'.format(os.environ.get('REDIS_HOST'))
 CELERY_TIMEZONE = TIME_ZONE
-# CELERY_RESULT_BACKEND = 'redis://localhost:6379'
-# CELERY_ACCEPT_CONTENT = ['application/json']
-# CELERY_TASK_SERIALIZER = 'json'
-# CELERY_RESULT_SERIALIZER = 'json'
-
-# CHANNEL_LAYERS = {
-#     'default': {
-#         'BACKEND': 'channels_redis.core.RedisChannelLayer',
-
-#         'CONFIG': {
-#             'hosts': [(os.environ.get('REDIS_HOST'), 6379)]
-#         }
-#     }
-# }

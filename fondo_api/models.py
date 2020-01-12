@@ -94,3 +94,12 @@ class ActivityUser(models.Model):
 class NotificationSubscriptions(models.Model):
 	user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
 	subscription = HStoreField()
+
+class SchedulerTask(models.Model):
+	TASK_TYPES = (
+		(0,'NOTIFICATIONS'),
+	)
+	type = models.IntegerField(choices = TASK_TYPES)
+	run_date = models.DateTimeField()
+	payload = HStoreField()
+	processed = models.BooleanField(default = False)

@@ -1,5 +1,5 @@
 import json
-import fondo_api.tasks.tasks as tasks
+import fondo_api.scheduler.tasks as tasks
 from fondo_api.models import NotificationSubscriptions, UserProfile
 
 def save_subscription(user_id, subscription):
@@ -28,7 +28,7 @@ def remove_invalid_subscriptions(subscriptions):
     for subscription in subscriptions:
         NotificationSubscriptions.objects.filter( subscription__endpoint = subscription['endpoint'] ).delete()
 
-def send_notification(user_ids, message, target):
+def send_notification(user_ids, message, target, run_async = True):
     notification_subscriptions = NotificationSubscriptions.objects.filter(user_id__in = user_ids)
     if len(notification_subscriptions) == 0:
         return
@@ -46,4 +46,7 @@ def send_notification(user_ids, message, target):
             'target': target
         }
     }
-    tasks.send_notification.delay({'type': 'send_notification', 'content': content})
+    if run_async:
+        tasks.send_notification.delay({'type': 'send_notification', 'content': content})
+    else:
+        tasks.send_notification({'type': 'send_notification', 'content': content})

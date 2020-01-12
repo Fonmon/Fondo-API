@@ -1,14 +1,15 @@
 import logging
 from django.db import IntegrityError,transaction
 from django.core.paginator import Paginator
+from django.conf import settings
+from django.utils import timezone
 from dateutil.relativedelta import relativedelta
 from decimal import Decimal
 from babel.dates import format_date
 from babel.numbers import decimal, format_decimal, format_number
-from django.conf import settings
 from datetime import datetime
 
-from fondo_api.models import UserProfile,UserFinance,Loan,LoanDetail
+from fondo_api.models import UserProfile, UserFinance, Loan, LoanDetail, SchedulerTask
 from fondo_api.serializers import LoanSerializer,LoanDetailSerializer
 from fondo_api.logic.sender_mails import *
 from fondo_api.logic.notifications_logic import send_notification
@@ -105,6 +106,8 @@ def update_loan(id,state):
 			if loan.prev_loan is not None:
 				loan.prev_loan.refinanced_loan = None
 				loan.prev_loan.save()
+		if state == 3:
+			remove_scheduled_tasks(id)
 	return (True,'')
 
 def generate_table(loan):
@@ -236,6 +239,36 @@ def update_loan_detail(obj):
 	loan_detail.capital_balance = obj['capital_balance']
 	loan_detail.from_date = obj['from_date']
 	loan_detail.save()
+	create_scheduled_task(obj['payday_limit'], loan_detail.loan_id)
+
+def create_scheduled_task(payday_limit, loan_id):
+	tasks = SchedulerTask.objects.filter(payload__loan_id = loan_id, processed = False)
+	if len(tasks) != 0:
+		return
+
+	payday_limit = datetime.strptime(payday_limit, '%Y-%m-%d').date()
+	five_days_date = payday_limit - relativedelta(days=5)
+	five_days_date = datetime(five_days_date.year, five_days_date.month, five_days_date.day)
+	before_date = payday_limit - relativedelta(days=1)
+	before_date = datetime(before_date.year, before_date.month, before_date.day)
+	message = "Recuerde que la fecha límite de pago para el crédito {}, es el: {}"
+	payload = {}
+	payload["loan_id"] = loan_id
+	payload["message"] = message.format(loan_id, format_date(payday_limit, locale=settings.LANGUAGE_LOCALE))
+
+	SchedulerTask.objects.create(
+		type = 0,
+		run_date = five_days_date,
+		payload = payload
+	)
+	SchedulerTask.objects.create(
+		type = 0,
+		run_date = before_date,
+		payload = payload
+	)
+
+def remove_scheduled_tasks(loan_id):
+	SchedulerTask.objects.filter(payload__loan_id = loan_id).delete()
 
 '''
 TODO: improve creating a map with keys and indexes
