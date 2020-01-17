@@ -31,7 +31,7 @@ def send_notification(message):
 
 @periodic_task(
     name = "Scheduler", 
-    run_every = (crontab()), 
+    run_every = (crontab(minute=0, hour='9,14')), 
     ignore_result = True)
 def scheduler():
     logger.info("Running scheduler")
@@ -46,5 +46,6 @@ def scheduler():
             executer = get_executer(task.type)
             executer.run(task.payload)
             task.processed = True
+            task.save()
         except Exception as ex:
             logger.error("Error processing task with id: {}, exception: {}".format(task.id, ex))

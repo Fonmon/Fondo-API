@@ -242,30 +242,41 @@ def update_loan_detail(obj):
 	create_scheduled_task(obj['payday_limit'], loan_detail.loan_id)
 
 def create_scheduled_task(payday_limit, loan_id):
-	tasks = SchedulerTask.objects.filter(payload__loan_id = loan_id, processed = False)
-	if len(tasks) != 0:
-		return
-
 	payday_limit = datetime.strptime(payday_limit, '%Y-%m-%d').date()
 	five_days_date = payday_limit - relativedelta(days=5)
 	five_days_date = datetime(five_days_date.year, five_days_date.month, five_days_date.day)
-	before_date = payday_limit - relativedelta(days=1)
-	before_date = datetime(before_date.year, before_date.month, before_date.day)
+
 	message = "Recuerde que la fecha límite de pago para el crédito {}, es el: {}"
 	payload = {}
 	payload["loan_id"] = loan_id
 	payload["message"] = message.format(loan_id, format_date(payday_limit, locale=settings.LANGUAGE_LOCALE))
 
-	SchedulerTask.objects.create(
-		type = 0,
-		run_date = five_days_date,
-		payload = payload
-	)
-	SchedulerTask.objects.create(
-		type = 0,
-		run_date = before_date,
-		payload = payload
-	)
+	tasks = SchedulerTask.objects.filter(payload__loan_id = loan_id, 
+									run_date__year = five_days_date.year,
+									run_date__month = five_days_date.month,
+									run_date__day = five_days_date.day,
+									processed = False)
+	if len(tasks) == 0:
+		SchedulerTask.objects.create(
+			type = 0,
+			run_date = five_days_date,
+			payload = payload
+		)
+
+	before_date = payday_limit - relativedelta(days=1)
+	before_date = datetime(before_date.year, before_date.month, before_date.day)
+
+	tasks = SchedulerTask.objects.filter(payload__loan_id = loan_id, 
+									run_date__year = before_date.year,
+									run_date__month = before_date.month,
+									run_date__day = before_date.day,
+									processed = False)
+	if len(tasks) == 0:	
+		SchedulerTask.objects.create(
+			type = 0,
+			run_date = before_date,
+			payload = payload
+		)
 
 def remove_scheduled_tasks(loan_id):
 	SchedulerTask.objects.filter(payload__loan_id = loan_id).delete()
