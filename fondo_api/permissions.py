@@ -1,48 +1,42 @@
 from rest_framework import permissions
 
 list_permissions = {
-    'view_get_post_loans': {
+    'LoanView': {
         'GET': 3,
         'POST': 3,
         'PATCH': [0,2]
     },
-    'view_get_update_loan': {
+    'LoanDetailView': {
         'GET': 3,
         'PATCH': [0,2]
     },
-    'view_get_update_delete_user': {
+    'UserDetailView': {
         'GET': 3,
         'PATCH': 3,
         'DELETE': 0
     },
-    'view_get_post_users': {
+    'UserView': {
         'POST': 0,
         'GET': 2,
         'PATCH': [0,2]
     },
-    'view_get_post_years': {
+    'ActivityYearView': {
         'GET': 3,
         'POST': 1
     },
-    'view_get_post_activities': {
+    'ActivityYearDetailView': {
         'GET': 3,
         'POST': 1
     },
-    'view_get_patch_delete_activity': {
+    'ActivityDetailView': {
         'GET': 3,
         'PATCH': 1,
         'DELETE': 1
     },
-    'view_loan_apps': {
+    'LoanAppsView': {
         'POST': 3
     },
-    'view_logout': {
-        'POST': 3
-    },
-    'view_notification_subscribe': {
-        'POST': 3
-    },
-    'view_notification_unsubscribe': {
+    'NotificationView': {
         'POST': 3
     }
 }

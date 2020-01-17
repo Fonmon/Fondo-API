@@ -4,7 +4,6 @@ python:
 addons:
   postgresql: "9.4"
 install:
-  - pip install --upgrade pip 
   - pip install -r requirements.txt 
   - pip install awscli
 services:
