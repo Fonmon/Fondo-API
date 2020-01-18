@@ -7,8 +7,8 @@ from rest_framework.authtoken.models import Token
 from datetime import datetime
 from OpenSSL import crypto
 
-from fondo_api.logic.alexa.handlers.launch_handler import LaunchHandler
-from fondo_api.logic.alexa.handlers.intent_handler import IntentHandler
+from fondo_api.services.alexa.handlers.launch_handler import LaunchHandler
+from fondo_api.services.alexa.handlers.intent_handler import IntentHandler
 
 logger = logging.getLogger(__name__)
 

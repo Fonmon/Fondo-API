@@ -1,9 +1,11 @@
 import logging
 
-from fondo_api.logic.alexa.model.models import AlexaResponse, Directive
-from fondo_api.logic.alexa.model.enums import SpeechEnum, CardEnum
-from fondo_api.logic.alexa.serializers import AlexaResponseSerializer
-from fondo_api.logic.loan_logic import create_loan
+from fondo_api.services.alexa.model.models import AlexaResponse, Directive
+from fondo_api.services.alexa.model.enums import SpeechEnum, CardEnum
+from fondo_api.services.alexa.serializers import AlexaResponseSerializer
+from fondo_api.services.loan import LoanService
+from fondo_api.services.user import UserService
+from fondo_api.services.notification import NotificationService
 
 logger = logging.getLogger(__name__)
 
@@ -12,13 +14,14 @@ class RequestLoanIntent:
         self.data = data
         self.user_id = user_id
         self.skill_banner = skill_banner
+        self.__loan_service = LoanService(UserService(), NotificationService())
 
     def handle(self):
         complete, loan_or_intent = self.process_slots()
         response = AlexaResponse()
         
         if 'dialogState' in self.data['request'] and self.data['request']['dialogState'] == 'COMPLETED':
-            success, message = create_loan(self.user_id, loan_or_intent)
+            success, message = self.__loan_service.create_loan(self.user_id, loan_or_intent)
             if success:
                 message = 'Loan has been created successfully, its number is {}'.format(message)
             response.set_output_speech(SpeechEnum.PLAIN_TEXT, text=message)\
