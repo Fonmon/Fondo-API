@@ -5,10 +5,9 @@ from rest_framework import status
 
 from fondo_api.tests.abstract_test import AbstractTest
 from fondo_api.models import *
-from fondo_api.logic.notifications_logic import send_notification
+from fondo_api.services.notification import NotificationService
 
-view_notification_subscribe = 'view_notification_subscribe'
-view_notification_unsubscribe = 'view_notification_unsubscribe'
+view_notification = 'view_notification'
 
 class NotificationViewTest(AbstractTest):
     def setUp(self):
@@ -33,7 +32,7 @@ class NotificationViewTest(AbstractTest):
 
     def test_subscribe(self):
         response = self.client.post(
-            reverse(view_notification_subscribe),
+            reverse(view_notification, kwargs={'operation': 'subscribe'}),
             data = json.dumps(self.subscription_json),
             content_type='application/json',
             **self.get_auth_header(self.token)
@@ -43,14 +42,14 @@ class NotificationViewTest(AbstractTest):
 
     def test_unsubscribe(self):
         response = self.client.post(
-            reverse(view_notification_subscribe),
+            reverse(view_notification, kwargs={'operation': 'subscribe'}),
             data = json.dumps(self.subscription_json),
             content_type='application/json',
             **self.get_auth_header(self.token)
         )
 
         response = self.client.post(
-            reverse(view_notification_unsubscribe),
+            reverse(view_notification, kwargs={'operation': 'unsubscribe'}),
             data = json.dumps(self.subscription_json),
             content_type='application/json',
             **self.get_auth_header(self.token)
@@ -60,14 +59,14 @@ class NotificationViewTest(AbstractTest):
 
     def test_unsubscribe_not_found(self):
         response = self.client.post(
-            reverse(view_notification_subscribe),
+            reverse(view_notification, kwargs={'operation': 'subscribe'}),
             data = json.dumps(self.subscription_json),
             content_type='application/json',
             **self.get_auth_header(self.token)
         )
 
         response = self.client.post(
-            reverse(view_notification_unsubscribe),
+            reverse(view_notification, kwargs={'operation': 'unsubscribe'}),
             data = json.dumps(self.subscription_not_exist),
             content_type='application/json',
             **self.get_auth_header(self.token)
@@ -77,7 +76,7 @@ class NotificationViewTest(AbstractTest):
     @patch('requests.post',return_value=False)
     def pending_test_send_notification(self, mock):
         response = self.client.post(
-            reverse(view_notification_subscribe),
+            reverse(view_notification, kwargs={'operation': 'subscribe'}),
             data = json.dumps(self.subscription_json),
             content_type='application/json',
             **self.get_auth_header(self.token)
@@ -85,4 +84,15 @@ class NotificationViewTest(AbstractTest):
         self.assertEqual(response.status_code,status.HTTP_200_OK)
         self.assertEqual(len(NotificationSubscriptions.objects.all()), 1)
 
-        send_notification([1], 'Test Notification Message')
+        notification_service = NotificationService()
+        notification_service.send_notification([1], 'Test Notification Message')
+
+    def test_invalid_operation(self):
+        response = self.client.post(
+            reverse(view_notification, kwargs={'operation': 'suscribe'}),
+            data = json.dumps(self.subscription_json),
+            content_type = 'application/json',
+            **self.get_auth_header(self.token)
+        )
+        self.assertEqual(response.status_code,status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(len(NotificationSubscriptions.objects.all()), 0)

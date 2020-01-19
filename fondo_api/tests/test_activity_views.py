@@ -7,9 +7,9 @@ from datetime import date
 from fondo_api.tests.abstract_test import AbstractTest
 from fondo_api.models import *
 
-view_get_post_years = 'view_get_post_years'
-view_get_post_activities = 'view_get_post_activities'
-view_get_patch_delete_activity = 'view_get_patch_delete_activity'
+view_activity_year = 'view_activity_year'
+view_activity_year_detail = 'view_activity_year_detail'
+view_activity_detail = 'view_activity_detail'
 
 class ActivityViewTest(AbstractTest):
     def setUp(self):
@@ -24,7 +24,7 @@ class ActivityViewTest(AbstractTest):
 
     def test_get_years_empty(self):
         response = self.client.get(
-			reverse(view_get_post_years),
+			reverse(view_activity_year),
 			**self.get_auth_header(self.token)
 		)
 
@@ -34,7 +34,7 @@ class ActivityViewTest(AbstractTest):
         ActivityYear.objects.create(year=2020)
         ActivityYear.objects.create(year=2021)
         response = self.client.get(
-			reverse(view_get_post_years),
+			reverse(view_activity_year),
 			**self.get_auth_header(self.token)
 		)
 
@@ -47,7 +47,7 @@ class ActivityViewTest(AbstractTest):
 
     def test_create_year(self):
         response = self.client.post(
-			reverse(view_get_post_years),
+			reverse(view_activity_year),
 			**self.get_auth_header(self.token)
 		)
         self.assertEqual(response.status_code,status.HTTP_201_CREATED)
@@ -59,7 +59,7 @@ class ActivityViewTest(AbstractTest):
         self.assertTrue(activity_years[0].enable)
 
         response = self.client.post(
-			reverse(view_get_post_years),
+			reverse(view_activity_year),
 			**self.get_auth_header(self.token)
 		)
         self.assertEqual(response.status_code,status.HTTP_304_NOT_MODIFIED)
@@ -68,7 +68,7 @@ class ActivityViewTest(AbstractTest):
         ActivityYear.objects.create(year=2000)
 
         response = self.client.post(
-			reverse(view_get_post_years),
+			reverse(view_activity_year),
 			**self.get_auth_header(self.token)
 		)
         activity_year = ActivityYear.objects.filter(year = '2000')
@@ -96,7 +96,7 @@ class ActivityViewTest(AbstractTest):
         )
 
         response = self.client.get(
-			reverse(view_get_post_activities,kwargs={'id_year':activity_year_2020.id}),
+			reverse(view_activity_year_detail,kwargs={'id_year':activity_year_2020.id}),
 			**self.get_auth_header(self.token)
 		)
         self.assertEqual(response.status_code,status.HTTP_200_OK)
@@ -108,7 +108,7 @@ class ActivityViewTest(AbstractTest):
     def test_create_activity(self):
         activity_year_2020 = ActivityYear.objects.create(year=2020)
         response = self.client.post(
-			reverse(view_get_post_activities,kwargs={'id_year':activity_year_2020.id}),
+			reverse(view_activity_year_detail,kwargs={'id_year':activity_year_2020.id}),
             data=self.activity_json,
 			**self.get_auth_header(self.token)
 		)
@@ -126,7 +126,7 @@ class ActivityViewTest(AbstractTest):
 
     def test_get_activity_not_found(self):
         response = self.client.get(
-            reverse(view_get_patch_delete_activity,kwargs={'id':12}),
+            reverse(view_activity_detail,kwargs={'id':12}),
             **self.get_auth_header(self.token)
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -134,14 +134,14 @@ class ActivityViewTest(AbstractTest):
     def test_get_activity(self):
         activity_year_2020 = ActivityYear.objects.create(year=2020)
         self.client.post(
-			reverse(view_get_post_activities,kwargs={'id_year':activity_year_2020.id}),
+			reverse(view_activity_year_detail,kwargs={'id_year':activity_year_2020.id}),
             data=self.activity_json,
 			**self.get_auth_header(self.token)
 		)
 
         activity_id = Activity.objects.all()[0].id
         response = self.client.get(
-            reverse(view_get_patch_delete_activity,kwargs={'id':activity_id}),
+            reverse(view_activity_detail,kwargs={'id':activity_id}),
             **self.get_auth_header(self.token)
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -164,7 +164,7 @@ class ActivityViewTest(AbstractTest):
             year = activity_year_2020
         )
         response = self.client.delete(
-            reverse(view_get_patch_delete_activity,kwargs={'id':1}),
+            reverse(view_activity_detail,kwargs={'id':1}),
             **self.get_auth_header(self.token)
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -181,7 +181,7 @@ class ActivityViewTest(AbstractTest):
             year = activity_year_2020
         )
         response = self.client.patch(
-            reverse(view_get_patch_delete_activity,kwargs={'id':1}),
+            reverse(view_activity_detail,kwargs={'id':1}),
             data=json.dumps(self.activity_json),
             content_type='application/json',
             **self.get_auth_header(self.token)
@@ -195,7 +195,7 @@ class ActivityViewTest(AbstractTest):
         self.assertEqual(response.data['users'],[])
 
         response = self.client.patch(
-            reverse(view_get_patch_delete_activity,kwargs={'id':2}),
+            reverse(view_activity_detail,kwargs={'id':2}),
             data=json.dumps(self.activity_json),
             content_type='application/json',
             **self.get_auth_header(self.token)
@@ -205,7 +205,7 @@ class ActivityViewTest(AbstractTest):
     def test_update_activity_user(self):
         activity_year_2020 = ActivityYear.objects.create(year=2020)
         self.client.post(
-			reverse(view_get_post_activities,kwargs={'id_year':activity_year_2020.id}),
+			reverse(view_activity_year_detail,kwargs={'id_year':activity_year_2020.id}),
             data=self.activity_json,
 			**self.get_auth_header(self.token)
 		)
@@ -217,7 +217,7 @@ class ActivityViewTest(AbstractTest):
             "state": 2
         }
         response = self.client.patch(
-            '%s?patch=user' % reverse(view_get_patch_delete_activity,kwargs={'id':activity_id}),
+            '%s?patch=user' % reverse(view_activity_detail,kwargs={'id':activity_id}),
             data=json.dumps(patch_user),
             content_type='application/json',
             **self.get_auth_header(self.token)
@@ -233,7 +233,7 @@ class ActivityViewTest(AbstractTest):
         self.assertEqual(response.data['users'][0]['state'],2)
 
         response = self.client.patch(
-            '%s?patch=user' % reverse(view_get_patch_delete_activity,kwargs={'id':123}),
+            '%s?patch=user' % reverse(view_activity_detail,kwargs={'id':123}),
             data=json.dumps(patch_user),
             content_type='application/json',
             **self.get_auth_header(self.token)
@@ -242,7 +242,7 @@ class ActivityViewTest(AbstractTest):
 
     def test_update_activity_bad_request(self):
         response = self.client.patch(
-            '%s?patch=invalid' % reverse(view_get_patch_delete_activity,kwargs={'id':1}),
+            '%s?patch=invalid' % reverse(view_activity_detail,kwargs={'id':1}),
             **self.get_auth_header(self.token)
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

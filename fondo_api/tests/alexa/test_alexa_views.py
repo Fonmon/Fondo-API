@@ -9,7 +9,7 @@ from test.support import EnvironmentVarGuard
 
 from fondo_api.tests.abstract_test import AbstractTest
 from fondo_api.models import Loan
-from fondo_api.logic.alexa.amazon_alexa import AmazonAlexa
+from fondo_api.services.alexa.amazon_alexa import AmazonAlexa
 
 VIEW_ALEXA = "view_alexa"
 

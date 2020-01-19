@@ -86,5 +86,5 @@ class LoanAppsView(APIView):
             response = loan_service.refinance_loan(id, request.data, request.user.id)
             if response is not None:
                 return Response({'id': response}, status=status.HTTP_200_OK)
-            return Response(status=tatus.HTTP_400_BAD_REQUEST)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_404_NOT_FOUND)

@@ -10,7 +10,7 @@ from babel.dates import format_date
 
 from fondo_api.models import UserProfile,UserFinance,UserPreference
 from fondo_api.serializers import UserProfileSerializer, UserFullInfoSerializer
-from fondo_api.services.utils.mails import send_activation_mail
+from fondo_api.services.utils import mails
 
 class UserService:
 
@@ -41,7 +41,7 @@ class UserService:
 					user = user
 				)
 				UserPreference.objects.create(user=user)
-				if not send_activation_mail(user):
+				if not mails.send_activation_mail(user):
 					transaction.set_rollback(True)
 					return (False, 'Invalid email');
 		except IntegrityError:
@@ -120,7 +120,7 @@ class UserService:
 			info['contributions']=int(round(float(data[3]), 0))
 			info['utilized_quota'] = int(round(float(data[4]), 0))
 			
-			success, state = update_user_finance(None, identification, info)
+			success, state = self.__update_user_finance(None, identification, info)
 			if not success:
 				self.__logger.error('User with identification: {}, not exists'.format(identification))
 				continue
