@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 @periodic_task(
     name = "Scheduler", 
-    run_every = (crontab(minute=0, hour='9,14')), 
+    run_every = (crontab(minute=0, hour='10,14')), 
     ignore_result = True)
 def scheduler():
     logger.info("Running scheduler")
