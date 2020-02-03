@@ -8,8 +8,8 @@ from decimal import Decimal
 from fondo_api.tests.abstract_test import AbstractTest
 from fondo_api.models import *
 
-view_get_update_loan = 'view_get_update_loan'
-view_get_post_loans = 'view_get_post_loans'
+view_loan_detail = 'view_loan_detail'
+view_loan = 'view_loan'
 view_loan_apps = 'view_loan_apps'
 
 class LoanViewTest(AbstractTest):
@@ -22,15 +22,17 @@ class LoanViewTest(AbstractTest):
 			'disbursement_date': '2017-12-9',
 			'comments':'',
 			'payment':0,
-			'fee': 0
+			'fee': 0,
+			'disbursement_value': 105
 		}
 		self.loan_with_quota_fee_10 = {
-			'value':200,
+			'value': 200,
 			'timelimit': 10,
 			'disbursement_date': '2017-11-9',
 			'comments':'',
 			'payment':1,
-			'fee': 0
+			'fee': 0,
+			'disbursement_value': 205
 		}
 		self.loan_with_quota_fee_20 = {
 			'value':300,
@@ -38,7 +40,8 @@ class LoanViewTest(AbstractTest):
 			'disbursement_date': '2018-1-1',
 			'comments':'',
 			'payment':0,
-			'fee': 0
+			'fee': 0,
+			'disbursement_value': 305
 		}
 		self.loan_with_quota_fee_30 = {
 			'value':300,
@@ -46,7 +49,8 @@ class LoanViewTest(AbstractTest):
 			'disbursement_date': '2018-1-1',
 			'comments':'',
 			'payment':0,
-			'fee': 0
+			'fee': 0,
+			'disbursement_value': 305
 		}
 		self.loan_with_not_quota = {
 			'value':600,
@@ -54,12 +58,13 @@ class LoanViewTest(AbstractTest):
 			'disbursement_date': '2017-12-9',
 			'comments':'',
 			'payment':0,
-			'fee': 0
+			'fee': 0,
+			'disbursement_value': 605
 		}
 
 	def test_post_loan_1(self):
 		response = self.client.post(
-			reverse(view_get_post_loans),
+			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_5),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -78,10 +83,11 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(loan.comments,'')
 		self.assertEqual(loan.payment,0)
 		self.assertEqual(loan.get_payment_display(),'CASH')
+		self.assertEqual(loan.disbursement_value, 105)
 
 	def test_post_loan_2(self):
 		response = self.client.post(
-			reverse(view_get_post_loans),
+			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_10),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -100,10 +106,11 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(loan.comments,'')
 		self.assertEqual(loan.payment,1)
 		self.assertEqual(loan.get_payment_display(),'BANK_ACCOUNT')
+		self.assertEqual(loan.disbursement_value, 205)
 
 	def test_post_loan_3(self):
 		response = self.client.post(
-			reverse(view_get_post_loans),
+			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_20),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -122,10 +129,11 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(loan.comments,'')
 		self.assertEqual(loan.payment,0)
 		self.assertEqual(loan.get_payment_display(),'CASH')
+		self.assertEqual(loan.disbursement_value, 305)
 
 	def test_post_loan_4(self):
 		response = self.client.post(
-			reverse(view_get_post_loans),
+			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_30),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -145,10 +153,11 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(loan.payment,0)
 		self.assertEqual(loan.get_payment_display(),'CASH')
 		self.assertEqual(loan.timelimit, 24)
+		self.assertEqual(loan.disbursement_value, 305)
 
 	def test_post_loan_error(self):
 		response = self.client.post(
-			reverse(view_get_post_loans),
+			reverse(view_loan),
 			data = json.dumps(self.loan_with_not_quota),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -161,14 +170,14 @@ class LoanViewTest(AbstractTest):
 	def test_get_loans_paginator(self):
 		for i in range(25):
 			self.client.post(
-				reverse(view_get_post_loans),
+				reverse(view_loan),
 				data = json.dumps(self.loan_with_quota_fee_5),
 				content_type='application/json',
 				**self.get_auth_header(self.token)
 			)
 		self.assertEqual(len(Loan.objects.all()),25)
 		response = self.client.get(
-			reverse(view_get_post_loans),
+			reverse(view_loan),
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code,status.HTTP_200_OK)
@@ -176,13 +185,13 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(response.data['num_pages'],3)
 		self.assertEqual(response.data['count'], 25)
 		response = self.client.get(
-			"%s?page=0" % reverse(view_get_post_loans),
+			"%s?page=0" % reverse(view_loan),
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code,status.HTTP_400_BAD_REQUEST)
 		self.assertEqual(response.data['message'],'Page number must be greater or equal than 0')
 		response = self.client.get(
-			"%s?page=3" % reverse(view_get_post_loans),
+			"%s?page=3" % reverse(view_loan),
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code,status.HTTP_200_OK)
@@ -191,7 +200,7 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(response.data['count'], 25)
 
 		response = self.client.get(
-			"%s?page=4" % reverse(view_get_post_loans),
+			"%s?page=4" % reverse(view_loan),
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code,status.HTTP_200_OK)
@@ -202,14 +211,14 @@ class LoanViewTest(AbstractTest):
 	def test_get_loans_not_paginator(self):
 		for i in range(25):
 			self.client.post(
-				reverse(view_get_post_loans),
+				reverse(view_loan),
 				data = json.dumps(self.loan_with_quota_fee_5),
 				content_type='application/json',
 				**self.get_auth_header(self.token)
 			)
 		self.assertEqual(len(Loan.objects.all()),25)
 		response = self.client.get(
-			"%s?paginate=false" % reverse(view_get_post_loans),
+			"%s?paginate=false" % reverse(view_loan),
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code,status.HTTP_200_OK)
@@ -218,13 +227,13 @@ class LoanViewTest(AbstractTest):
 
 	def test_get_loans(self):
 		self.client.post(
-			reverse(view_get_post_loans),
+			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_5),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
 		self.client.post(
-			reverse(view_get_post_loans),
+			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_10),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -248,14 +257,14 @@ class LoanViewTest(AbstractTest):
 		)
 		token = self.get_token('mail_for_tests_2@mail.com','password')
 		self.client.post(
-			reverse(view_get_post_loans),
+			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_20),
 			content_type='application/json',
 			**self.get_auth_header(token)
 		)
 
 		response = self.client.get(
-			reverse(view_get_post_loans),
+			reverse(view_loan),
 			**self.get_auth_header(token)
 		)
 		self.assertEqual(response.status_code,status.HTTP_200_OK)
@@ -270,9 +279,10 @@ class LoanViewTest(AbstractTest):
 			self.assertIsNotNone(loan['rate'])
 			self.assertIsNotNone(loan['id'])
 			self.assertIsNotNone(loan['created_at'])
+			self.assertIsNotNone(loan['disbursement_value'])
 
 		response = self.client.get(
-			reverse(view_get_post_loans),
+			reverse(view_loan),
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code,status.HTTP_200_OK)
@@ -287,16 +297,17 @@ class LoanViewTest(AbstractTest):
 			self.assertIsNotNone(loan['rate'])
 			self.assertIsNotNone(loan['id'])
 			self.assertIsNotNone(loan['created_at'])
+			self.assertIsNotNone(loan['disbursement_value'])
 
 		response = self.client.get(
-			"%s?all_loans=true" % reverse(view_get_post_loans),
+			"%s?all_loans=true" % reverse(view_loan),
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code,status.HTTP_200_OK)
 		self.assertEqual(len(response.data['list']),3)
 
 		response = self.client.get(
-			"%s?all_loans=true" % reverse(view_get_post_loans),
+			"%s?all_loans=true" % reverse(view_loan),
 			**self.get_auth_header(token)
 		)
 		self.assertEqual(response.status_code,status.HTTP_200_OK)
@@ -304,33 +315,33 @@ class LoanViewTest(AbstractTest):
 
 	def test_get_loans_filter(self):
 		self.client.post(
-			reverse(view_get_post_loans),
+			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_5),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
 		self.client.post(
-			reverse(view_get_post_loans),
+			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_10),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
 		response = self.client.get(
-			"%s?state=5" % reverse(view_get_post_loans),
+			"%s?state=5" % reverse(view_loan),
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code,status.HTTP_400_BAD_REQUEST)
 		self.assertEqual(response.data['message'],'State must be between 0 and 4')
 
 		response = self.client.get(
-			"%s?state=1" % reverse(view_get_post_loans),
+			"%s?state=1" % reverse(view_loan),
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code,status.HTTP_200_OK)
 		self.assertEqual(len(response.data['list']),0)
 
 		response = self.client.get(
-			"%s?state=0" % reverse(view_get_post_loans),
+			"%s?state=0" % reverse(view_loan),
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code,status.HTTP_200_OK)
@@ -340,20 +351,20 @@ class LoanViewTest(AbstractTest):
 
 	def test_get_loans_filter_all(self):
 		self.client.post(
-			reverse(view_get_post_loans),
+			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_5),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
 		self.client.post(
-			reverse(view_get_post_loans),
+			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_10),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
 
 		response = self.client.get(
-			"%s?state=0&all_loans=true" % reverse(view_get_post_loans),
+			"%s?state=0&all_loans=true" % reverse(view_loan),
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code,status.HTTP_200_OK)
@@ -363,7 +374,7 @@ class LoanViewTest(AbstractTest):
 
 	def test_update_loan_approved_monthly(self):
 		self.client.post(
-			reverse(view_get_post_loans),
+			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_10),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -371,7 +382,7 @@ class LoanViewTest(AbstractTest):
 
 		loan = Loan.objects.get(user_id = 1)
 		response = self.client.patch(
-			reverse(view_get_update_loan,kwargs={'id': loan.id}),
+			reverse(view_loan_detail,kwargs={'id': loan.id}),
 			data = '{"state":1}',
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -399,7 +410,7 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(loan.get_state_display(),'APPROVED')
 
 		response = self.client.get(
-			reverse(view_get_update_loan,kwargs={'id': loan.id}),
+			reverse(view_loan_detail,kwargs={'id': loan.id}),
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -424,7 +435,7 @@ class LoanViewTest(AbstractTest):
 		self.loan_with_quota_fee_10['fee']=1
 		self.loan_with_quota_fee_10['timelimit']=13
 		self.client.post(
-			reverse(view_get_post_loans),
+			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_10),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -432,7 +443,7 @@ class LoanViewTest(AbstractTest):
 
 		loan = Loan.objects.get(user_id = 1)
 		response = self.client.patch(
-			reverse(view_get_update_loan,kwargs={'id': loan.id}),
+			reverse(view_loan_detail,kwargs={'id': loan.id}),
 			data = '{"state":1}',
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -460,7 +471,7 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(loan.get_state_display(),'APPROVED')
 
 		response = self.client.get(
-			reverse(view_get_update_loan,kwargs={'id': loan.id}),
+			reverse(view_loan_detail,kwargs={'id': loan.id}),
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -504,7 +515,7 @@ class LoanViewTest(AbstractTest):
 		token = self.get_token('mail_for_tests_2@mail.com','password')
 
 		self.client.post(
-			reverse(view_get_post_loans),
+			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_10),
 			content_type='application/json',
 			**self.get_auth_header(token)
@@ -512,7 +523,7 @@ class LoanViewTest(AbstractTest):
 
 		loan = Loan.objects.get(user_id = 2)
 		response = self.client.patch(
-			reverse(view_get_update_loan,kwargs={'id': loan.id}),
+			reverse(view_loan_detail,kwargs={'id': loan.id}),
 			data = '{"state":1}',
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -543,7 +554,7 @@ class LoanViewTest(AbstractTest):
 
 	def test_update_loan_state(self):
 		self.client.post(
-			reverse(view_get_post_loans),
+			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_10),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -551,7 +562,7 @@ class LoanViewTest(AbstractTest):
 
 		loan = Loan.objects.get(user_id = 1)
 		response = self.client.patch(
-			reverse(view_get_update_loan,kwargs={'id': loan.id}),
+			reverse(view_loan_detail,kwargs={'id': loan.id}),
 			data = '{"state":3}',
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -564,7 +575,7 @@ class LoanViewTest(AbstractTest):
 
 	def test_update_loan_denied(self):
 		self.client.post(
-			reverse(view_get_post_loans),
+			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_10),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -572,7 +583,7 @@ class LoanViewTest(AbstractTest):
 
 		loan = Loan.objects.get(user_id = 1)
 		response = self.client.patch(
-			reverse(view_get_update_loan,kwargs={'id': loan.id}),
+			reverse(view_loan_detail,kwargs={'id': loan.id}),
 			data = '{"state":2}',
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -615,7 +626,7 @@ class LoanViewTest(AbstractTest):
 		token = self.get_token('mail_for_tests_2@mail.com','password')
 
 		self.client.post(
-			reverse(view_get_post_loans),
+			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_10),
 			content_type='application/json',
 			**self.get_auth_header(token)
@@ -623,7 +634,7 @@ class LoanViewTest(AbstractTest):
 
 		loan = Loan.objects.get(user_id = 2)
 		response = self.client.patch(
-			reverse(view_get_update_loan,kwargs={'id': loan.id}),
+			reverse(view_loan_detail,kwargs={'id': loan.id}),
 			data = '{"state":2}',
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -649,7 +660,7 @@ class LoanViewTest(AbstractTest):
 
 	def test_update_loan_not_found(self):
 		self.client.post(
-			reverse(view_get_post_loans),
+			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_10),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -657,7 +668,7 @@ class LoanViewTest(AbstractTest):
 
 		loan = Loan.objects.get(user_id = 1)
 		response = self.client.patch(
-			reverse(view_get_update_loan,kwargs={'id': loan.id+1}),
+			reverse(view_loan_detail,kwargs={'id': loan.id+1}),
 			data = '{"state":2}',
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -667,7 +678,7 @@ class LoanViewTest(AbstractTest):
 
 	def test_update_loan_exceeded(self):
 		self.client.post(
-			reverse(view_get_post_loans),
+			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_10),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -675,7 +686,7 @@ class LoanViewTest(AbstractTest):
 
 		loan = Loan.objects.get(user_id = 1)
 		response = self.client.patch(
-			reverse(view_get_update_loan,kwargs={'id': loan.id+1}),
+			reverse(view_loan_detail,kwargs={'id': loan.id+1}),
 			data = '{"state":5}',
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -685,7 +696,7 @@ class LoanViewTest(AbstractTest):
 
 	def test_get_loan(self):
 		self.client.post(
-			reverse(view_get_post_loans),
+			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_10),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -693,7 +704,7 @@ class LoanViewTest(AbstractTest):
 		loan = Loan.objects.get(user_id = 1)
 
 		response = self.client.get(
-			reverse(view_get_update_loan,kwargs={'id': loan.id}),
+			reverse(view_loan_detail,kwargs={'id': loan.id}),
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -708,10 +719,11 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(response.data['loan']['user_full_name'],'Foo Name Foo Last Name')
 		self.assertEqual(Decimal(response.data['loan']['rate']).quantize(self.THREEPLACES),Decimal(0.025).quantize(self.THREEPLACES))
 		self.assertIsNotNone(response.data['loan']['created_at'])
+		self.assertEqual(response.data['loan']['disbursement_value'], 205)
 
 	def test_get_loan_not_found(self):
 		response = self.client.get(
-			reverse(view_get_update_loan,kwargs={'id': 2}),
+			reverse(view_loan_detail,kwargs={'id': 2}),
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -751,7 +763,7 @@ class LoanViewTest(AbstractTest):
 		file_reader = open(created_file.name,'r')
 		file['file'] = file_reader
 		response = self.client.patch(
-			reverse(view_get_post_loans),
+			reverse(view_loan),
 			data=encode_multipart('file',file),
 			content_type='multipart/form-data; boundary=file',
 			**self.get_auth_header(self.token)
@@ -817,14 +829,14 @@ class LoanViewTest(AbstractTest):
 
 	def test_payment_projection(self):
 		response = self.client.post(
-			reverse(view_get_post_loans),
+			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_10),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
 		loan_id = response.data['id']
 		response = self.client.patch(
-			reverse(view_get_update_loan,kwargs={'id': loan_id}),
+			reverse(view_loan_detail,kwargs={'id': loan_id}),
 			data = '{"state":1}',
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -887,7 +899,7 @@ class LoanViewTest(AbstractTest):
 
 	def test_refinance_loan_invalid_state(self):
 		response = self.client.post(
-			reverse(view_get_post_loans),
+			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_10),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -901,19 +913,18 @@ class LoanViewTest(AbstractTest):
 
 	def test_refinance_loan(self):
 		response = self.client.post(
-			reverse(view_get_post_loans),
+			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_10),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
 		loan_id = response.data['id']
 		self.client.patch(
-			reverse(view_get_update_loan,kwargs={'id': loan_id}),
+			reverse(view_loan_detail,kwargs={'id': loan_id}),
 			data = '{"state":1}',
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
-
 
 		data = {
 			"disbursement_date": "2017-12-09",
@@ -948,22 +959,23 @@ class LoanViewTest(AbstractTest):
 		self.assertIsNotNone(new_loan.prev_loan)
 		self.assertEqual(new_loan.prev_loan.id, loan.id)
 		self.assertEqual(loan.refinanced_loan, new_loan.id)
+		self.assertEqual(loan.disbursement_value, 205)
+		self.assertIsNone(new_loan.disbursement_value)
 
 	def test_refinance_loan_include_interests(self):
 		response = self.client.post(
-			reverse(view_get_post_loans),
+			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_10),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
 		loan_id = response.data['id']
 		self.client.patch(
-			reverse(view_get_update_loan,kwargs={'id': loan_id}),
+			reverse(view_loan_detail,kwargs={'id': loan_id}),
 			data = '{"state":1}',
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
-
 
 		data = {
 			"disbursement_date": "2017-12-09",
@@ -998,17 +1010,19 @@ class LoanViewTest(AbstractTest):
 		self.assertIsNotNone(new_loan.prev_loan)
 		self.assertEqual(new_loan.prev_loan.id, loan.id)
 		self.assertEqual(loan.refinanced_loan, new_loan.id)
+		self.assertEqual(loan.disbursement_value, 205)
+		self.assertIsNone(new_loan.disbursement_value)
 
 	def test_refinance_loan_update_approved(self):
 		response = self.client.post(
-			reverse(view_get_post_loans),
+			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_10),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
 		loan_id = response.data['id']
 		self.client.patch(
-			reverse(view_get_update_loan,kwargs={'id': loan_id}),
+			reverse(view_loan_detail,kwargs={'id': loan_id}),
 			data = '{"state":1}',
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -1029,7 +1043,7 @@ class LoanViewTest(AbstractTest):
 		)
 		new_loan_id = response.data['id']
 		response = self.client.patch(
-			reverse(view_get_update_loan,kwargs={'id': new_loan_id}),
+			reverse(view_loan_detail,kwargs={'id': new_loan_id}),
 			data = '{"state":1}',
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -1044,14 +1058,14 @@ class LoanViewTest(AbstractTest):
 
 	def test_refinance_loan_update_denied(self):
 		response = self.client.post(
-			reverse(view_get_post_loans),
+			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_10),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
 		loan_id = response.data['id']
 		self.client.patch(
-			reverse(view_get_update_loan,kwargs={'id': loan_id}),
+			reverse(view_loan_detail,kwargs={'id': loan_id}),
 			data = '{"state":1}',
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -1072,7 +1086,7 @@ class LoanViewTest(AbstractTest):
 		)
 		new_loan_id = response.data['id']
 		response = self.client.patch(
-			reverse(view_get_update_loan,kwargs={'id': new_loan_id}),
+			reverse(view_loan_detail,kwargs={'id': new_loan_id}),
 			data = '{"state":2}',
 			content_type='application/json',
 			**self.get_auth_header(self.token)

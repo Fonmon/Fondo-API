@@ -21,7 +21,7 @@ class AuthView(APIView):
         }
         return TemplateResponse(request, 'auth/authorize.html', context)
 
-    def post(self,request):
+    def post(self, request):
         client_id = request.query_params.get('client_id', '')
         response_type = request.query_params.get('response_type', '')
         redirect_to = request.query_params.get('redirect_uri', '')
@@ -31,7 +31,7 @@ class AuthView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST) 
 
         request_params = 'client_id={}&response_type={}&redirect_uri={}&state={}'\
-            .format(client_id,response_type,redirect_to,state)
+            .format(client_id, response_type, redirect_to, state)
 
         user = authenticate(username=request.POST.get('username', None), password=request.POST.get('password', None))
         if user is None:

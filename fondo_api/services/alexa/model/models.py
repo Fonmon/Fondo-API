@@ -1,4 +1,4 @@
-from fondo_api.logic.alexa.model.enums import CardEnum, SpeechEnum
+from fondo_api.services.alexa.model.enums import CardEnum, SpeechEnum
 
 class Card(object):
     def __init__(self, type, title, content, text):

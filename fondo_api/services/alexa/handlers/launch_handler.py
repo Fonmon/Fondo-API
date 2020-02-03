@@ -1,7 +1,7 @@
-from fondo_api.logic.alexa.handlers.abstract_handler import AbstractRequestHandler
-from fondo_api.logic.alexa.serializers import AlexaResponseSerializer
-from fondo_api.logic.alexa.model.models import AlexaResponse
-from fondo_api.logic.alexa.model.enums import SpeechEnum, CardEnum
+from fondo_api.services.alexa.handlers.abstract_handler import AbstractRequestHandler
+from fondo_api.services.alexa.serializers import AlexaResponseSerializer
+from fondo_api.services.alexa.model.models import AlexaResponse
+from fondo_api.services.alexa.model.enums import SpeechEnum, CardEnum
 
 class LaunchHandler(AbstractRequestHandler):
     def __init__(self, data, user_id):

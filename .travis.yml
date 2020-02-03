@@ -3,7 +3,7 @@ python:
   - 3.6
 addons:
   postgresql: "9.4"
-install: 
+install:
   - pip install -r requirements.txt 
   - pip install awscli
 services:
@@ -21,7 +21,7 @@ env:
     - POSTGRES_PORT=5432
     - DJANGO_SETTINGS_MODULE=api.settings.development
 script:
-  - coverage run --branch --source='.' manage.py test && coverage report -m --omit="*env*,*tests*,api/wsgi.py,fondo_api/apps.py,manage.py,*migrations*,fondo_api/routing.py,api/asgi.py"
+  - coverage run --branch --source='.' manage.py test && coverage report -m --omit="*env*,*tests*,api/wsgi.py,fondo_api/apps.py,manage.py,*migrations*"
 deploy:
   - provider: script
     script: sh $TRAVIS_BUILD_DIR/scripts/trigger-deploy.sh $TRAVIS_COMMIT i-02fd1798f1ce6963a $TRAVIS_BRANCH
@@ -29,7 +29,7 @@ deploy:
     on:
       branch: master
   - provider: script
-    script: sh $TRAVIS_BUILD_DIR/scripts/trigger-deploy.sh $TRAVIS_COMMIT i-09184c9cd4abacca0 $TRAVIS_BRANCH
+    script: sh $TRAVIS_BUILD_DIR/scripts/trigger-deploy.sh $TRAVIS_COMMIT i-028018a7f5b27a704 $TRAVIS_BRANCH
     skip_cleanup: true
     on:
       branch: develop

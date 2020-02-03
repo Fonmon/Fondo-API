@@ -9,7 +9,7 @@ from test.support import EnvironmentVarGuard
 
 from fondo_api.tests.abstract_test import AbstractTest
 from fondo_api.models import Loan
-from fondo_api.logic.alexa.amazon_alexa import AmazonAlexa
+from fondo_api.services.alexa.amazon_alexa import AmazonAlexa
 
 VIEW_ALEXA = "view_alexa"
 
@@ -526,6 +526,12 @@ class AlexaViewTest(AbstractTest):
                             "confirmationStatus": "NONE",
                             "source": "USER"
                         },
+                        "disbursement_value": {
+                            "name": "disbursement_value",
+                            "value": "105",
+                            "confirmationStatus": "NONE",
+                            "source": "USER"
+                        },
                         "fee": {
                             "name": "fee",
                             "value": "unique",
@@ -837,7 +843,7 @@ class AlexaViewTest(AbstractTest):
         self.assertEqual(len(response.data['response']['directives']), 0)
 
         loan = Loan.objects.get(id = loan_id)
-        self.assertEqual(loan.value,100)
+        self.assertEqual(loan.value, 100)
         self.assertEqual(loan.get_fee_display(),'UNIQUE')
         self.assertEqual(loan.get_state_display(),'WAITING_APPROVAL')
         self.assertEqual(loan.rate,Decimal(0.025).quantize(self.THREEPLACES))
@@ -848,3 +854,4 @@ class AlexaViewTest(AbstractTest):
         self.assertEqual(loan.payment,0)
         self.assertEqual(loan.get_payment_display(),'CASH')
         self.assertEqual(loan.timelimit, 7)
+        self.assertEqual(loan.disbursement_value, 105)

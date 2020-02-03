@@ -7,7 +7,7 @@
 cd /app
 
 if [ $# -ne 1 ]; then
-	echo 'One argument must to be provided. {api|worker}'
+	echo 'One argument must to be provided. {api|worker|scheduler}'
 	exit 1
 fi
 
@@ -17,6 +17,10 @@ if [ $1 == 'api' ]; then
 	gunicorn --bind 0.0.0.0:8443 api.wsgi\
 		--log-level=debug\
 		-w 3
-else
-	python manage.py runworker notification-task
+fi
+if [ $1 == 'worker' ]; then
+	celery -A api worker -l info
+fi
+if [ $1 == 'scheduler' ]; then
+	celery -A api beat -l info
 fi

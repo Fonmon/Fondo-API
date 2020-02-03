@@ -59,6 +59,7 @@ class Loan(models.Model):
 	user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
 	prev_loan = models.ForeignKey('self', on_delete=models.SET_NULL, null=True)
 	refinanced_loan = models.BigIntegerField(null=True)
+	disbursement_value = models.BigIntegerField(null = True)
 
 class LoanDetail(models.Model):
 	total_payment = models.BigIntegerField(default = 0)
@@ -93,3 +94,12 @@ class ActivityUser(models.Model):
 class NotificationSubscriptions(models.Model):
 	user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
 	subscription = HStoreField()
+
+class SchedulerTask(models.Model):
+	TASK_TYPES = (
+		(0,'NOTIFICATIONS'),
+	)
+	type = models.IntegerField(choices = TASK_TYPES)
+	run_date = models.DateTimeField()
+	payload = HStoreField()
+	processed = models.BooleanField(default = False)

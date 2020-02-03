@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from fondo_api.logic.alexa.amazon_alexa import AmazonAlexa
+from fondo_api.services.alexa.amazon_alexa import AmazonAlexa
 
 logger = logging.getLogger(__name__)
 aws_alexa = AmazonAlexa()

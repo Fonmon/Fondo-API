@@ -42,15 +42,15 @@ class UserFullInfoSerializer(serializers.Serializer):
 		fields = ('user', 'finance')
 
 	def get_user(self, obj):
-		serializer = UserProfileSerializer(obj[0].user)
+		serializer = UserProfileSerializer(obj["finance"].user)
 		return serializer.data
 
 	def get_finance(self, obj):
-		serializer = UserFinanceSerializer(obj[0])
+		serializer = UserFinanceSerializer(obj["finance"])
 		return serializer.data
 
 	def get_preferences(self, obj):
-		serializer = UserPreferenceSerializer(obj[1])
+		serializer = UserPreferenceSerializer(obj["preference"])
 		return serializer.data
 
 class LoanSerializer(serializers.ModelSerializer):
@@ -63,7 +63,7 @@ class LoanSerializer(serializers.ModelSerializer):
 		model = Loan
 		fields = ('value','timelimit','disbursement_date', 'payment',
 			'created_at','fee','comments','state','user_full_name','id','rate',
-			'is_refinanced', 'refinanced_loan', 'user_id')
+			'is_refinanced', 'refinanced_loan', 'user_id', 'disbursement_value')
 
 	def get_user_full_name(self, obj):
 		return '{} {}'.format(obj.user.first_name, obj.user.last_name)

@@ -8,10 +8,9 @@ from django.core import mail
 from fondo_api.models import *
 from fondo_api.tests.abstract_test import AbstractTest
 
-view_get_post_users = 'view_get_post_users'
-view_get_update_delete_user = 'view_get_update_delete_user'
-view_activate_user = 'view_activate_user'
-view_logout = 'view_logout'
+view_user = 'view_user'
+view_user_detail = 'view_user_detail'
+view_user_activate = 'view_user_activate'
 
 class UserViewTest(AbstractTest):
 	def setUp(self):
@@ -111,7 +110,7 @@ class UserViewTest(AbstractTest):
 
 	def test_success_post(self):
 		response = self.client.post(
-			reverse(view_get_post_users),
+			reverse(view_user),
 			data = json.dumps(self.object_json),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -136,23 +135,23 @@ class UserViewTest(AbstractTest):
 		self.assertEqual(len(UserProfile.objects.all()),2)
 		self.assertEqual(len(UserFinance.objects.all()),2)
 
-	@patch('fondo_api.logic.sender_mails.send_activation_mail',return_value=False)
+	@patch('fondo_api.services.utils.mails.send_activation_mail', return_value=False)
 	def test_invalid_email(self,mock):
 		response = self.client.post(
-			reverse(view_get_post_users),
+			reverse(view_user),
 			data = json.dumps(self.object_json),
-			content_type='application/json',
+			content_type = 'application/json',
 			**self.get_auth_header(self.token)
 		)
-		self.assertEqual(response.status_code,status.HTTP_409_CONFLICT)
-		self.assertEqual(response.data['message'],'Invalid email')
+		self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+		self.assertEqual(response.data['message'], 'Invalid email')
 
-		self.assertEqual(len(UserProfile.objects.all()),1)
-		self.assertEqual(len(UserFinance.objects.all()),1)
+		self.assertEqual(len(UserProfile.objects.all()), 1)
+		self.assertEqual(len(UserFinance.objects.all()), 1)
 
 	def test_unsuccess_post_identification(self):
 		response = self.client.post(
-			reverse(view_get_post_users),
+			reverse(view_user),
 			data = json.dumps(self.object_json_identification_r),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -165,7 +164,7 @@ class UserViewTest(AbstractTest):
 
 	def test_unsuccess_post_email(self):
 		response = self.client.post(
-			reverse(view_get_post_users),
+			reverse(view_user),
 			data = json.dumps(self.object_json_email_r),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -178,7 +177,7 @@ class UserViewTest(AbstractTest):
 
 	def test_get_users(self):
 		response = self.client.get(
-			reverse(view_get_post_users),
+			reverse(view_user),
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -192,7 +191,7 @@ class UserViewTest(AbstractTest):
 
 	def test_get_users_empty(self):
 		response = self.client.get(
-			"%s?page=2" % reverse(view_get_post_users),
+			"%s?page=2" % reverse(view_user),
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -201,7 +200,7 @@ class UserViewTest(AbstractTest):
 
 	def test_get_users_error_pagination(self):
 		response = self.client.get(
-			"%s?page=0" % reverse(view_get_post_users),
+			"%s?page=0" % reverse(view_user),
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -209,7 +208,7 @@ class UserViewTest(AbstractTest):
 
 	def test_get_user(self):
 		response = self.client.get(
-			reverse(view_get_update_delete_user,kwargs={'id': 1}),
+			reverse(view_user_detail,kwargs={'id': 1}),
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -228,7 +227,7 @@ class UserViewTest(AbstractTest):
 
 	def test_get_session_user(self):
 		response = self.client.get(
-			reverse(view_get_update_delete_user,kwargs={'id': -1}),
+			reverse(view_user_detail,kwargs={'id': -1}),
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -247,20 +246,20 @@ class UserViewTest(AbstractTest):
 
 	def test_get_user_not_found(self):
 		response = self.client.get(
-			reverse(view_get_update_delete_user,kwargs={'id': 2}),
+			reverse(view_user_detail,kwargs={'id': 2}),
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 	def test_delete_user(self):
 		response = self.client.delete(
-			reverse(view_get_update_delete_user,kwargs={'id': 2}),
+			reverse(view_user_detail,kwargs={'id': 2}),
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 		response = self.client.delete(
-			reverse(view_get_update_delete_user,kwargs={'id': 1}),
+			reverse(view_user_detail,kwargs={'id': 1}),
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -268,7 +267,7 @@ class UserViewTest(AbstractTest):
 		self.assertFalse(user.is_active)
 
 		response = self.client.get(
-			reverse(view_get_update_delete_user,kwargs={'id': 1}),
+			reverse(view_user_detail,kwargs={'id': 1}),
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code,status.HTTP_401_UNAUTHORIZED)
@@ -281,7 +280,7 @@ class UserViewTest(AbstractTest):
 	def test_patch_user(self):
 		self.object_json_user_update['type'] = 'personal'
 		response = self.client.patch(
-			reverse(view_get_update_delete_user,kwargs={'id': 2}),
+			reverse(view_user_detail,kwargs={'id': 2}),
 			data=json.dumps(self.object_json_user_update),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -289,7 +288,7 @@ class UserViewTest(AbstractTest):
 		self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 		response = self.client.patch(
-			reverse(view_get_update_delete_user,kwargs={'id': 1}),
+			reverse(view_user_detail,kwargs={'id': 1}),
 			data=json.dumps(self.object_json_user_update),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -305,7 +304,7 @@ class UserViewTest(AbstractTest):
 	def test_patch_user_finance(self):
 		self.object_json_user_update['type'] = 'finance'
 		response = self.client.patch(
-			reverse(view_get_update_delete_user,kwargs={'id': 2}),
+			reverse(view_user_detail,kwargs={'id': 2}),
 			data=json.dumps(self.object_json_user_update),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -313,7 +312,7 @@ class UserViewTest(AbstractTest):
 		self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 		response = self.client.patch(
-			reverse(view_get_update_delete_user,kwargs={'id': 1}),
+			reverse(view_user_detail,kwargs={'id': 1}),
 			data=json.dumps(self.object_json_user_update),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -330,7 +329,7 @@ class UserViewTest(AbstractTest):
 	def test_patch_user_not_finance(self):
 		self.object_json_user_update_same_finance['type'] = 'personal'
 		response = self.client.patch(
-			reverse(view_get_update_delete_user,kwargs={'id': 1}),
+			reverse(view_user_detail,kwargs={'id': 1}),
 			data=json.dumps(self.object_json_user_update_same_finance),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -345,7 +344,7 @@ class UserViewTest(AbstractTest):
 
 		self.object_json_user_update_same_finance['type'] = 'finance'
 		response = self.client.patch(
-			reverse(view_get_update_delete_user,kwargs={'id': 1}),
+			reverse(view_user_detail,kwargs={'id': 1}),
 			data=json.dumps(self.object_json_user_update_same_finance),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -360,7 +359,7 @@ class UserViewTest(AbstractTest):
 
 	def test_patch_user_conflict(self):
 		response = self.client.post(
-			reverse(view_get_post_users),
+			reverse(view_user),
 			data = json.dumps(self.object_json),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -373,7 +372,7 @@ class UserViewTest(AbstractTest):
 
 		self.object_json_user_update_identification_r['type'] = 'personal'
 		response = self.client.patch(
-			reverse(view_get_update_delete_user,kwargs={'id': 1}),
+			reverse(view_user_detail,kwargs={'id': 1}),
 			data=json.dumps(self.object_json_user_update_identification_r),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -383,7 +382,7 @@ class UserViewTest(AbstractTest):
 
 		self.object_json_user_update_email_r['type'] = 'personal'
 		response = self.client.patch(
-			reverse(view_get_update_delete_user,kwargs={'id': 1}),
+			reverse(view_user_detail,kwargs={'id': 1}),
 			data=json.dumps(self.object_json_user_update_email_r),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -392,7 +391,7 @@ class UserViewTest(AbstractTest):
 
 	def test_patch_preferences_not_found(self):
 		response = self.client.patch(
-			reverse(view_get_update_delete_user,kwargs={'id': 111}),
+			reverse(view_user_detail,kwargs={'id': 111}),
 			data='{"type": "preferences", "preferences":{"notifications": true}}',
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -401,7 +400,7 @@ class UserViewTest(AbstractTest):
 
 	def test_patch_preferences_notifications(self):
 		response = self.client.patch(
-			reverse(view_get_update_delete_user,kwargs={'id': 1}),
+			reverse(view_user_detail,kwargs={'id': 1}),
 			data='''{"type": "preferences", "preferences":{"notifications": true, "primary_color": "#fff", 
 					"secondary_color": "#000"}}''',
 			content_type='application/json',
@@ -413,7 +412,7 @@ class UserViewTest(AbstractTest):
 		self.assertTrue(user_preference.notifications, True)
 
 		response = self.client.patch(
-			reverse(view_get_update_delete_user,kwargs={'id': 1}),
+			reverse(view_user_detail,kwargs={'id': 1}),
 			data='''{"type": "preferences", "preferences":{"notifications": false, "primary_color": "#fff", 
 					"secondary_color": "#000"}}''',
 			content_type='application/json',
@@ -426,7 +425,7 @@ class UserViewTest(AbstractTest):
 
 	def test_activation_successful(self):
 		response = self.client.post(
-			reverse(view_get_post_users),
+			reverse(view_user),
 			data = json.dumps(self.object_json),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -445,7 +444,7 @@ class UserViewTest(AbstractTest):
 		};
 
 		response = self.client.post(
-			reverse(view_activate_user,kwargs={'id': user.id}),
+			reverse(view_user_activate,kwargs={'id': user.id}),
 			data = json.dumps(obj),
 			content_type='application/json',
 		)
@@ -458,7 +457,7 @@ class UserViewTest(AbstractTest):
 
 	def test_activation_unsuccessful_1(self):
 		response = self.client.post(
-			reverse(view_get_post_users),
+			reverse(view_user),
 			data = json.dumps(self.object_json),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -477,7 +476,7 @@ class UserViewTest(AbstractTest):
 		};
 
 		response = self.client.post(
-			reverse(view_activate_user,kwargs={'id': user.id}),
+			reverse(view_user_activate,kwargs={'id': user.id}),
 			data = json.dumps(obj),
 			content_type='application/json',
 		)
@@ -490,7 +489,7 @@ class UserViewTest(AbstractTest):
 
 	def test_activation_unsuccessful_2(self):
 		response = self.client.post(
-			reverse(view_get_post_users),
+			reverse(view_user),
 			data = json.dumps(self.object_json),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -509,7 +508,7 @@ class UserViewTest(AbstractTest):
 		};
 
 		response = self.client.post(
-			reverse(view_activate_user,kwargs={'id': user.id}),
+			reverse(view_user_activate,kwargs={'id': user.id}),
 			data = json.dumps(obj),
 			content_type='application/json',
 		)
@@ -522,7 +521,7 @@ class UserViewTest(AbstractTest):
 
 	def test_activation_unsuccessful_3(self):
 		response = self.client.post(
-			reverse(view_get_post_users),
+			reverse(view_user),
 			data = json.dumps(self.object_json),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
@@ -540,7 +539,7 @@ class UserViewTest(AbstractTest):
 		};
 
 		response = self.client.post(
-			reverse(view_activate_user,kwargs={'id': user.id}),
+			reverse(view_user_activate,kwargs={'id': user.id}),
 			data = json.dumps(obj),
 			content_type='application/json',
 		)
@@ -550,18 +549,6 @@ class UserViewTest(AbstractTest):
 		self.assertEqual(user.is_active,False)
 		self.assertFalse('pbkdf2_sha256' in user.password)
 		self.assertIsNotNone(user.key_activation)
-
-	def test_logout(self):
-		response = self.client.post(
-			reverse(view_logout),
-			**self.get_auth_header(self.token)
-		)
-		self.assertEqual(response.status_code,status.HTTP_200_OK)
-		response = self.client.post(
-			reverse(view_logout),
-			**self.get_auth_header(self.token)
-		)
-		self.assertEqual(response.status_code,status.HTTP_401_UNAUTHORIZED)
 
 	def create_test_file(self):
 		try:
@@ -598,7 +585,7 @@ class UserViewTest(AbstractTest):
 		file_reader = open(created_file.name,'r')
 		file['file'] = file_reader
 		response = self.client.patch(
-			reverse(view_get_post_users),
+			reverse(view_user),
 			data=encode_multipart('file',file),
 			content_type='multipart/form-data; boundary=file',
 			**self.get_auth_header(self.token)
