@@ -14,9 +14,11 @@ fi
 if [ $1 == 'api' ]; then
 	python manage.py migrate
 
-	gunicorn --bind 0.0.0.0:8443 api.wsgi\
+	gunicorn --bind 0.0.0.0:8081 api.wsgi\
 		--log-level=debug\
-		-w 3
+		-w 3 &
+
+	nginx -g 'daemon off;'
 fi
 if [ $1 == 'worker' ]; then
 	celery -A api worker -l info
