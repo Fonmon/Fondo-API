@@ -11,9 +11,9 @@ logger = logging.getLogger(__name__)
 @task(name = "send_notification")
 def send_notification(message):
     logger.info("Sending request to MNS...")
-    mns_host = os.environ.get('MNS_HOST', 'localhost')
+    mns_host = os.environ.get('MNS_HOST', 'http://localhost:9901/mns/send')
     try:
-        request = requests.post('http://{}:9901/mns/send'.format(mns_host), \
+        request = requests.post(mns_host, \
             data = json.dumps(message['content']), \
             headers = { 'content-type': 'application/json' }, \
             timeout = 120 \

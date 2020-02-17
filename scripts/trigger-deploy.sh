@@ -25,7 +25,7 @@ gcloud -q container images delete us.gcr.io/$PROJECT_ID/fonmon_api:$TAG --force-
 docker push us.gcr.io/$PROJECT_ID/fonmon_api:$TAG
 
 gcloud -q run deploy $SERVICE --allow-unauthenticated --max-instances=1 --platform managed --region us-central1 --image us.gcr.io/$PROJECT_ID/fonmon_api:$TAG --update-env-vars=CURRENT_API_APP=api
-gcloud -q run deploy $SERVICE_SCHED --no-allow-unauthenticated --max-instances=1 --platform managed --region us-central1 --image us.gcr.io/$PROJECT_ID/fonmon_api:$TAG --update-env-vars=CURRENT_API_APP=scheduler
-gcloud -q run deploy $SERVICE_WORKER --no-allow-unauthenticated --max-instances=1 --platform managed --region us-central1 --image us.gcr.io/$PROJECT_ID/fonmon_api:$TAG --update-env-vars=CURRENT_API_APP=worker
+gcloud -q run deploy $SERVICE_SCHED --allow-unauthenticated --max-instances=1 --platform managed --region us-central1 --image us.gcr.io/$PROJECT_ID/fonmon_api:$TAG --update-env-vars=CURRENT_API_APP=scheduler
+gcloud -q run deploy $SERVICE_WORKER --allow-unauthenticated --max-instances=1 --platform managed --region us-central1 --image us.gcr.io/$PROJECT_ID/fonmon_api:$TAG --update-env-vars=CURRENT_API_APP=worker
 
 exit 0
