@@ -21,4 +21,3 @@ RUN apk --purge del .build-deps
 COPY . /app
 
 ENTRYPOINT ["/bin/sh", "scripts/run-server.sh"]
-CMD ["api"]

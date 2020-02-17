@@ -6,23 +6,18 @@
 
 cd /app
 
-if [ $# -ne 1 ]; then
-	echo 'One argument must to be provided. {api|worker|scheduler}'
-	exit 1
-fi
-
-if [ $1 == 'api' ]; then
+if [ $CURRENT_API_APP == 'api' ]; then
 	python manage.py migrate
 
 	gunicorn --bind 0.0.0.0:8081 api.wsgi\
 		--log-level=debug\
 		-w 3 &
+fi
+if [ $CURRENT_API_APP == 'worker' ]; then
+	celery -A api worker -l info &
+fi
+if [ $CURRENT_API_APP == 'scheduler' ]; then
+	celery -A api beat -l info &
+fi
 
-	nginx -g 'daemon off;'
-fi
-if [ $1 == 'worker' ]; then
-	celery -A api worker -l info
-fi
-if [ $1 == 'scheduler' ]; then
-	celery -A api beat -l info
-fi
+nginx -g 'daemon off;'
