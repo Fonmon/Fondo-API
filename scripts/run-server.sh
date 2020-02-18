@@ -10,8 +10,7 @@ if [ $CURRENT_API_APP == 'api' ]; then
 	python manage.py migrate
 
 	gunicorn --bind 0.0.0.0:8081 api.wsgi\
-		--log-level=debug\
-		-w 3 &
+		--log-level=debug &
 fi
 if [ $CURRENT_API_APP == 'worker' ]; then
 	celery -A api worker -l info &
