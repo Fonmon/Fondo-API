@@ -6,10 +6,10 @@ from datetime import date
 class UserProfile(User):
 	REQUIRED_FIELDS = ('email','password')
 	ROLES = (
-		(0,'ADMIN'),
-		(1,'PRESIDENT'),
-		(2,'TREASURER'),
-		(3,'MEMBER')
+		(0,	'ADMIN'),
+		(1,	'PRESIDENT'),
+		(2,	'TREASURER'),
+		(3,	'MEMBER')
 	)
 	USERNAME_FIELD = 'email'
 	identification = models.BigIntegerField(unique=True)
@@ -33,19 +33,19 @@ class UserFinance(models.Model):
 
 class Loan(models.Model):
 	LOAN_STATES = (
-		(0,'WAITING_APPROVAL'),
-		(1,'APPROVED'),
-		(2,'DENIED'),
-		(3,'PAID_OUT')
+		(0, 'WAITING_APPROVAL'),
+		(1, 'APPROVED'),
+		(2, 'DENIED'),
+		(3, 'PAID_OUT')
 	)
 	FEE_TYPES = (
-		(0,'MONTHLY'),
-		(1,'UNIQUE')
+		(0, 'MONTHLY'),
+		(1, 'UNIQUE')
 	)
 	PAYMENT_TYPES = (
-		(0,'CASH'),
-		(1,'BANK_ACCOUNT'),
-		(2,'REFINANCED')
+		(0,	'CASH'),
+		(1,	'BANK_ACCOUNT'),
+		(2,	'REFINANCED')
 	)
 	value = models.BigIntegerField()
 	timelimit = models.IntegerField()
@@ -83,9 +83,9 @@ class Activity(models.Model):
 
 class ActivityUser(models.Model):
 	STATE_TYPES = (
-		(0,'NOT_PAID'),
-		(1,'PAID_OUT'),
-		(2,'EXEMPTED')
+		(0, 'NOT_PAID'),
+		(1, 'PAID_OUT'),
+		(2, 'EXEMPTED')
 	)
 	user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
 	activity = models.ForeignKey(Activity,on_delete=models.CASCADE)
@@ -97,9 +97,17 @@ class NotificationSubscriptions(models.Model):
 
 class SchedulerTask(models.Model):
 	TASK_TYPES = (
-		(0,'NOTIFICATIONS'),
+		(0, 'NOTIFICATIONS'),
 	)
-	type = models.IntegerField(choices = TASK_TYPES)
+	type = models.IntegerField(choices=TASK_TYPES)
 	run_date = models.DateTimeField()
 	payload = HStoreField()
-	processed = models.BooleanField(default = False)
+	processed = models.BooleanField(default=False)
+
+class File(models.Model): 
+	FILE_TYPE = (
+		(0, 'proceeding'),
+	)
+	type = models.IntegerField(choices=FILE_TYPE)
+	display_name = models.TextField(unique=True)
+	created_at = models.DateTimeField(auto_now_add=True)

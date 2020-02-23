@@ -6,6 +6,7 @@ from fondo_api.views.activity import ActivityDetailView, ActivityYearView, Activ
 from fondo_api.views.alexa import AlexaView
 from fondo_api.views.auth import AuthView
 from fondo_api.views.notification import NotificationView
+from fondo_api.views.file import FileView, FileDetailView
 
 urlpatterns = [
     url( r'^api/authorize/?$', AuthView.as_view(), name='view_auth' ),
@@ -25,4 +26,7 @@ urlpatterns = [
     url( r'^api/alexa/?$', AlexaView.as_view(), name='view_alexa' ),
 
     url( r'^api/notification/(?P<operation>[a-zA-Z]+)/?$', NotificationView.as_view(), name='view_notification' ),
+
+    url( r'^api/file/?$', FileView.as_view(), name='view_file' ),
+    url( r'^api/file/(?P<id>[0-9]+)$', FileDetailView.as_view(), name='view_file_detail' ),
 ]

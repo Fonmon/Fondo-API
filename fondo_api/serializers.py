@@ -119,3 +119,10 @@ class ActivityDetailSerializer(serializers.ModelSerializer):
 	def get_users(self, obj):
 		serializer = ActivityUserSerializer(obj.activityuser_set.order_by('user_id'), many=True)
 		return serializer.data
+
+class FileSerializer(serializers.ModelSerializer):
+	type_display = serializers.CharField(source='get_type_display')
+
+	class Meta:
+		model = File
+		fields = ('id', 'display_name', 'type_display')

@@ -1,3 +1,4 @@
+import logging
 from django.test.runner import DiscoverRunner
 
 class TestRunner(DiscoverRunner):
@@ -5,6 +6,10 @@ class TestRunner(DiscoverRunner):
     does not emit.  So we need another hook for installing the extension.  Prior to
     Django 1.9, the `pre_syncdb` signal worked for that.
     """
+
+    def run_tests(self, test_labels, extra_tests=None, **kwargs):
+        logging.disable(logging.CRITICAL);
+        return super(TestRunner, self).run_tests(test_labels, extra_tests, **kwargs)
 
     def setup_databases(self, **kwargs):
         """

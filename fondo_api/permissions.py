@@ -38,6 +38,13 @@ list_permissions = {
     },
     'NotificationView': {
         'POST': 3
+    },
+    'FileView': {
+        'POST': 0,
+        'GET': 3
+    },
+    'FileDetailView': {
+        'GET': 3
     }
 }
 

@@ -2,7 +2,7 @@ import logging
 from django.db import IntegrityError,transaction
 from django.core.paginator import Paginator
 from django.conf import settings
-from django.utils import timezone
+from django.utils.timezone import make_aware
 from decimal import Decimal
 from babel.dates import format_date
 from babel.numbers import decimal, format_decimal, format_number
@@ -309,6 +309,7 @@ class LoanService:
 										run_date__day = five_days_date.day,
 										processed = False)
 		if len(tasks) == 0:
+			five_days_date = make_aware(five_days_date)
 			SchedulerTask.objects.create(
 				type = 0,
 				run_date = five_days_date,
@@ -324,6 +325,7 @@ class LoanService:
 										run_date__day = before_date.day,
 										processed = False)
 		if len(tasks) == 0:	
+			before_date = make_aware(before_date)
 			SchedulerTask.objects.create(
 				type = 0,
 				run_date = before_date,
