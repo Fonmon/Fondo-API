@@ -165,7 +165,8 @@ class UserService:
 				user.username = obj['email']
 				user.identification = obj['identification']
 				user.role = obj['role']
-				user.birthdate = obj['birthdate']
+				if 'birthdate' in obj:
+					user.birthdate = obj['birthdate']
 				user.save()
 		except UserProfile.DoesNotExist:
 			return (False, 404)
