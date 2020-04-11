@@ -9,7 +9,7 @@ from rest_framework.authtoken.models import Token
 from babel.dates import format_date
 
 from fondo_api.models import UserProfile,UserFinance,UserPreference
-from fondo_api.serializers import UserProfileSerializer, UserFullInfoSerializer
+from fondo_api.serializers import UserProfileSerializer, UserFullInfoSerializer, UserBirthdateSerializer
 from fondo_api.services.utils import mails
 
 class UserService:
@@ -135,6 +135,11 @@ class UserService:
 	def get_profile(self, user_id):
 		return UserProfile.objects.get(id=user_id)
 
+	def get_users_birthdate(self):
+		users = UserProfile.objects.filter(is_active=True)
+		serializer = UserBirthdateSerializer(users, many=True)
+		return serializer.data
+
 	def __update_user_preferences(self, id, obj):
 		try:
 			user_preference = UserPreference.objects.get(user_id = id)
@@ -160,6 +165,7 @@ class UserService:
 				user.username = obj['email']
 				user.identification = obj['identification']
 				user.role = obj['role']
+				user.birthdate = obj['birthdate']
 				user.save()
 		except UserProfile.DoesNotExist:
 			return (False, 404)

@@ -67,3 +67,10 @@ class UserActivateView(APIView):
         if state:
             return Response(status=status.HTTP_200_OK)
         return Response(status=status.HTTP_404_NOT_FOUND)
+
+class UserAppsView(APIView):
+
+    def post(self, request, app):
+        if app == "birthdates":
+            return Response(user_service.get_users_birthdate(), status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_404_NOT_FOUND)

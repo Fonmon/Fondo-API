@@ -15,6 +15,7 @@ class UserProfile(User):
 	identification = models.BigIntegerField(unique=True)
 	role = models.IntegerField(choices=ROLES,default=3)
 	key_activation = models.CharField(null=True,max_length=100)
+	birthdate = models.DateField(null=True)
 
 class UserPreference(models.Model):
 	notifications = models.BooleanField(default=False)
@@ -59,7 +60,7 @@ class Loan(models.Model):
 	user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
 	prev_loan = models.ForeignKey('self', on_delete=models.SET_NULL, null=True)
 	refinanced_loan = models.BigIntegerField(null=True)
-	disbursement_value = models.BigIntegerField(null = True)
+	disbursement_value = models.BigIntegerField(null=True)
 
 class LoanDetail(models.Model):
 	total_payment = models.BigIntegerField(default = 0)

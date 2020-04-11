@@ -1,7 +1,7 @@
 from django.conf.urls import url
 
 from fondo_api.views.loan import LoanView, LoanDetailView, LoanAppsView
-from fondo_api.views.user import UserView, UserDetailView, UserActivateView
+from fondo_api.views.user import UserView, UserDetailView, UserActivateView, UserAppsView
 from fondo_api.views.activity import ActivityDetailView, ActivityYearView, ActivityYearDetailView
 from fondo_api.views.alexa import AlexaView
 from fondo_api.views.auth import AuthView
@@ -16,6 +16,7 @@ urlpatterns = [
     url( r'^api/loan/(?P<id>[0-9]+)/(?P<app>[a-zA-Z]+)$', LoanAppsView.as_view(), name='view_loan_apps' ),
 
     url( r'^api/user/?$', UserView.as_view(), name='view_user' ),
+    url( r'^api/user/(?P<app>-?[a-zA-Z]+)$', UserAppsView.as_view(), name='view_user_apps' ),
     url( r'^api/user/(?P<id>-?[0-9]+)$', UserDetailView.as_view(), name='view_user_detail' ),
     url( r'^api/user/activate/(?P<id>[0-9]+)$', UserActivateView.as_view(), name='view_user_activate' ),
 

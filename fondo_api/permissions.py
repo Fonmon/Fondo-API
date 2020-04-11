@@ -45,6 +45,9 @@ list_permissions = {
     },
     'FileDetailView': {
         'GET': 3
+    },
+    'UserAppsView': {
+        'POST': 3
     }
 }
 
