@@ -1,7 +1,8 @@
 import json
+from django.utils.timezone import make_aware
 
 from fondo_api.celery.tasks import send_notification
-from fondo_api.models import NotificationSubscriptions, UserProfile
+from fondo_api.models import NotificationSubscriptions, UserProfile, SchedulerTask
 
 class NotificationService:
 
@@ -49,3 +50,23 @@ class NotificationService:
             send_notification.delay({'type': 'send_notification', 'content': content})
         else:
             send_notification({'type': 'send_notification', 'content': content})
+
+    def schedule_notification(self, run_date, payload, repeat=0):
+        tasks = SchedulerTask.objects.filter(payload__owner_id = payload["owner_id"], 
+										payload__type = payload["type"],
+										run_date__year = run_date.year,
+										run_date__month = run_date.month,
+										run_date__day = run_date.day,
+										processed = False)
+        if len(tasks) == 0:
+            run_date = make_aware(run_date)
+            SchedulerTask.objects.create(
+                type = 0,
+                run_date = run_date,
+                payload = payload,
+                repeat = repeat
+            )
+
+    def remove_sch_notitfications(self, notification_type, owner_id):
+        SchedulerTask.objects.filter(payload__owner_id = owner_id,
+                                payload__type = notification_type).delete()

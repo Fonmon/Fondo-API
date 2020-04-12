@@ -100,10 +100,18 @@ class SchedulerTask(models.Model):
 	TASK_TYPES = (
 		(0, 'NOTIFICATIONS'),
 	)
+	REPEAT_TYPES = (
+		(0, 'NONE'),
+		(1, 'DAILY'),
+		(2, 'WEEKLY'),
+		(3, 'MONTHLY'),
+		(4, 'YEARLY')
+	)
 	type = models.IntegerField(choices=TASK_TYPES)
 	run_date = models.DateTimeField()
 	payload = HStoreField()
 	processed = models.BooleanField(default=False)
+	repeat = models.IntegerField(choices=REPEAT_TYPES, default=0)
 
 class File(models.Model): 
 	FILE_TYPE = (

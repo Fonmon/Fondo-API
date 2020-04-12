@@ -1,4 +1,4 @@
-from fondo_api.models import Loan
+import json
 from fondo_api.scheduler.executers.abstract_executer import AbstractExecuter
 
 class NotificationExecuter(AbstractExecuter):
@@ -8,10 +8,10 @@ class NotificationExecuter(AbstractExecuter):
         self.__notification_service = notification_service
 
     def run(self, payload):
-        loan = Loan.objects.get(id = payload["loan_id"])
+        user_ids = json.loads(payload["user_ids"])
         self.__notification_service.send_notification(
-            [loan.user.id], 
+            user_ids, 
             payload["message"], 
-            "/loan/{}".format(loan.id), 
+            payload["target"], 
             False
         )

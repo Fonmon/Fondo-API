@@ -7,6 +7,7 @@ from django.core.paginator import Paginator
 from django.conf import settings
 from rest_framework.authtoken.models import Token 
 from babel.dates import format_date
+from datetime import datetime
 
 from fondo_api.models import UserProfile,UserFinance,UserPreference
 from fondo_api.serializers import UserProfileSerializer, UserFullInfoSerializer, UserBirthdateSerializer
@@ -125,8 +126,11 @@ class UserService:
 				self.__logger.error('User with identification: {}, not exists'.format(identification))
 				continue
 
-	def get_profile_attr(self, profiles, attr):
-		users = UserProfile.objects.filter(role__in=profiles)
+	def get_users_attr(self, attr, roles=None):
+		if roles is not None:
+			users = UserProfile.objects.filter(role__in=roles, is_active=True)
+		else:
+			users = UserProfile.objects.filter(is_active=True)
 		list_attr = []
 		for user in users:
 			list_attr.append(getattr(user, attr))
@@ -167,6 +171,7 @@ class UserService:
 				user.role = obj['role']
 				if 'birthdate' in obj:
 					user.birthdate = obj['birthdate']
+					self.__create_birthdate_notification(user)
 				user.save()
 		except UserProfile.DoesNotExist:
 			return (False, 404)
@@ -197,3 +202,20 @@ class UserService:
 
 	def __generate_key(self):
 		return binascii.hexlify(os.urandom(25)).decode()
+
+	def __create_birthdate_notification(self, user):
+		today_year = datetime.now().year
+		birthdate = datetime.strptime(user.birthdate, '%Y-%m-%d').date().replace(year=today_year)
+		birthdate_time = datetime(birthdate.year, birthdate.month, birthdate.day)
+		user_ids = self.get_users_attr("id")
+		user_ids.remove(user.id)
+
+		payload = {}
+		payload["type"] = "birthdate"
+		payload["owner_id"] = user.id
+		payload["user_ids"] = user_ids
+		payload["target"] = "/"
+		payload["message"] = "Hoy está cumpliendo años {} {}".format(user.first_name, user.last_name)
+
+		self.__notification_service.remove_sch_notitfications("birthdate", user.id)
+		self.__notification_service.schedule_notification(birthdate_time, payload, 4)
