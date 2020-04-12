@@ -1,11 +1,11 @@
 import json
 import copy
+import os
 from mock import patch, MagicMock
 from datetime import datetime
 from django.urls import reverse
 from rest_framework import status
 from decimal import Decimal
-from test.support import EnvironmentVarGuard
 
 from fondo_api.tests.abstract_test import AbstractTest
 from fondo_api.models import Loan
@@ -15,8 +15,8 @@ VIEW_ALEXA = "view_alexa"
 
 class AlexaViewTest(AbstractTest):
     def setUp(self):
-        self.env = EnvironmentVarGuard()
-        self.env.set('AWS_SKILL_ID', 'amzn1.ask.skill.ZZZZZ-ee0d-4b69-YYYY-LKJOIU49d049')
+        self.env = patch.dict(os.environ, {'AWS_SKILL_ID': 'amzn1.ask.skill.ZZZZZ-ee0d-4b69-YYYY-LKJOIU49d049'})
+        self.env.start()
         self.create_user()
         self.token = self.get_token('mail_for_tests@mail.com','password')
         self.launch_object = {
@@ -568,6 +568,9 @@ class AlexaViewTest(AbstractTest):
             }
         }
     
+    def tearDown(self):
+        self.env.stop()
+
     def _get_alexa_headers(self):
         return {
             "HTTP_SIGNATURECERTCHAINURL": "https://s3.amazonaws.com/echo.api/echo-api-cert-6-ats.pem",

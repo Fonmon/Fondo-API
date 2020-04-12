@@ -12,7 +12,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = UserProfile
 		fields = ('full_name', 'identification','email','role_display','id',
-				  'first_name', 'last_name', 'role')
+				  'first_name', 'last_name', 'role', 'birthdate')
 
 	def get_full_name(self, obj):
 		return '{} {}'.format(obj.first_name, obj.last_name)
@@ -52,6 +52,16 @@ class UserFullInfoSerializer(serializers.Serializer):
 	def get_preferences(self, obj):
 		serializer = UserPreferenceSerializer(obj["preference"])
 		return serializer.data
+
+class UserBirthdateSerializer(serializers.ModelSerializer):
+	full_name = serializers.SerializerMethodField()
+
+	class Meta:
+		model = UserProfile
+		fields = ('birthdate', 'full_name')
+
+	def get_full_name(self, obj):
+		return '{} {}'.format(obj.first_name, obj.last_name)
 
 class LoanSerializer(serializers.ModelSerializer):
 	user_full_name = serializers.SerializerMethodField()
@@ -119,3 +129,10 @@ class ActivityDetailSerializer(serializers.ModelSerializer):
 	def get_users(self, obj):
 		serializer = ActivityUserSerializer(obj.activityuser_set.order_by('user_id'), many=True)
 		return serializer.data
+
+class FileSerializer(serializers.ModelSerializer):
+	type_display = serializers.CharField(source='get_type_display')
+
+	class Meta:
+		model = File
+		fields = ('id', 'display_name', 'type_display')

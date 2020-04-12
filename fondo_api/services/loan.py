@@ -2,14 +2,13 @@ import logging
 from django.db import IntegrityError,transaction
 from django.core.paginator import Paginator
 from django.conf import settings
-from django.utils import timezone
 from decimal import Decimal
 from babel.dates import format_date
 from babel.numbers import decimal, format_decimal, format_number
 from dateutil.relativedelta import relativedelta
 from datetime import datetime
 
-from fondo_api.models import UserProfile, UserFinance, Loan, LoanDetail, SchedulerTask
+from fondo_api.models import UserProfile, UserFinance, Loan, LoanDetail
 from fondo_api.serializers import LoanSerializer,LoanDetailSerializer
 from fondo_api.services.utils.mails import send_change_state_loan
 from fondo_api.services.utils.date import days360
@@ -52,7 +51,7 @@ class LoanService:
 
 		# send notification
 		self.__notification_service.send_notification(
-			self.__user_service.get_profile_attr([0,2], 'id'), 
+			self.__user_service.get_users_attr('id', [0,2]), 
 			"Ha sido creada una nueva solicitud de crédito", 
 			"/loan/{}".format(newLoan.id)
 		)
@@ -94,15 +93,15 @@ class LoanService:
 					loan.prev_loan.state = 3
 					loan.prev_loan.save()
 				loan_detail = self.__create_loan_detail(loan, detail)
-				send_change_state_loan(loan, 'approved', table, self.__user_service.get_profile_attr([0,2], 'email'))
+				send_change_state_loan(loan, 'approved', table, self.__user_service.get_users_attr('email', [0,2]))
 				return (True, LoanDetailSerializer(loan_detail).data)
 			if state == 2:
-				send_change_state_loan(loan, 'denied', bcc_list=self.__user_service.get_profile_attr([0,2], 'email'))
+				send_change_state_loan(loan, 'denied', bcc_list=self.__user_service.get_users_attr('email', [0,2]))
 				if loan.prev_loan is not None:
 					loan.prev_loan.refinanced_loan = None
 					loan.prev_loan.save()
 			if state == 3:
-				self.__remove_scheduled_tasks(id)
+				self.__notification_service.remove_sch_notitfications("payment_reminder", id)
 		return (True,'')
 
 	def payment_projection(self, loan_id, to_date):
@@ -291,44 +290,23 @@ class LoanService:
 		loan_detail.capital_balance = obj['capital_balance']
 		loan_detail.from_date = obj['from_date']
 		loan_detail.save()
-		self.__create_scheduled_task(obj['payday_limit'], loan_detail.loan_id)
+		self.__create_scheduled_task(obj['payday_limit'], loan_detail.loan)
 
-	def __create_scheduled_task(self, payday_limit, loan_id):
+	def __create_scheduled_task(self, payday_limit, loan):
 		payday_limit = datetime.strptime(payday_limit, '%Y-%m-%d').date()
 		five_days_date = payday_limit - relativedelta(days=5)
 		five_days_date = datetime(five_days_date.year, five_days_date.month, five_days_date.day)
 
-		message = "Recuerde que la fecha límite de pago para el crédito {}, es el: {}"
-		payload = {}
-		payload["loan_id"] = loan_id
-		payload["message"] = message.format(loan_id, format_date(payday_limit, locale=settings.LANGUAGE_LOCALE))
-
-		tasks = SchedulerTask.objects.filter(payload__loan_id = loan_id, 
-										run_date__year = five_days_date.year,
-										run_date__month = five_days_date.month,
-										run_date__day = five_days_date.day,
-										processed = False)
-		if len(tasks) == 0:
-			SchedulerTask.objects.create(
-				type = 0,
-				run_date = five_days_date,
-				payload = payload
-			)
-
 		before_date = payday_limit - relativedelta(days=1)
 		before_date = datetime(before_date.year, before_date.month, before_date.day)
 
-		tasks = SchedulerTask.objects.filter(payload__loan_id = loan_id, 
-										run_date__year = before_date.year,
-										run_date__month = before_date.month,
-										run_date__day = before_date.day,
-										processed = False)
-		if len(tasks) == 0:	
-			SchedulerTask.objects.create(
-				type = 0,
-				run_date = before_date,
-				payload = payload
-			)
+		message = "Recuerde que la fecha límite de pago para el crédito {}, es el: {}"
+		payload = {}
+		payload["type"] = "payment_reminder"
+		payload["owner_id"] = loan.id
+		payload["user_ids"] = [loan.user.id]
+		payload["target"] = "/loan/{}".format(loan.id)
+		payload["message"] = message.format(loan.id, format_date(payday_limit, locale=settings.LANGUAGE_LOCALE))
 
-	def __remove_scheduled_tasks(self, loan_id):
-		SchedulerTask.objects.filter(payload__loan_id = loan_id).delete()
+		self.__notification_service.schedule_notification(five_days_date, payload)
+		self.__notification_service.schedule_notification(before_date, payload)
