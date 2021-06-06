@@ -19,10 +19,12 @@ class UserView(APIView):
         return Response({'message': msg}, status=status.HTTP_409_CONFLICT)
 
     def get(self, request):
-        page = int(request.query_params.get('page', '1'))
-        if page <= 0:
+        page = None
+        if request.query_params.get('page') is not None:
+            page = int(request.query_params.get('page', '1'))
+        if page is not None and page <= 0:
             return Response(
-                {'message': 'Page number must be greater or equal than 0'}, 
+                {'message': 'Page number must be greater than 0'}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
         return Response(user_service.get_users(page), status=status.HTTP_200_OK)

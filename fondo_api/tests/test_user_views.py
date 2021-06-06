@@ -204,7 +204,7 @@ class UserViewTest(AbstractTest):
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-		self.assertEqual(response.data['message'],'Page number must be greater or equal than 0')
+		self.assertEqual(response.data['message'],'Page number must be greater than 0')
 
 	def test_get_user(self):
 		response = self.client.get(
