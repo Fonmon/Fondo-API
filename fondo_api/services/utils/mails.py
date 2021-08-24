@@ -1,6 +1,50 @@
 import os
+import boto3
+from botocore.exceptions import ClientError
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
+
+class MailService:
+
+	def send_mail(self):
+		try:
+			RECIPIENT = "TO_EMAIL"
+			params = {
+				'loan_id': 1,
+				'loan_table': ''
+			}
+			html_template = render_to_string('loans/{}_email.html'.format('denied'), params)
+			subject = render_to_string('loans/loan_subject.txt')
+			CHARSET = "UTF-8"
+
+			client = boto3.client('ses',region_name=os.environ['AWS_REGION'])
+			response = client.send_email(
+        Destination={
+            'ToAddresses': [
+              RECIPIENT,
+            ],
+						# 'BccAddresses': []
+        },
+        Message={
+            'Body': {
+                'Html': {
+                    'Charset': CHARSET,
+                    'Data': html_template,
+                },
+            },
+            'Subject': {
+                'Charset': CHARSET,
+                'Data': subject,
+            },
+        },
+        Source=os.environ['DEFAULT_FROM_EMAIL'],
+    	)
+			print(response)
+		except ClientError as e:
+			print(e.response['Error']['Message'])
+		else:
+			print("Email sent! Message ID:"),
+			print(response['MessageId'])
 
 def send_mail(subject, body, recipient_list, bcc_list = []):
 	mail = EmailMessage(
