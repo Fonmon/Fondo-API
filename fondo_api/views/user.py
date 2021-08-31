@@ -80,6 +80,9 @@ class UserAppsView(APIView):
         try:
             if app == "birthdates":
                 return Response(user_service.get_users_birthdate(), status=status.HTTP_200_OK)
+            if app == "power":
+                result = user_service.handle_power_request(request.user.id, request.data)
+                return Response(result, status=status.HTTP_200_OK)
         except Exception as exception:
             logger.error('Exception executing an user app: %s', exception)
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)

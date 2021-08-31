@@ -9,8 +9,9 @@ from rest_framework.authtoken.models import Token
 from babel.dates import format_date
 from datetime import datetime
 
-from fondo_api.models import UserProfile,UserFinance,UserPreference
-from fondo_api.serializers import UserProfileSerializer, UserFullInfoSerializer, UserBirthdateSerializer
+from fondo_api.models import UserProfile,UserFinance,UserPreference, Power
+from fondo_api.serializers import UserProfileSerializer, UserFullInfoSerializer, UserBirthdateSerializer,\
+  PowerSetSerializer
 from fondo_api.enums import EmailTemplate
 
 class UserService:
@@ -153,6 +154,26 @@ class UserService:
 		users = UserProfile.objects.filter(is_active=True)
 		serializer = UserBirthdateSerializer(users, many=True)
 		return serializer.data
+
+	def handle_power_request(self, user_id, request):
+		if request['type'].lower() == 'post':
+			Power.objects.create(
+				meeting_date = request['meeting_date'],
+				requester = self.get_profile(user_id),
+				requestee = self.get_profile(request['requestee'])
+			)
+			# send notifications
+			return None
+		elif request['type'].lower() == 'get':
+			user = self.get_profile(user_id)
+			serializer = PowerSetSerializer(user)
+			return serializer.data
+		elif request['type'].lower() == 'patch':
+			power = Power.objects.get(id = request['id'])
+			power.state = request['state']
+			power.save()
+			# send notifications
+			return None
 
 	def __update_user_preferences(self, id, obj):
 		try:

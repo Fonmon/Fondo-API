@@ -136,3 +136,29 @@ class FileSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = File
 		fields = ('id', 'display_name', 'type_display')
+
+class PowerSetSerializer(serializers.ModelSerializer):
+	requested = serializers.SerializerMethodField()
+	requestee = serializers.SerializerMethodField()
+
+	class Meta:
+		model = Power
+		fields = ('requested', 'requestee')
+
+	def get_requested(self, obj):
+		serializer = PowerSerializer(obj.power_requested.all(), many=True)
+		return serializer.data
+
+	def get_requestee(self, obj):
+		serializer = PowerSerializer(obj.power_requestee.all(), many=True)
+		return serializer.data
+
+class PowerSerializer(serializers.ModelSerializer):
+	requestee = serializers.SerializerMethodField()
+
+	class Meta:
+		model = Power
+		fields = ('id', 'state', 'meeting_date', 'requestee')
+
+	def get_requestee(self, obj):
+		return "{} {}".format(obj.requestee.first_name, obj.requestee.last_name)

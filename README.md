@@ -11,4 +11,4 @@ Django REST API. It provides access to fund's information
 ## Docker containers
 `docker run -d --name fondo_db -p 5432:5432 -e POSTGRES_DB=fondodev -e POSTGRES_USER=fondouser -e POSTGRES_PASSWORD=fondo postgres`
 
-`docker run --name redis -d redis`
+`docker run --name redis -p 6379:6379 -d redis`
