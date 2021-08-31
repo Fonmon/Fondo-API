@@ -7,6 +7,8 @@ from django.core import mail
 
 from fondo_api.models import *
 from fondo_api.tests.abstract_test import AbstractTest
+from fondo_api.services.mail import MailService
+from fondo_api.enums import EmailTemplate
 
 view_user = 'view_user'
 view_user_detail = 'view_user_detail'
@@ -108,7 +110,8 @@ class UserViewTest(AbstractTest):
 			}
 		}
 
-	def test_success_post(self):
+	@patch.object(MailService, 'send_mail')
+	def test_success_post(self, mock):
 		response = self.client.post(
 			reverse(view_user),
 			data = json.dumps(self.object_json),
@@ -127,15 +130,18 @@ class UserViewTest(AbstractTest):
 		self.assertIsNotNone(user.key_activation)
 		self.assertFalse(user.is_active)
 
-		self.assertEqual(len(mail.outbox),1)
-		self.assertEqual(mail.outbox[0].subject,'[Fondo Montañez] Activación de cuenta')
-		self.assertEqual(len(mail.outbox[0].to),1)
-		self.assertEqual(mail.outbox[0].to[0],'mail@mail.com')
+		self.assertTrue(mock.called)
+		mock.assert_called_once_with(EmailTemplate.USER_ACTIVATION, [user.email], {
+			'user_full_name': '{} {}'.format(user.first_name, user.last_name),
+			'user_id': user.id,
+			'user_key': user.key_activation,
+			'host_url': 'http://localhost:3000'
+		})
 
 		self.assertEqual(len(UserProfile.objects.all()),2)
 		self.assertEqual(len(UserFinance.objects.all()),2)
 
-	@patch('fondo_api.services.utils.mails.send_activation_mail', return_value=False)
+	@patch.object(MailService, 'send_mail', return_value=False)
 	def test_invalid_email(self,mock):
 		response = self.client.post(
 			reverse(view_user),
@@ -357,7 +363,8 @@ class UserViewTest(AbstractTest):
 		self.assertEqual(user_finance.utilized_quota, 0)
 		self.assertEqual(user_finance.available_quota, 500)
 
-	def test_patch_user_conflict(self):
+	@patch.object(MailService, 'send_mail')
+	def test_patch_user_conflict(self, mock):
 		response = self.client.post(
 			reverse(view_user),
 			data = json.dumps(self.object_json),
@@ -365,10 +372,8 @@ class UserViewTest(AbstractTest):
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code,status.HTTP_201_CREATED)
-		self.assertEqual(len(mail.outbox),1)
-		self.assertEqual(mail.outbox[0].subject,'[Fondo Montañez] Activación de cuenta')
-		self.assertEqual(len(mail.outbox[0].to),1)
-		self.assertEqual(mail.outbox[0].to[0],'mail@mail.com')
+		self.assertTrue(mock.called)
+		mock.assert_called_once()
 
 		self.object_json_user_update_identification_r['type'] = 'personal'
 		response = self.client.patch(
@@ -423,7 +428,8 @@ class UserViewTest(AbstractTest):
 		user_preference = UserPreference.objects.get(user_id=1)
 		self.assertFalse(user_preference.notifications, False)
 
-	def test_activation_successful(self):
+	@patch.object(MailService, 'send_mail')
+	def test_activation_successful(self, mock):
 		response = self.client.post(
 			reverse(view_user),
 			data = json.dumps(self.object_json),
@@ -431,17 +437,15 @@ class UserViewTest(AbstractTest):
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code,status.HTTP_201_CREATED)
-		self.assertEqual(len(mail.outbox),1)
-		self.assertEqual(mail.outbox[0].subject,'[Fondo Montañez] Activación de cuenta')
-		self.assertEqual(len(mail.outbox[0].to),1)
-		self.assertEqual(mail.outbox[0].to[0],'mail@mail.com')
+		self.assertTrue(mock.called)
+		mock.assert_called_once()
 
 		user = UserProfile.objects.get(identification = 123)
 		obj = {
 			'password':'newPassword123',
 			'identification':123,
 			'key':user.key_activation
-		};
+		}
 
 		response = self.client.post(
 			reverse(view_user_activate,kwargs={'id': user.id}),
@@ -455,7 +459,8 @@ class UserViewTest(AbstractTest):
 		self.assertTrue('pbkdf2_sha256' in user.password)
 		self.assertIsNone(user.key_activation)
 
-	def test_activation_unsuccessful_1(self):
+	@patch.object(MailService, 'send_mail')
+	def test_activation_unsuccessful_1(self, mock):
 		response = self.client.post(
 			reverse(view_user),
 			data = json.dumps(self.object_json),
@@ -463,17 +468,15 @@ class UserViewTest(AbstractTest):
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code,status.HTTP_201_CREATED)
-		self.assertEqual(len(mail.outbox),1)
-		self.assertEqual(mail.outbox[0].subject,'[Fondo Montañez] Activación de cuenta')
-		self.assertEqual(len(mail.outbox[0].to),1)
-		self.assertEqual(mail.outbox[0].to[0],'mail@mail.com')
+		self.assertTrue(mock.called)
+		mock.assert_called_once()
 
 		user = UserProfile.objects.get(identification = 123)
 		obj = {
 			'password':'newPassword123',
 			'identification':1234,
 			'key':user.key_activation
-		};
+		}
 
 		response = self.client.post(
 			reverse(view_user_activate,kwargs={'id': user.id}),
@@ -487,7 +490,8 @@ class UserViewTest(AbstractTest):
 		self.assertFalse('pbkdf2_sha256' in user.password)
 		self.assertIsNotNone(user.key_activation)
 
-	def test_activation_unsuccessful_2(self):
+	@patch.object(MailService, 'send_mail')
+	def test_activation_unsuccessful_2(self, mock):
 		response = self.client.post(
 			reverse(view_user),
 			data = json.dumps(self.object_json),
@@ -495,17 +499,15 @@ class UserViewTest(AbstractTest):
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code,status.HTTP_201_CREATED)
-		self.assertEqual(len(mail.outbox),1)
-		self.assertEqual(mail.outbox[0].subject,'[Fondo Montañez] Activación de cuenta')
-		self.assertEqual(len(mail.outbox[0].to),1)
-		self.assertEqual(mail.outbox[0].to[0],'mail@mail.com')
+		self.assertTrue(mock.called)
+		mock.assert_called_once()
 
 		user = UserProfile.objects.get(identification = 123)
 		obj = {
 			'password':'newPassword123',
 			'identification':1234,
 			'key': ''
-		};
+		}
 
 		response = self.client.post(
 			reverse(view_user_activate,kwargs={'id': user.id}),
@@ -519,7 +521,8 @@ class UserViewTest(AbstractTest):
 		self.assertFalse('pbkdf2_sha256' in user.password)
 		self.assertIsNotNone(user.key_activation)
 
-	def test_activation_unsuccessful_3(self):
+	@patch.object(MailService, 'send_mail')
+	def test_activation_unsuccessful_3(self, mock):
 		response = self.client.post(
 			reverse(view_user),
 			data = json.dumps(self.object_json),
@@ -527,16 +530,14 @@ class UserViewTest(AbstractTest):
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code,status.HTTP_201_CREATED)
-		self.assertEqual(len(mail.outbox),1)
-		self.assertEqual(mail.outbox[0].subject,'[Fondo Montañez] Activación de cuenta')
-		self.assertEqual(len(mail.outbox[0].to),1)
-		self.assertEqual(mail.outbox[0].to[0],'mail@mail.com')
+		self.assertTrue(mock.called)
+		mock.assert_called_once()
 
 		user = UserProfile.objects.get(identification = 123)
 		obj = {
 			'password':'newPassword123',
 			'identification':1234
-		};
+		}
 
 		response = self.client.post(
 			reverse(view_user_activate,kwargs={'id': user.id}),

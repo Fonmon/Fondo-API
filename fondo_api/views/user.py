@@ -1,3 +1,4 @@
+import logging
 from rest_framework.decorators import parser_classes
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -6,9 +7,12 @@ from rest_framework.parsers import MultiPartParser
 
 from fondo_api.services.user import UserService
 from fondo_api.services.notification import NotificationService
+from fondo_api.services.mail import MailService
 
 notification_service = NotificationService()
-user_service = UserService(notification_service)
+mail_service = MailService()
+user_service = UserService(notification_service, mail_service)
+logger = logging.getLogger(__name__)
 
 class UserView(APIView):
 
@@ -73,6 +77,11 @@ class UserActivateView(APIView):
 class UserAppsView(APIView):
 
     def post(self, request, app):
-        if app == "birthdates":
-            return Response(user_service.get_users_birthdate(), status=status.HTTP_200_OK)
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        try:
+            if app == "birthdates":
+                return Response(user_service.get_users_birthdate(), status=status.HTTP_200_OK)
+        except Exception as exception:
+            logger.error('Exception executing an user app: %s', exception)
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
