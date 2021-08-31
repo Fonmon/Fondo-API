@@ -11,14 +11,15 @@ from datetime import datetime
 
 from fondo_api.models import UserProfile,UserFinance,UserPreference
 from fondo_api.serializers import UserProfileSerializer, UserFullInfoSerializer, UserBirthdateSerializer
-from fondo_api.services.utils import mails
+from fondo_api.enums import EmailTemplate
 
 class UserService:
 
-	def __init__(self, notification_service = None):
+	def __init__(self, notification_service = None, mail_service = None):
 		self.USERS_PER_PAGE = 10
 		self.__logger = logging.getLogger(__name__)
 		self.__notification_service = notification_service
+		self.__mail_service = mail_service
 
 	def create_user(self, obj):
 		try:
@@ -42,10 +43,16 @@ class UserService:
 					user = user
 				)
 				UserPreference.objects.create(user=user)
-				if not mails.send_activation_mail(user):
+				mail_params = {
+					'user_full_name': '{} {}'.format(user.first_name, user.last_name),
+					'user_id': user.id,
+					'user_key': user.key_activation,
+					'host_url': os.environ.get('HOST_URL_APP')
+				}
+				if not self.__mail_service.send_mail(EmailTemplate.USER_ACTIVATION, [user.email], mail_params):
 					transaction.set_rollback(True)
 					return (False, 'Invalid email');
-		except IntegrityError:
+		except IntegrityError as error:
 			return (False, 'Identification/email already exists')
 		return (True, 'Success')
 

@@ -4,9 +4,12 @@ from django.core import mail
 from django.test.client import encode_multipart
 from rest_framework import status
 from decimal import Decimal
+from mock import patch, MagicMock
 
 from fondo_api.tests.abstract_test import AbstractTest
 from fondo_api.models import *
+from fondo_api.services.mail import MailService
+from fondo_api.enums import EmailTemplate
 
 view_loan_detail = 'view_loan_detail'
 view_loan = 'view_loan'
@@ -372,7 +375,8 @@ class LoanViewTest(AbstractTest):
 		for loan in response.data['list']:
 			self.assertEqual(loan['state'],0)
 
-	def test_update_loan_approved_monthly(self):
+	@patch.object(MailService, 'send_mail')
+	def test_update_loan_approved_monthly(self, mock):
 		self.client.post(
 			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_10),
@@ -391,19 +395,11 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(response.data['total_payment'],228)
 		self.assertEqual(response.data['minimum_payment'],25)
 		self.assertEqual(response.data['payday_limit'],'9 dic. 2017')
-		self.assertEqual(len(mail.outbox),1)
-		self.assertEqual(mail.outbox[0].subject,'[Fondo Montañez] Solicitud de crédito')
-		self.assertEqual(len(mail.outbox[0].to),1)
-		self.assertEqual(mail.outbox[0].to[0],'mail_for_tests@mail.com')
-		content = mail.outbox[0].body
-		mimetype = mail.outbox[0].content_subtype
-		self.assertEqual(mimetype,'html')
-		subcontent = 'crédito número: {},'.format(loan.id)
-		self.assertTrue(subcontent in content)
-		subcontent = '<strong>APROBADA</strong>'
-		self.assertTrue(subcontent in content)
-		subcontent = '<table style="width:100%" border="1"><tr><th>Cuota</th><th>Saldo inicial</th><th>Fecha inicial</th><th>Intereses</th><th>Abono a capital</th><th>Fecha de pago</th><th>Valor pago</th><th>Saldo final</th></tr><tr><td>1</td><td>$200</td><td>9 nov. 2017</td><td>$5</td><td>$20</td><td>9 dic. 2017</td><td>$25</td><td>$180</td></tr><tr><td>2</td><td>$180</td><td>9 dic. 2017</td><td>$4</td><td>$20</td><td>9 ene. 2018</td><td>$24</td><td>$160</td></tr><tr><td>3</td><td>$160</td><td>9 ene. 2018</td><td>$4</td><td>$20</td><td>9 feb. 2018</td><td>$24</td><td>$140</td></tr><tr><td>4</td><td>$140</td><td>9 feb. 2018</td><td>$3</td><td>$20</td><td>9 mar. 2018</td><td>$23</td><td>$120</td></tr><tr><td>5</td><td>$120</td><td>9 mar. 2018</td><td>$3</td><td>$20</td><td>9 abr. 2018</td><td>$23</td><td>$100</td></tr><tr><td>6</td><td>$100</td><td>9 abr. 2018</td><td>$2</td><td>$20</td><td>9 may. 2018</td><td>$22</td><td>$80</td></tr><tr><td>7</td><td>$80</td><td>9 may. 2018</td><td>$2</td><td>$20</td><td>9 jun. 2018</td><td>$22</td><td>$60</td></tr><tr><td>8</td><td>$60</td><td>9 jun. 2018</td><td>$1</td><td>$20</td><td>9 jul. 2018</td><td>$21</td><td>$40</td></tr><tr><td>9</td><td>$40</td><td>9 jul. 2018</td><td>$1</td><td>$20</td><td>9 ago. 2018</td><td>$21</td><td>$20</td></tr><tr><td>10</td><td>$20</td><td>9 ago. 2018</td><td>$0</td><td>$20</td><td>9 sept. 2018</td><td>$20</td><td>$0</td></tr></table>'
-		self.assertTrue(subcontent in content)
+		self.assertEqual(mock.called, True)
+		mock.assert_called_once_with(EmailTemplate.CHANGE_STATE_LOAN_APPROVED, ['mail_for_tests@mail.com'], {
+			'loan_id': loan.id,
+			'loan_table': '<table style="width:100%" border="1"><tr><th>Cuota</th><th>Saldo inicial</th><th>Fecha inicial</th><th>Intereses</th><th>Abono a capital</th><th>Fecha de pago</th><th>Valor pago</th><th>Saldo final</th></tr><tr><td>1</td><td>$200</td><td>9 nov. 2017</td><td>$5</td><td>$20</td><td>9 dic. 2017</td><td>$25</td><td>$180</td></tr><tr><td>2</td><td>$180</td><td>9 dic. 2017</td><td>$4</td><td>$20</td><td>9 ene. 2018</td><td>$24</td><td>$160</td></tr><tr><td>3</td><td>$160</td><td>9 ene. 2018</td><td>$4</td><td>$20</td><td>9 feb. 2018</td><td>$24</td><td>$140</td></tr><tr><td>4</td><td>$140</td><td>9 feb. 2018</td><td>$3</td><td>$20</td><td>9 mar. 2018</td><td>$23</td><td>$120</td></tr><tr><td>5</td><td>$120</td><td>9 mar. 2018</td><td>$3</td><td>$20</td><td>9 abr. 2018</td><td>$23</td><td>$100</td></tr><tr><td>6</td><td>$100</td><td>9 abr. 2018</td><td>$2</td><td>$20</td><td>9 may. 2018</td><td>$22</td><td>$80</td></tr><tr><td>7</td><td>$80</td><td>9 may. 2018</td><td>$2</td><td>$20</td><td>9 jun. 2018</td><td>$22</td><td>$60</td></tr><tr><td>8</td><td>$60</td><td>9 jun. 2018</td><td>$1</td><td>$20</td><td>9 jul. 2018</td><td>$21</td><td>$40</td></tr><tr><td>9</td><td>$40</td><td>9 jul. 2018</td><td>$1</td><td>$20</td><td>9 ago. 2018</td><td>$21</td><td>$20</td></tr><tr><td>10</td><td>$20</td><td>9 ago. 2018</td><td>$0</td><td>$20</td><td>9 sept. 2018</td><td>$20</td><td>$0</td></tr></table>'
+		}, ['mail_for_tests@mail.com'])
 
 		loan = Loan.objects.get(user_id = 1)
 		self.assertEqual(loan.state,1)
@@ -431,7 +427,8 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(response.data['loan_detail']['payday_limit'],'9 dic. 2017')
 		self.assertEqual(response.data['loan_detail']['from_date'],'9 nov. 2017')
 
-	def test_update_loan_approved_unique(self):
+	@patch.object(MailService, 'send_mail')
+	def test_update_loan_approved_unique(self, mock):
 		self.loan_with_quota_fee_10['fee']=1
 		self.loan_with_quota_fee_10['timelimit']=13
 		self.client.post(
@@ -452,19 +449,11 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(response.data['total_payment'],278)
 		self.assertEqual(response.data['minimum_payment'],278)
 		self.assertEqual(response.data['payday_limit'],'9 dic. 2018')
-		self.assertEqual(len(mail.outbox),1)
-		self.assertEqual(mail.outbox[0].subject,'[Fondo Montañez] Solicitud de crédito')
-		self.assertEqual(len(mail.outbox[0].to),1)
-		self.assertEqual(mail.outbox[0].to[0],'mail_for_tests@mail.com')
-		content = mail.outbox[0].body
-		mimetype = mail.outbox[0].content_subtype
-		self.assertEqual(mimetype,'html')
-		subcontent = 'crédito número: {},'.format(loan.id)
-		self.assertTrue(subcontent in content)
-		subcontent = '<strong>APROBADA</strong>'
-		self.assertTrue(subcontent in content)
-		subcontent = '<table style="width:100%" border="1"><tr><th>Cuota</th><th>Saldo inicial</th><th>Fecha inicial</th><th>Intereses</th><th>Abono a capital</th><th>Fecha de pago</th><th>Valor pago</th><th>Saldo final</th></tr><tr><td>1</td><td>$200</td><td>9 nov. 2017</td><td>$78</td><td>$200</td><td>9 dic. 2018</td><td>$278</td><td>$0</td></tr></table>'
-		self.assertTrue(subcontent in content)
+		self.assertEqual(mock.called, True)
+		mock.assert_called_once_with(EmailTemplate.CHANGE_STATE_LOAN_APPROVED, ['mail_for_tests@mail.com'], {
+			'loan_id': loan.id,
+			'loan_table': '<table style="width:100%" border="1"><tr><th>Cuota</th><th>Saldo inicial</th><th>Fecha inicial</th><th>Intereses</th><th>Abono a capital</th><th>Fecha de pago</th><th>Valor pago</th><th>Saldo final</th></tr><tr><td>1</td><td>$200</td><td>9 nov. 2017</td><td>$78</td><td>$200</td><td>9 dic. 2018</td><td>$278</td><td>$0</td></tr></table>'
+		}, ['mail_for_tests@mail.com'])
 
 		loan = Loan.objects.get(user_id = 1)
 		self.assertEqual(loan.state,1)
@@ -492,7 +481,8 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(response.data['loan_detail']['payday_limit'],'9 dic. 2018')
 		self.assertEqual(response.data['loan_detail']['from_date'],'9 nov. 2017')
 
-	def test_update_loan_approved_repeat_email(self):
+	@patch.object(MailService, 'send_mail')
+	def test_update_loan_approved_repeat_email(self, mock):
 		self.loan_with_quota_fee_10['fee']=1
 		self.loan_with_quota_fee_10['timelimit']=13
 		user = UserProfile.objects.create_user(
@@ -532,21 +522,11 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(response.data['total_payment'],278)
 		self.assertEqual(response.data['minimum_payment'],278)
 		self.assertEqual(response.data['payday_limit'],'9 dic. 2018')
-		self.assertEqual(len(mail.outbox),1)
-		self.assertEqual(mail.outbox[0].subject,'[Fondo Montañez] Solicitud de crédito')
-		self.assertEqual(len(mail.outbox[0].to),1)
-		self.assertEqual(len(mail.outbox[0].bcc),1)
-		self.assertEqual(mail.outbox[0].to[0],'mail_for_tests_2@mail.com')
-		self.assertEqual(mail.outbox[0].bcc[0],'mail_for_tests@mail.com')
-		content = mail.outbox[0].body
-		mimetype = mail.outbox[0].content_subtype
-		self.assertEqual(mimetype,'html')
-		subcontent = 'crédito número: {},'.format(loan.id)
-		self.assertTrue(subcontent in content)
-		subcontent = '<strong>APROBADA</strong>'
-		self.assertTrue(subcontent in content)
-		subcontent = '<table style="width:100%" border="1"><tr><th>Cuota</th><th>Saldo inicial</th><th>Fecha inicial</th><th>Intereses</th><th>Abono a capital</th><th>Fecha de pago</th><th>Valor pago</th><th>Saldo final</th></tr><tr><td>1</td><td>$200</td><td>9 nov. 2017</td><td>$78</td><td>$200</td><td>9 dic. 2018</td><td>$278</td><td>$0</td></tr></table>'
-		self.assertTrue(subcontent in content)
+		self.assertEqual(mock.called, True)
+		mock.assert_called_once_with(EmailTemplate.CHANGE_STATE_LOAN_APPROVED, ['mail_for_tests_2@mail.com'], {
+			'loan_id': loan.id,
+			'loan_table': '<table style="width:100%" border="1"><tr><th>Cuota</th><th>Saldo inicial</th><th>Fecha inicial</th><th>Intereses</th><th>Abono a capital</th><th>Fecha de pago</th><th>Valor pago</th><th>Saldo final</th></tr><tr><td>1</td><td>$200</td><td>9 nov. 2017</td><td>$78</td><td>$200</td><td>9 dic. 2018</td><td>$278</td><td>$0</td></tr></table>'
+		}, ['mail_for_tests@mail.com'])
 
 		loan = Loan.objects.get(user_id = 2)
 		self.assertEqual(loan.state,1)
@@ -573,7 +553,8 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(loan.state,3)
 		self.assertEqual(loan.get_state_display(),'PAID_OUT')
 
-	def test_update_loan_denied(self):
+	@patch.object(MailService, 'send_mail')
+	def test_update_loan_denied(self, mock):
 		self.client.post(
 			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_10),
@@ -589,23 +570,17 @@ class LoanViewTest(AbstractTest):
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code,status.HTTP_200_OK)
-		self.assertEqual(len(mail.outbox),1)
-		self.assertEqual(mail.outbox[0].subject,'[Fondo Montañez] Solicitud de crédito')
-		self.assertEqual(len(mail.outbox[0].to),1)
-		self.assertEqual(mail.outbox[0].to[0],'mail_for_tests@mail.com')
-		content = mail.outbox[0].body
-		mimetype = mail.outbox[0].content_subtype
-		self.assertEqual(mimetype,'html')
-		subcontent = 'crédito número: {},'.format(loan.id)
-		self.assertTrue(subcontent in content)
-		subcontent = '<strong>RECHAZADA</strong>'
-		self.assertTrue(subcontent in content)
+		self.assertEqual(mock.called, True)
+		mock.assert_called_once_with(EmailTemplate.CHANGE_STATE_LOAN_DENIED, ['mail_for_tests@mail.com'], {
+			'loan_id': loan.id
+		}, ['mail_for_tests@mail.com'])
 
 		loan = Loan.objects.get(user_id = 1)
 		self.assertEqual(loan.state,2)
 		self.assertEqual(loan.get_state_display(),'DENIED')
 
-	def test_update_loan_denied_repeat_email(self):
+	@patch.object(MailService, 'send_mail')
+	def test_update_loan_denied_repeat_email(self, mock):
 		user = UserProfile.objects.create_user(
 			id = 2,
 			first_name = 'Foo Name',
@@ -640,19 +615,10 @@ class LoanViewTest(AbstractTest):
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code,status.HTTP_200_OK)
-		self.assertEqual(len(mail.outbox),1)
-		self.assertEqual(mail.outbox[0].subject,'[Fondo Montañez] Solicitud de crédito')
-		self.assertEqual(len(mail.outbox[0].to),1)
-		self.assertEqual(len(mail.outbox[0].bcc),1)
-		self.assertEqual(mail.outbox[0].to[0],'mail_for_tests_2@mail.com')
-		self.assertEqual(mail.outbox[0].bcc[0],'mail_for_tests@mail.com')
-		content = mail.outbox[0].body
-		mimetype = mail.outbox[0].content_subtype
-		self.assertEqual(mimetype,'html')
-		subcontent = 'crédito número: {},'.format(loan.id)
-		self.assertTrue(subcontent in content)
-		subcontent = '<strong>RECHAZADA</strong>'
-		self.assertTrue(subcontent in content)
+		self.assertEqual(mock.called, True)
+		mock.assert_called_once_with(EmailTemplate.CHANGE_STATE_LOAN_DENIED, ['mail_for_tests_2@mail.com'], {
+			'loan_id': loan.id
+		}, ['mail_for_tests@mail.com'])
 
 		loan = Loan.objects.get(user_id = 2)
 		self.assertEqual(loan.state,2)
@@ -827,7 +793,8 @@ class LoanViewTest(AbstractTest):
 		)
 		self.assertEqual(response.status_code,status.HTTP_400_BAD_REQUEST)
 
-	def test_payment_projection(self):
+	@patch.object(MailService, 'send_mail')
+	def test_payment_projection(self, mock):
 		response = self.client.post(
 			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_10),
@@ -911,7 +878,8 @@ class LoanViewTest(AbstractTest):
 		)
 		self.assertEqual(response.status_code,status.HTTP_400_BAD_REQUEST)
 
-	def test_refinance_loan(self):
+	@patch.object(MailService, 'send_mail')
+	def test_refinance_loan(self, mock):
 		response = self.client.post(
 			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_10),
@@ -962,7 +930,8 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(loan.disbursement_value, 205)
 		self.assertIsNone(new_loan.disbursement_value)
 
-	def test_refinance_loan_include_interests(self):
+	@patch.object(MailService, 'send_mail')
+	def test_refinance_loan_include_interests(self, mock):
 		response = self.client.post(
 			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_10),
@@ -1013,7 +982,8 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(loan.disbursement_value, 205)
 		self.assertIsNone(new_loan.disbursement_value)
 
-	def test_refinance_loan_update_approved(self):
+	@patch.object(MailService, 'send_mail')
+	def test_refinance_loan_update_approved(self, mock):
 		response = self.client.post(
 			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_10),
@@ -1056,7 +1026,8 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(loan.state, 3)
 		self.assertEqual(new_loan.state, 1)
 
-	def test_refinance_loan_update_denied(self):
+	@patch.object(MailService, 'send_mail')
+	def test_refinance_loan_update_denied(self, mock):
 		response = self.client.post(
 			reverse(view_loan),
 			data = json.dumps(self.loan_with_quota_fee_10),
