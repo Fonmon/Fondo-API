@@ -20,6 +20,8 @@ env:
     - POSTGRES_PASSWORD=
     - POSTGRES_PORT=5432
     - DJANGO_SETTINGS_MODULE=api.settings.development
+    - DEFAULT_FROM_EMAIL=test@localhost
+    - AWS_REGION=aws-region
 script:
   - coverage run --branch --source='.' manage.py test && coverage report -m --omit="*env*,*tests*,api/wsgi.py,fondo_api/apps.py,manage.py,*migrations*"
 deploy:
