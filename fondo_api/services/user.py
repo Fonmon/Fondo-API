@@ -11,13 +11,13 @@ from datetime import datetime
 
 from fondo_api.models import UserProfile,UserFinance,UserPreference, Power
 from fondo_api.serializers import UserProfileSerializer, UserFullInfoSerializer, UserBirthdateSerializer,\
-  PowerSetSerializer
+  PowerSerializer
 from fondo_api.enums import EmailTemplate
 
 class UserService:
 
 	def __init__(self, notification_service = None, mail_service = None):
-		self.USERS_PER_PAGE = 10
+		self.ITEMS_PER_PAGE = 10
 		self.__logger = logging.getLogger(__name__)
 		self.__notification_service = notification_service
 		self.__mail_service = mail_service
@@ -60,7 +60,7 @@ class UserService:
 	def get_users(self, page):
 		users = UserProfile.objects.filter(is_active=True).order_by('id')
 		if page is not None:
-			paginator = Paginator(users, self.USERS_PER_PAGE)
+			paginator = Paginator(users, self.ITEMS_PER_PAGE)
 			if page > paginator.num_pages:
 				return {'list': [], 'num_pages': paginator.num_pages, 'count': paginator.count}
 			page_return = paginator.page(page)
@@ -162,17 +162,40 @@ class UserService:
 				requester = self.get_profile(user_id),
 				requestee = self.get_profile(request['requestee'])
 			)
-			# send notifications
+			self.__notification_service.send_notification(
+				[request['requestee']], 
+				'Te han enviado una solicitud para ser apoderado en una reunion. Revisala',
+				'/tool/power'
+			)
 			return None
 		elif request['type'].lower() == 'get':
+			objs = []
+			page = request['page']
 			user = self.get_profile(user_id)
-			serializer = PowerSetSerializer(user)
-			return serializer.data
+			if request['obj'] == 'requested':
+				objs = user.power_requested.all().order_by('-id')
+			if request['obj'] == 'requestee':
+				objs = user.power_requestee.all().order_by('-id')
+
+			paginator = Paginator(objs, self.ITEMS_PER_PAGE)
+			if page > paginator.num_pages:
+				return {'list': [], 'num_pages': paginator.num_pages, 'count': paginator.count}
+			page_return = paginator.page(page)
+			serializer = PowerSerializer(page_return.object_list, many=True)
+			return {'list': serializer.data, 'num_pages': paginator.num_pages, 'count': paginator.count}
 		elif request['type'].lower() == 'patch':
 			power = Power.objects.get(id = request['id'])
 			power.state = request['state']
 			power.save()
-			# send notifications
+			if power.state == 1:
+				mail_params = {
+					'requester_full_name': '{} {}'.format(power.requester.first_name, power.requester.last_name),
+					'requester_identification': power.requester.identification,
+					'requestee_full_name': '{} {}'.format(power.requestee.first_name, power.requestee.last_name),
+					'requestee_identification': power.requestee.identification,
+					'meeting_date': format_date(power.meeting_date, locale=settings.LANGUAGE_LOCALE),
+				}
+				self.__mail_service.send_mail(EmailTemplate.POWER_APPROVED, self.get_users_attr('email'), mail_params)
 			return None
 
 	def __update_user_preferences(self, id, obj):

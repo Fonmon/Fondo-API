@@ -62,6 +62,9 @@ class MailService:
 		elif template == EmailTemplate.CHANGE_STATE_LOAN_DENIED:
 			mail['body'] = render_to_string('loans/denied_email.html', params)
 			mail['subject'] = render_to_string('loans/loan_subject.txt')
+		elif template == EmailTemplate.POWER_APPROVED:
+			mail['body'] = render_to_string('power/power_email.html', params)
+			mail['subject'] = render_to_string('power/power_subject.txt')
 		return mail
 
 # def send_mail(subject, body, recipient_list, bcc_list = []):
