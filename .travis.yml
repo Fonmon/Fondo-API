@@ -20,7 +20,7 @@ env:
     - POSTGRES_PASSWORD=
     - POSTGRES_PORT=5432
     - DJANGO_SETTINGS_MODULE=api.settings.development
-    - DEFAULT_FROM_EMAIL=Fondo Montanez <no-reply@fonmon.minagle.com>
+    - DEFAULT_FROM_EMAIL="Fondo Montanez <no-reply@fonmon.minagle.com>"
     - AWS_REGION=aws-region
     - HOST_URL_APP=http://localhost:3000
 script:
