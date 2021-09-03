@@ -120,3 +120,14 @@ class File(models.Model):
 	type = models.IntegerField(choices=FILE_TYPE)
 	display_name = models.TextField(unique=True)
 	created_at = models.DateTimeField(auto_now_add=True)
+
+class Power(models.Model):
+	POWER_STATE = (
+		(0, 'PENDING'),
+		(1, 'APPROVED'),
+		(2, 'REJECTED'),
+	)
+	meeting_date = models.DateField()
+	state = models.IntegerField(choices=POWER_STATE, default=0)
+	requester = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='power_requested')
+	requestee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='power_requestee')

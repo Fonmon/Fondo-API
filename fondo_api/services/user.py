@@ -9,16 +9,18 @@ from rest_framework.authtoken.models import Token
 from babel.dates import format_date
 from datetime import datetime
 
-from fondo_api.models import UserProfile,UserFinance,UserPreference
-from fondo_api.serializers import UserProfileSerializer, UserFullInfoSerializer, UserBirthdateSerializer
-from fondo_api.services.utils import mails
+from fondo_api.models import UserProfile,UserFinance,UserPreference, Power
+from fondo_api.serializers import UserProfileSerializer, UserFullInfoSerializer, UserBirthdateSerializer,\
+  PowerSerializer
+from fondo_api.enums import EmailTemplate
 
 class UserService:
 
-	def __init__(self, notification_service = None):
-		self.USERS_PER_PAGE = 10
+	def __init__(self, notification_service = None, mail_service = None):
+		self.ITEMS_PER_PAGE = 10
 		self.__logger = logging.getLogger(__name__)
 		self.__notification_service = notification_service
+		self.__mail_service = mail_service
 
 	def create_user(self, obj):
 		try:
@@ -42,21 +44,30 @@ class UserService:
 					user = user
 				)
 				UserPreference.objects.create(user=user)
-				if not mails.send_activation_mail(user):
+				mail_params = {
+					'user_full_name': '{} {}'.format(user.first_name, user.last_name),
+					'user_id': user.id,
+					'user_key': user.key_activation,
+					'host_url': os.environ.get('HOST_URL_APP')
+				}
+				if not self.__mail_service.send_mail(EmailTemplate.USER_ACTIVATION, [user.email], mail_params):
 					transaction.set_rollback(True)
 					return (False, 'Invalid email');
-		except IntegrityError:
+		except IntegrityError as error:
 			return (False, 'Identification/email already exists')
 		return (True, 'Success')
 
-	def get_users(self, page = 1):
+	def get_users(self, page):
 		users = UserProfile.objects.filter(is_active=True).order_by('id')
-		paginator = Paginator(users, self.USERS_PER_PAGE)
-		if page > paginator.num_pages:
-			return {'list': [], 'num_pages': paginator.num_pages, 'count': paginator.count}
-		page_return = paginator.page(page)
-		serializer = UserProfileSerializer(page_return.object_list, many=True)
-		return {'list': serializer.data, 'num_pages': paginator.num_pages, 'count': paginator.count}
+		if page is not None:
+			paginator = Paginator(users, self.ITEMS_PER_PAGE)
+			if page > paginator.num_pages:
+				return {'list': [], 'num_pages': paginator.num_pages, 'count': paginator.count}
+			page_return = paginator.page(page)
+			serializer = UserProfileSerializer(page_return.object_list, many=True)
+			return {'list': serializer.data, 'num_pages': paginator.num_pages, 'count': paginator.count}
+		serializer = UserProfileSerializer(users, many=True)
+		return {'list': serializer.data}
 
 	def get_user(self, id):
 		try:
@@ -143,6 +154,49 @@ class UserService:
 		users = UserProfile.objects.filter(is_active=True)
 		serializer = UserBirthdateSerializer(users, many=True)
 		return serializer.data
+
+	def handle_power_request(self, user_id, request):
+		if request['type'].lower() == 'post':
+			Power.objects.create(
+				meeting_date = request['meeting_date'],
+				requester = self.get_profile(user_id),
+				requestee = self.get_profile(request['requestee'])
+			)
+			self.__notification_service.send_notification(
+				[request['requestee']], 
+				'Te han enviado una solicitud para ser apoderado en una reunion. Revisala',
+				'/tool/power'
+			)
+			return None
+		elif request['type'].lower() == 'get':
+			objs = []
+			page = request['page']
+			user = self.get_profile(user_id)
+			if request['obj'] == 'requested':
+				objs = user.power_requested.all().order_by('-id')
+			if request['obj'] == 'requestee':
+				objs = user.power_requestee.all().order_by('-id')
+
+			paginator = Paginator(objs, self.ITEMS_PER_PAGE)
+			if page > paginator.num_pages:
+				return {'list': [], 'num_pages': paginator.num_pages, 'count': paginator.count}
+			page_return = paginator.page(page)
+			serializer = PowerSerializer(page_return.object_list, many=True)
+			return {'list': serializer.data, 'num_pages': paginator.num_pages, 'count': paginator.count}
+		elif request['type'].lower() == 'patch':
+			power = Power.objects.get(id = request['id'])
+			power.state = request['state']
+			power.save()
+			if power.state == 1:
+				mail_params = {
+					'requester_full_name': '{} {}'.format(power.requester.first_name, power.requester.last_name),
+					'requester_identification': power.requester.identification,
+					'requestee_full_name': '{} {}'.format(power.requestee.first_name, power.requestee.last_name),
+					'requestee_identification': power.requestee.identification,
+					'meeting_date': format_date(power.meeting_date, locale=settings.LANGUAGE_LOCALE),
+				}
+				self.__mail_service.send_mail(EmailTemplate.POWER_APPROVED, self.get_users_attr('email'), mail_params)
+			return None
 
 	def __update_user_preferences(self, id, obj):
 		try:

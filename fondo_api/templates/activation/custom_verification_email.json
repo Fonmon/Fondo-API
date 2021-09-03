@@ -1,0 +1,8 @@
+{
+  "TemplateName": "FonmonVerificationEmail",
+  "FromEmailAddress": "Fondo Montanez <no-reply@fonmon.minagle.com>",
+  "TemplateSubject": "[Fondo Montañez] Verifica tu correo",
+  "TemplateContent": "<html><head></head><body style='font-family:sans-serif;'>Apreciado afiliado,<p>El siguiente mensaje tiene como fin verificar que el actual correo electrónico sea correcto para poder seguir enviándole notificaciones a esta dirección, para ello le pedimos el favor que de click al link que se encuentra debajo. Gracias</p></body></html>",
+  "SuccessRedirectionURL": "https://fonmon.minagle.com",
+  "FailureRedirectionURL": "https://fonmon.minagle.com"
+}

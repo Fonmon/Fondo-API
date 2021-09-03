@@ -10,16 +10,17 @@ from datetime import datetime
 
 from fondo_api.models import UserProfile, UserFinance, Loan, LoanDetail
 from fondo_api.serializers import LoanSerializer,LoanDetailSerializer
-from fondo_api.services.utils.mails import send_change_state_loan
 from fondo_api.services.utils.date import days360
+from fondo_api.enums import EmailTemplate
 
 class LoanService:
 
-	def __init__(self, user_service = None, notification_service = None):
+	def __init__(self, user_service = None, notification_service = None, mail_service = None):
 		self.LOANS_PER_PAGE = 10
 		self.__logger = logging.getLogger(__name__)
 		self.__user_service = user_service
 		self.__notification_service = notification_service
+		self.__mail_service = mail_service
 
 	def create_loan(self, user_id, obj, refinance = False, prev_loan = None):
 		user_finance = UserFinance.objects.get(user_id = user_id)
@@ -87,16 +88,22 @@ class LoanService:
 				return (False, 'Loan does not exist')
 			loan.state = state
 			loan.save()
+			mail_params = {
+				'loan_id': loan.id,
+			}
 			if state == 1:
 				table, detail = self.__generate_table(loan)
 				if loan.prev_loan is not None:
 					loan.prev_loan.state = 3
 					loan.prev_loan.save()
 				loan_detail = self.__create_loan_detail(loan, detail)
-				send_change_state_loan(loan, 'approved', table, self.__user_service.get_users_attr('email', [0,2]))
+				mail_params['loan_table'] = table
+				self.__mail_service.send_mail(EmailTemplate.CHANGE_STATE_LOAN_APPROVED, 
+				  [loan.user.email], mail_params, self.__user_service.get_users_attr('email', [0,2]))
 				return (True, LoanDetailSerializer(loan_detail).data)
 			if state == 2:
-				send_change_state_loan(loan, 'denied', bcc_list=self.__user_service.get_users_attr('email', [0,2]))
+				self.__mail_service.send_mail(EmailTemplate.CHANGE_STATE_LOAN_DENIED,
+				  [loan.user.email], mail_params, self.__user_service.get_users_attr('email', [0,2]))
 				if loan.prev_loan is not None:
 					loan.prev_loan.refinanced_loan = None
 					loan.prev_loan.save()

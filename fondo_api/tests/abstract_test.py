@@ -19,7 +19,7 @@ class AbstractTest(TestCase):
             role = 0,
             username = "mail_for_tests@mail.com",
             email = "mail_for_tests@mail.com",
-            password = "password"
+            password = "password",
         )
         UserFinance.objects.create(
             contributions= 2000,
@@ -29,6 +29,26 @@ class AbstractTest(TestCase):
             user= user
         )
         UserPreference.objects.create( user = user)
+
+    def create_basic_users(self):
+        for i in range(1, 11):
+            user = UserProfile.objects.create_user(
+                first_name = 'Foo Name',
+                last_name = 'Foo Last Name',
+                identification = i*1001,
+                role = 2,
+                username = "mail_for_tests_{}@mail.com".format(i*1001),
+                email = "mail_for_tests_{}@mail.com".format(i*1001),
+                password = "password"
+            )
+            UserFinance.objects.create(
+                contributions= 2000,
+                balance_contributions= 2000,
+                total_quota= 1000,
+                available_quota= 500,
+                user= user
+            )
+            UserPreference.objects.create( user = user)
 
     def get_token(self,username, password):
         body = {

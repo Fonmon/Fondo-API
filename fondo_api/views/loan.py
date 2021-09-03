@@ -8,10 +8,12 @@ from datetime import datetime
 from fondo_api.services.loan import LoanService
 from fondo_api.services.notification import NotificationService
 from fondo_api.services.user import UserService
+from fondo_api.services.mail import MailService
 
 notification_service = NotificationService()
 user_service = UserService()
-loan_service = LoanService(user_service, notification_service)
+mail_service = MailService()
+loan_service = LoanService(user_service, notification_service, mail_service)
 
 class LoanView(APIView):
 

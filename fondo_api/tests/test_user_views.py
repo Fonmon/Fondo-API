@@ -7,14 +7,18 @@ from django.core import mail
 
 from fondo_api.models import *
 from fondo_api.tests.abstract_test import AbstractTest
+from fondo_api.services.mail import MailService
+from fondo_api.enums import EmailTemplate
 
 view_user = 'view_user'
 view_user_detail = 'view_user_detail'
 view_user_activate = 'view_user_activate'
+view_user_apps = 'view_user_apps'
 
 class UserViewTest(AbstractTest):
 	def setUp(self):
 		self.create_user()
+		self.create_basic_users();
 		self.token = self.get_token('mail_for_tests@mail.com','password')
 		self.object_json = {
 			'first_name': 'Foo Name',
@@ -49,7 +53,8 @@ class UserViewTest(AbstractTest):
 				'first_name': 'Foo Name update',
 				'last_name': 'Last Name update',
 				'email': 'mail_updated@mail.com2',
-				'role': 2
+				'role': 2,
+				'birthdate': '1995-11-07'
 			},
 			'finance': {
 				'contributions': 2000,
@@ -108,7 +113,8 @@ class UserViewTest(AbstractTest):
 			}
 		}
 
-	def test_success_post(self):
+	@patch.object(MailService, 'send_mail')
+	def test_success_post(self, mock):
 		response = self.client.post(
 			reverse(view_user),
 			data = json.dumps(self.object_json),
@@ -127,15 +133,18 @@ class UserViewTest(AbstractTest):
 		self.assertIsNotNone(user.key_activation)
 		self.assertFalse(user.is_active)
 
-		self.assertEqual(len(mail.outbox),1)
-		self.assertEqual(mail.outbox[0].subject,'[Fondo Montañez] Activación de cuenta')
-		self.assertEqual(len(mail.outbox[0].to),1)
-		self.assertEqual(mail.outbox[0].to[0],'mail@mail.com')
+		self.assertTrue(mock.called)
+		mock.assert_called_once_with(EmailTemplate.USER_ACTIVATION, [user.email], {
+			'user_full_name': '{} {}'.format(user.first_name, user.last_name),
+			'user_id': user.id,
+			'user_key': user.key_activation,
+			'host_url': 'http://localhost:3000'
+		})
 
-		self.assertEqual(len(UserProfile.objects.all()),2)
-		self.assertEqual(len(UserFinance.objects.all()),2)
+		self.assertEqual(len(UserProfile.objects.all()), 12)
+		self.assertEqual(len(UserFinance.objects.all()), 12)
 
-	@patch('fondo_api.services.utils.mails.send_activation_mail', return_value=False)
+	@patch.object(MailService, 'send_mail', return_value=False)
 	def test_invalid_email(self,mock):
 		response = self.client.post(
 			reverse(view_user),
@@ -146,8 +155,8 @@ class UserViewTest(AbstractTest):
 		self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 		self.assertEqual(response.data['message'], 'Invalid email')
 
-		self.assertEqual(len(UserProfile.objects.all()), 1)
-		self.assertEqual(len(UserFinance.objects.all()), 1)
+		self.assertEqual(len(UserProfile.objects.all()), 11)
+		self.assertEqual(len(UserFinance.objects.all()), 11)
 
 	def test_unsuccess_post_identification(self):
 		response = self.client.post(
@@ -159,8 +168,8 @@ class UserViewTest(AbstractTest):
 		self.assertEqual(response.status_code,status.HTTP_409_CONFLICT)
 		self.assertEqual(response.data['message'],'Identification/email already exists')
 
-		self.assertEqual(len(UserProfile.objects.all()),1)
-		self.assertEqual(len(UserFinance.objects.all()),1)
+		self.assertEqual(len(UserProfile.objects.all()), 11)
+		self.assertEqual(len(UserFinance.objects.all()), 11)
 
 	def test_unsuccess_post_email(self):
 		response = self.client.post(
@@ -172,16 +181,31 @@ class UserViewTest(AbstractTest):
 		self.assertEqual(response.status_code,status.HTTP_409_CONFLICT)
 		self.assertEqual(response.data['message'],'Identification/email already exists')
 
-		self.assertEqual(len(UserProfile.objects.all()),1)
-		self.assertEqual(len(UserFinance.objects.all()),1)
+		self.assertEqual(len(UserProfile.objects.all()), 11)
+		self.assertEqual(len(UserFinance.objects.all()), 11)
 
 	def test_get_users(self):
+		response = self.client.get(
+			"%s?page=1" % reverse(view_user),
+			**self.get_auth_header(self.token)
+		)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(len(response.data['list']), 10)
+		self.assertEqual(response.data['num_pages'], 2)
+		for user in response.data['list']:
+			self.assertIsNotNone(user['id'])
+			self.assertIsNotNone(user['identification'])
+			self.assertIsNotNone(user['full_name'])
+			self.assertIsNotNone(user['email'])
+			self.assertIsNotNone(user['role'])
+
+	def test_get_users_all(self):
 		response = self.client.get(
 			reverse(view_user),
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
-		self.assertEqual(len(response.data['list']),len(UserProfile.objects.filter(is_active=True)))
+		self.assertEqual(len(response.data['list']), 11)
 		for user in response.data['list']:
 			self.assertIsNotNone(user['id'])
 			self.assertIsNotNone(user['identification'])
@@ -191,12 +215,12 @@ class UserViewTest(AbstractTest):
 
 	def test_get_users_empty(self):
 		response = self.client.get(
-			"%s?page=2" % reverse(view_user),
+			"%s?page=3" % reverse(view_user),
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
 		self.assertEqual(len(response.data['list']),0)
-		self.assertEqual(response.data['num_pages'],1)
+		self.assertEqual(response.data['num_pages'],2)
 
 	def test_get_users_error_pagination(self):
 		response = self.client.get(
@@ -204,7 +228,7 @@ class UserViewTest(AbstractTest):
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-		self.assertEqual(response.data['message'],'Page number must be greater or equal than 0')
+		self.assertEqual(response.data['message'],'Page number must be greater than 0')
 
 	def test_get_user(self):
 		response = self.client.get(
@@ -357,7 +381,8 @@ class UserViewTest(AbstractTest):
 		self.assertEqual(user_finance.utilized_quota, 0)
 		self.assertEqual(user_finance.available_quota, 500)
 
-	def test_patch_user_conflict(self):
+	@patch.object(MailService, 'send_mail')
+	def test_patch_user_conflict(self, mock):
 		response = self.client.post(
 			reverse(view_user),
 			data = json.dumps(self.object_json),
@@ -365,10 +390,8 @@ class UserViewTest(AbstractTest):
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code,status.HTTP_201_CREATED)
-		self.assertEqual(len(mail.outbox),1)
-		self.assertEqual(mail.outbox[0].subject,'[Fondo Montañez] Activación de cuenta')
-		self.assertEqual(len(mail.outbox[0].to),1)
-		self.assertEqual(mail.outbox[0].to[0],'mail@mail.com')
+		self.assertTrue(mock.called)
+		mock.assert_called_once()
 
 		self.object_json_user_update_identification_r['type'] = 'personal'
 		response = self.client.patch(
@@ -423,7 +446,8 @@ class UserViewTest(AbstractTest):
 		user_preference = UserPreference.objects.get(user_id=1)
 		self.assertFalse(user_preference.notifications, False)
 
-	def test_activation_successful(self):
+	@patch.object(MailService, 'send_mail')
+	def test_activation_successful(self, mock):
 		response = self.client.post(
 			reverse(view_user),
 			data = json.dumps(self.object_json),
@@ -431,17 +455,15 @@ class UserViewTest(AbstractTest):
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code,status.HTTP_201_CREATED)
-		self.assertEqual(len(mail.outbox),1)
-		self.assertEqual(mail.outbox[0].subject,'[Fondo Montañez] Activación de cuenta')
-		self.assertEqual(len(mail.outbox[0].to),1)
-		self.assertEqual(mail.outbox[0].to[0],'mail@mail.com')
+		self.assertTrue(mock.called)
+		mock.assert_called_once()
 
 		user = UserProfile.objects.get(identification = 123)
 		obj = {
 			'password':'newPassword123',
 			'identification':123,
 			'key':user.key_activation
-		};
+		}
 
 		response = self.client.post(
 			reverse(view_user_activate,kwargs={'id': user.id}),
@@ -455,7 +477,8 @@ class UserViewTest(AbstractTest):
 		self.assertTrue('pbkdf2_sha256' in user.password)
 		self.assertIsNone(user.key_activation)
 
-	def test_activation_unsuccessful_1(self):
+	@patch.object(MailService, 'send_mail')
+	def test_activation_unsuccessful_1(self, mock):
 		response = self.client.post(
 			reverse(view_user),
 			data = json.dumps(self.object_json),
@@ -463,17 +486,15 @@ class UserViewTest(AbstractTest):
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code,status.HTTP_201_CREATED)
-		self.assertEqual(len(mail.outbox),1)
-		self.assertEqual(mail.outbox[0].subject,'[Fondo Montañez] Activación de cuenta')
-		self.assertEqual(len(mail.outbox[0].to),1)
-		self.assertEqual(mail.outbox[0].to[0],'mail@mail.com')
+		self.assertTrue(mock.called)
+		mock.assert_called_once()
 
 		user = UserProfile.objects.get(identification = 123)
 		obj = {
 			'password':'newPassword123',
 			'identification':1234,
 			'key':user.key_activation
-		};
+		}
 
 		response = self.client.post(
 			reverse(view_user_activate,kwargs={'id': user.id}),
@@ -487,7 +508,8 @@ class UserViewTest(AbstractTest):
 		self.assertFalse('pbkdf2_sha256' in user.password)
 		self.assertIsNotNone(user.key_activation)
 
-	def test_activation_unsuccessful_2(self):
+	@patch.object(MailService, 'send_mail')
+	def test_activation_unsuccessful_2(self, mock):
 		response = self.client.post(
 			reverse(view_user),
 			data = json.dumps(self.object_json),
@@ -495,17 +517,15 @@ class UserViewTest(AbstractTest):
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code,status.HTTP_201_CREATED)
-		self.assertEqual(len(mail.outbox),1)
-		self.assertEqual(mail.outbox[0].subject,'[Fondo Montañez] Activación de cuenta')
-		self.assertEqual(len(mail.outbox[0].to),1)
-		self.assertEqual(mail.outbox[0].to[0],'mail@mail.com')
+		self.assertTrue(mock.called)
+		mock.assert_called_once()
 
 		user = UserProfile.objects.get(identification = 123)
 		obj = {
 			'password':'newPassword123',
 			'identification':1234,
 			'key': ''
-		};
+		}
 
 		response = self.client.post(
 			reverse(view_user_activate,kwargs={'id': user.id}),
@@ -519,7 +539,8 @@ class UserViewTest(AbstractTest):
 		self.assertFalse('pbkdf2_sha256' in user.password)
 		self.assertIsNotNone(user.key_activation)
 
-	def test_activation_unsuccessful_3(self):
+	@patch.object(MailService, 'send_mail')
+	def test_activation_unsuccessful_3(self, mock):
 		response = self.client.post(
 			reverse(view_user),
 			data = json.dumps(self.object_json),
@@ -527,19 +548,17 @@ class UserViewTest(AbstractTest):
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code,status.HTTP_201_CREATED)
-		self.assertEqual(len(mail.outbox),1)
-		self.assertEqual(mail.outbox[0].subject,'[Fondo Montañez] Activación de cuenta')
-		self.assertEqual(len(mail.outbox[0].to),1)
-		self.assertEqual(mail.outbox[0].to[0],'mail@mail.com')
+		self.assertTrue(mock.called)
+		mock.assert_called_once()
 
 		user = UserProfile.objects.get(identification = 123)
 		obj = {
 			'password':'newPassword123',
 			'identification':1234
-		};
+		}
 
 		response = self.client.post(
-			reverse(view_user_activate,kwargs={'id': user.id}),
+			reverse(view_user_activate, kwargs={'id': user.id}),
 			data = json.dumps(obj),
 			content_type='application/json',
 		)
@@ -613,3 +632,167 @@ class UserViewTest(AbstractTest):
 		self.assertEqual(user_finance.contributions,800)
 		self.assertEqual(user_finance.utilized_quota,900)
 		self.assertEqual(user_finance.available_quota,100)
+
+	def test_user_apps_not_found(self):
+		response = self.client.post(
+			reverse(view_user_apps, kwargs={'app': 'noexist'}),
+			**self.get_auth_header(self.token)
+		)
+
+		self.assertEqual(response.status_code,status.HTTP_404_NOT_FOUND)
+
+	def test_get_users_birthdate(self):
+		response = self.client.post(
+			reverse(view_user_apps, kwargs={'app': 'birthdates'}),
+			**self.get_auth_header(self.token)
+		)
+
+		self.assertEqual(response.status_code,status.HTTP_200_OK)
+		self.assertEqual(len(response.data), 11)
+		for i in range(len(response.data)):
+			self.assertEqual(response.data[i]['birthdate'], None)
+
+	def test_get_powers_exception(self):
+		response = self.client.post(
+			reverse(view_user_apps, kwargs={'app': 'power'}),
+			**self.get_auth_header(self.token),
+			data = json.dumps({
+				'type': 'get',
+				'page': 2
+			}),
+			content_type='application/json',
+		)
+
+		self.assertEqual(response.status_code,status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+	def test_get_powers_empty(self):
+		response = self.client.post(
+			reverse(view_user_apps, kwargs={'app': 'power'}),
+			**self.get_auth_header(self.token),
+			data = json.dumps({
+				'type': 'get',
+				'page': 2,
+				'obj': 'requestee'
+			}),
+			content_type='application/json',
+		)
+
+		self.assertEqual(response.status_code,status.HTTP_200_OK)
+		self.assertEqual(len(response.data['list']), 0)
+		self.assertEqual(response.data['num_pages'], 1)
+
+	def test_post_power(self):
+		self.assertEqual(len(Power.objects.all()), 0)
+		user = UserProfile.objects.get(identification=1001)
+
+		response = self.client.post(
+			reverse(view_user_apps, kwargs={'app': 'power'}),
+			**self.get_auth_header(self.token),
+			data = json.dumps({
+				'type': 'post',
+				'meeting_date': '2020-01-01',
+				'requestee': user.id
+			}),
+			content_type='application/json',
+		)
+
+		self.assertEqual(response.status_code,status.HTTP_200_OK)
+		self.assertEqual(response.data, None)
+		self.assertEqual(len(Power.objects.all()), 1)
+
+	def test_get_powers_pagination(self):
+		self.assertEqual(len(Power.objects.all()), 0)
+		user = UserProfile.objects.get(identification=1001)
+
+		for i in range(11):
+			response = self.client.post(
+				reverse(view_user_apps, kwargs={'app': 'power'}),
+				**self.get_auth_header(self.token),
+				data = json.dumps({
+					'type': 'post',
+					'meeting_date': '2020-01-01',
+					'requestee': user.id
+				}),
+				content_type='application/json',
+			)
+			self.assertEqual(response.status_code,status.HTTP_200_OK)
+		
+		response = self.client.post(
+			reverse(view_user_apps, kwargs={'app': 'power'}),
+			**self.get_auth_header(self.token),
+			data = json.dumps({
+				'type': 'get',
+				'page': 1,
+				'obj': 'requested'
+			}),
+			content_type='application/json',
+		)
+
+		self.assertEqual(response.status_code,status.HTTP_200_OK)
+		self.assertEqual(len(response.data['list']), 10)
+		self.assertEqual(response.data['num_pages'], 2)
+
+	def test_patch_power_denied(self):
+		user = UserProfile.objects.get(identification=1001)
+		response = self.client.post(
+			reverse(view_user_apps, kwargs={'app': 'power'}),
+			**self.get_auth_header(self.token),
+			data = json.dumps({
+				'type': 'post',
+				'meeting_date': '2020-01-01',
+				'requestee': user.id
+			}),
+			content_type='application/json',
+		)
+		self.assertEqual(response.status_code,status.HTTP_200_OK)
+
+		power = Power.objects.all()[0]
+		response = self.client.post(
+			reverse(view_user_apps, kwargs={'app': 'power'}),
+			**self.get_auth_header(self.token),
+			data = json.dumps({
+				'type': 'patch',
+				'id': power.id,
+				'state': 2
+			}),
+			content_type='application/json',
+		)
+
+		self.assertEqual(response.status_code,status.HTTP_200_OK)
+		self.assertEqual(response.data, None)
+		power = Power.objects.all()[0]
+		self.assertEqual(power.state, 2)
+
+	@patch.object(MailService, 'send_mail')
+	def test_patch_power_approved(self, mock):
+		user = UserProfile.objects.get(identification=1001)
+		response = self.client.post(
+			reverse(view_user_apps, kwargs={'app': 'power'}),
+			**self.get_auth_header(self.token),
+			data = json.dumps({
+				'type': 'post',
+				'meeting_date': '2020-01-01',
+				'requestee': user.id
+			}),
+			content_type='application/json',
+		)
+		self.assertEqual(response.status_code,status.HTTP_200_OK)
+
+		power = Power.objects.all()[0]
+		response = self.client.post(
+			reverse(view_user_apps, kwargs={'app': 'power'}),
+			**self.get_auth_header(self.token),
+			data = json.dumps({
+				'type': 'patch',
+				'id': power.id,
+				'state': 1
+			}),
+			content_type='application/json',
+		)
+
+		self.assertEqual(response.status_code,status.HTTP_200_OK)
+		self.assertEqual(response.data, None)
+		power = Power.objects.all()[0]
+		self.assertEqual(power.state, 1)
+		self.assertTrue(mock.called)
+		mock.assert_called_once()
