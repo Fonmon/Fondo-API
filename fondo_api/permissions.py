@@ -48,6 +48,9 @@ list_permissions = {
     },
     'UserAppsView': {
         'POST': 3
+    },
+    'AdminView': {
+        'GET': 0
     }
 }
 

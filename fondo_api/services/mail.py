@@ -1,7 +1,6 @@
 import os
 import boto3
 import logging
-from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 
 from fondo_api.enums import EmailTemplate
@@ -65,6 +64,9 @@ class MailService:
 		elif template == EmailTemplate.POWER_APPROVED:
 			mail['body'] = render_to_string('power/power_email.html', params)
 			mail['subject'] = render_to_string('power/power_subject.txt')
+		elif template == EmailTemplate.TEST:
+			mail['body'] = render_to_string('test/test_email.html')
+			mail['subject'] = render_to_string('test/test_subject.txt')
 		return mail
 
 # def send_mail(subject, body, recipient_list, bcc_list = []):
