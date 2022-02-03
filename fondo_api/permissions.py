@@ -17,7 +17,7 @@ list_permissions = {
     },
     'UserView': {
         'POST': 0,
-        'GET': 2,
+        'GET': 3,
         'PATCH': [0,2]
     },
     'ActivityYearView': {
