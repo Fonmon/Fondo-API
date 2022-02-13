@@ -41,9 +41,7 @@ class LoanView(APIView):
         )
 
     def post(self, request):
-        user = user_service.get_profile(request.user.id)
-
-        state, msg = loan_service.create_loan(user.id, request.data)
+        state, msg = loan_service.create_loan(request.user.id, request.data)
         if state:
             return Response({'id': msg}, status=status.HTTP_201_CREATED)
         return Response({'message': msg}, status=status.HTTP_406_NOT_ACCEPTABLE)

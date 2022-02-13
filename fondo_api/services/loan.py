@@ -37,7 +37,7 @@ class LoanService:
 			rate = 0.03
 			obj['timelimit'] = 24
 
-		newLoan = Loan.objects.create(
+		new_loan = Loan.objects.create(
 			value = obj['value'],
 			timelimit = obj['timelimit'],
 			disbursement_date = obj['disbursement_date'],
@@ -54,9 +54,9 @@ class LoanService:
 		self.__notification_service.send_notification(
 			self.__user_service.get_users_attr('id', [0,2]), 
 			"Ha sido creada una nueva solicitud de crédito", 
-			"/loan/{}".format(newLoan.id)
+			"/loan/{}".format(new_loan.id)
 		)
-		return (True, newLoan.id)
+		return (True, new_loan.id)
 
 	def get_loans(self, user_id, page, all_loans = False, state = 4, paginate = True):
 		if state == 4:

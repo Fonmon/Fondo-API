@@ -51,7 +51,11 @@ list_permissions = {
     },
     'AdminView': {
         'GET': 0
-    }
+    },
+    'SavingAccountView': {
+        'GET': 3,
+        'POST': 3,
+    },
 }
 
 class APIRolePermission(permissions.BasePermission):
