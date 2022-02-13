@@ -1,7 +1,5 @@
 import logging
-from celery.decorators import task, periodic_task
-from celery.task.schedules import crontab
-from django.utils.timezone import make_aware
+from api.celery import app
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
@@ -10,11 +8,7 @@ from fondo_api.scheduler.executers.factory import get_executer
 
 logger = logging.getLogger(__name__)
 
-@periodic_task(
-    name = "Scheduler", 
-    run_every = (crontab(minute=0, hour='10,14')), 
-    # run_every = crontab(),
-    ignore_result = True)
+@app.task(name = 'scheduler')
 def scheduler():
     logger.info("Running scheduler")
 

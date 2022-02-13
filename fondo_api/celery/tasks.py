@@ -2,13 +2,13 @@ import logging
 import requests
 import json
 import os
-from celery.decorators import task
+from api.celery import app
 
 from fondo_api.models import NotificationSubscriptions
 
 logger = logging.getLogger(__name__)
 
-@task(name = "send_notification")
+@app.task(name = "send_notification")
 def send_notification(message):
     logger.info("Sending request to MNS...")
     mns_host = os.environ.get('MNS_HOST', 'localhost')
