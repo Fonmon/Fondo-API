@@ -150,3 +150,23 @@ class PowerSerializer(serializers.ModelSerializer):
 
 	def get_requester(self, obj):
 		return "{} {}".format(obj.requester.first_name, obj.requester.last_name)
+
+class SavingAccountSerializer(serializers.ModelSerializer):
+	user_full_name = serializers.SerializerMethodField()
+	created_at = serializers.SerializerMethodField()
+	end_date = serializers.SerializerMethodField()
+
+	class Meta:
+		model = SavingAccount
+		fields = ('value','created_at','state','user_full_name',
+		  'id','end_date',)
+
+	def get_user_full_name(self, obj):
+		return '{} {}'.format(obj.user.first_name, obj.user.last_name)
+
+	def get_created_at(self, obj):
+		created_at = timezone.localtime(obj.created_at)
+		return format_date(created_at, locale=settings.LANGUAGE_LOCALE)
+
+	def get_end_date(self, obj):
+		return format_date(obj.end_date, locale=settings.LANGUAGE_LOCALE)

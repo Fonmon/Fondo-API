@@ -137,7 +137,7 @@ class SavingAccount(models.Model):
 		(0, 'ACTIVE'),
 		(1, 'CLOSED'),
 	)
-	open_date = models.DateField()
+	created_at = models.DateTimeField(auto_now_add=True)
 	end_date = models.DateField()
 	user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
 	state = models.IntegerField(choices=ACCOUNT_STATE, default=0)

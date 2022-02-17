@@ -1,5 +1,5 @@
 import logging
-from django.db import IntegrityError,transaction
+from django.db import transaction
 from django.core.paginator import Paginator
 from django.conf import settings
 from decimal import Decimal
@@ -8,7 +8,7 @@ from babel.numbers import decimal, format_decimal, format_number
 from dateutil.relativedelta import relativedelta
 from datetime import datetime
 
-from fondo_api.models import UserProfile, UserFinance, Loan, LoanDetail
+from fondo_api.models import UserFinance, Loan, LoanDetail
 from fondo_api.serializers import LoanSerializer,LoanDetailSerializer
 from fondo_api.services.utils.date import days360
 from fondo_api.enums import EmailTemplate
