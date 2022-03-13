@@ -8,6 +8,7 @@ from fondo_api.views.auth import AuthView
 from fondo_api.views.notification import NotificationView
 from fondo_api.views.file import FileView, FileDetailView
 from fondo_api.views.admin import AdminView
+from fondo_api.views.saving_account import SavingAccountView
 
 urlpatterns = [
     url( r'^api/authorize/?$', AuthView.as_view(), name='view_auth' ),
@@ -33,4 +34,6 @@ urlpatterns = [
     url( r'^api/file/(?P<id>[0-9]+)$', FileDetailView.as_view(), name='view_file_detail' ),
 
     url( r'^api/admin/?$', AdminView.as_view(), name='view_admin' ),
+
+    url( r'^api/saving-account/?$', SavingAccountView.as_view(), name='view_saving_account' ),
 ]

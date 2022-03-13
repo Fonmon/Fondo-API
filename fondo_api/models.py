@@ -116,6 +116,7 @@ class SchedulerTask(models.Model):
 class File(models.Model): 
 	FILE_TYPE = (
 		(0, 'proceeding'),
+		(1, 'presentations'),
 	)
 	type = models.IntegerField(choices=FILE_TYPE)
 	display_name = models.TextField(unique=True)
@@ -131,3 +132,14 @@ class Power(models.Model):
 	state = models.IntegerField(choices=POWER_STATE, default=0)
 	requester = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='power_requested')
 	requestee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='power_requestee')
+
+class SavingAccount(models.Model):
+	ACCOUNT_STATE = (
+		(0, 'ACTIVE'),
+		(1, 'CLOSED'),
+	)
+	created_at = models.DateTimeField(auto_now_add=True)
+	end_date = models.DateField()
+	user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+	state = models.IntegerField(choices=ACCOUNT_STATE, default=0)
+	value = models.BigIntegerField(default=0)
