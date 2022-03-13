@@ -53,7 +53,7 @@ class FileViewTest(AbstractTest):
     # blob.upload_from_file.side_effect = Exception('error uploading file')
     bucket.return_value.blob.return_value = blob
 
-    self.assertEqual(len(File.objects.all()), 15)
+    self.assertEqual(len(File.objects.all()), 25)
     response = self.client.post(
       reverse(view_file),
       data=encode_multipart('file', {
@@ -65,7 +65,7 @@ class FileViewTest(AbstractTest):
 			**self.get_auth_header(self.token)
 		)
     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-    self.assertEqual(len(File.objects.all()), 16)
+    self.assertEqual(len(File.objects.all()), 26)
 
   @patch.object(Client, 'get_bucket')
   def test_post_file_already_in_db(self, bucket):
@@ -73,7 +73,7 @@ class FileViewTest(AbstractTest):
     blob.exists.return_value = True
     bucket.return_value.blob.return_value = blob
 
-    self.assertEqual(len(File.objects.all()), 15)
+    self.assertEqual(len(File.objects.all()), 25)
     response = self.client.post(
       reverse(view_file),
       data=encode_multipart('file', {
@@ -85,7 +85,7 @@ class FileViewTest(AbstractTest):
 			**self.get_auth_header(self.token)
 		)
     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-    self.assertEqual(len(File.objects.all()), 15)
+    self.assertEqual(len(File.objects.all()), 25)
 
   @patch.object(Client, 'get_bucket')
   def test_get_url_not_found(self, bucket):
@@ -123,4 +123,4 @@ class FileViewTest(AbstractTest):
 			**self.get_auth_header(self.token)
 		)
     self.assertEqual(response.status_code, status.HTTP_200_OK)
-    self.assertEqual(len(response.data), 15)
+    self.assertEqual(len(response.data), 25)
