@@ -116,6 +116,7 @@ class SchedulerTask(models.Model):
 class File(models.Model): 
 	FILE_TYPE = (
 		(0, 'proceeding'),
+		(1, 'presentations'),
 	)
 	type = models.IntegerField(choices=FILE_TYPE)
 	display_name = models.TextField(unique=True)
