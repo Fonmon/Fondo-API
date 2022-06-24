@@ -23,14 +23,28 @@ env:
     - DEFAULT_FROM_EMAIL="Fondo Montanez <no-reply@fonmon.minagle.com>"
     - AWS_REGION=aws-region
     - HOST_URL_APP=http://localhost:3000
+cache:
+  directories:
+    - "$HOME/google-cloud-sdk/"
 script:
   - coverage run --branch --source='.' manage.py test && coverage report -m --omit="*env*,*tests*,api/wsgi.py,fondo_api/apps.py,manage.py,*migrations*"
+before_deploy:
+  - gcloud version || true
+  - if [ ! -d "$HOME/google-cloud-sdk/bin" ]; then rm -rf $HOME/google-cloud-sdk; export CLOUDSDK_CORE_DISABLE_PROMPTS=1; curl https://sdk.cloud.google.com | bash; fi
+  # Add gcloud to $PATH
+  - source $HOME/google-cloud-sdk/path.bash.inc
+  - gcloud version
 deploy:
   - provider: script
     script: sh $TRAVIS_BUILD_DIR/scripts/trigger-deploy.sh $TRAVIS_COMMIT i-02fd1798f1ce6963a $TRAVIS_BRANCH
     skip_cleanup: true
     on:
-      branch: master
+      branch: gcloud_migration
+  # - provider: script
+  #   script: sh $TRAVIS_BUILD_DIR/scripts/trigger-deploy.sh $TRAVIS_COMMIT i-02fd1798f1ce6963a $TRAVIS_BRANCH
+  #   skip_cleanup: true
+  #   on:
+  #     branch: master
   # - provider: script
   #   script: sh $TRAVIS_BUILD_DIR/scripts/trigger-deploy.sh $TRAVIS_COMMIT i-028018a7f5b27a704 $TRAVIS_BRANCH
   #   skip_cleanup: true

@@ -21,11 +21,16 @@ ENV=$3
 
 # Triggering deploy process
 echo 'Starting trigger'
-aws ssm send-command \
-	--document-name "AWS-RunShellScript" \
-	--comment "Deploying api layer" \
-	--instance-ids "${INSTANCE}" \
-	--parameters commands="entrypoint_deploy ${COMMIT} api ${ENV}" \
-	--output text
+# aws ssm send-command \
+# 	--document-name "AWS-RunShellScript" \
+# 	--comment "Deploying api layer" \
+# 	--instance-ids "${INSTANCE}" \
+# 	--parameters commands="entrypoint_deploy ${COMMIT} api ${ENV}" \
+# 	--output text
+gcloud compute ssh \
+	--zone 'us-central1-a' \
+	"prod-fonmon" \
+	--project "notificationstest-90976" \
+	--command 'touch test-${COMMIT}'
 echo 'Deploying in background'
 exit 0
