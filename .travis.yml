@@ -35,8 +35,7 @@ before_deploy:
 - gcloud version
 deploy:
 - provider: script
-  script: sh $TRAVIS_BUILD_DIR/scripts/trigger-deploy.sh $TRAVIS_COMMIT i-02fd1798f1ce6963a
-    $TRAVIS_BRANCH
+  script: sh $TRAVIS_BUILD_DIR/scripts/trigger-deploy.sh $TRAVIS_COMMIT prod-fonmon $TRAVIS_BRANCH
   skip_cleanup: true
   on:
     branch: gcloud_migration

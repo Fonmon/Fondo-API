@@ -30,8 +30,7 @@ echo 'Starting trigger'
 gcloud auth login --cred-file=${HOME}/gcloud-service-key.json
 gcloud compute ssh \
 	--zone 'us-central1-a' \
-	"prod-fonmon" \
-	--project "notificationstest-90976" \
-	--command 'touch test-${COMMIT}'
+	"${INSTANCE}" \
+	--command "touch test-${COMMIT}-${ENV}"
 echo 'Deploying in background'
 exit 0
