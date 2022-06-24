@@ -31,6 +31,6 @@ gcloud auth login --cred-file=${HOME}/gcloud-service-key.json
 gcloud compute ssh \
 	--zone 'us-central1-a' \
 	"${INSTANCE}" \
-	--command "touch test-${COMMIT}-${ENV}"
+	--command "entrypoint_deploy ${COMMIT} api ${ENV}"
 echo 'Deploying in background'
 exit 0
