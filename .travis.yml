@@ -1,52 +1,56 @@
 language: python
 python:
-  - 3.9
+- 3.9
 addons:
-  postgresql: "9.4"
+  postgresql: '9.4'
 install:
-  - pip install -r requirements.txt 
+- pip install -r requirements.txt
 services:
-  - postgresql
+- postgresql
 before_script:
-  - psql -c "CREATE DATABASE test_fondo_api;" -U postgres
-  - psql -c "CREATE EXTENSION hstore;" -U postgres -d test_fondo_api
-  - python3 manage.py migrate
+- psql -c "CREATE DATABASE test_fondo_api;" -U postgres
+- psql -c "CREATE EXTENSION hstore;" -U postgres -d test_fondo_api
+- python3 manage.py migrate
 env:
   global:
-    - POSTGRES_DATABASE=test_fondo_api
-    - POSTGRES_USER=postgres
-    - POSTGRES_HOST=localhost
-    - POSTGRES_PASSWORD=
-    - POSTGRES_PORT=5432
-    - DJANGO_SETTINGS_MODULE=api.settings.development
-    - DEFAULT_FROM_EMAIL="Fondo Montanez <no-reply@fonmon.minagle.com>"
-    - AWS_REGION=aws-region
-    - HOST_URL_APP=http://localhost:3000
+  - POSTGRES_DATABASE=test_fondo_api
+  - POSTGRES_USER=postgres
+  - POSTGRES_HOST=localhost
+  - POSTGRES_PASSWORD=
+  - POSTGRES_PORT=5432
+  - DJANGO_SETTINGS_MODULE=api.settings.development
+  - DEFAULT_FROM_EMAIL="Fondo Montanez <no-reply@fonmon.minagle.com>"
+  - AWS_REGION=aws-region
+  - HOST_URL_APP=http://localhost:3000
 cache:
   directories:
-    - "$HOME/google-cloud-sdk/"
+  - "$HOME/google-cloud-sdk/"
 script:
-  - coverage run --branch --source='.' manage.py test && coverage report -m --omit="*env*,*tests*,api/wsgi.py,fondo_api/apps.py,manage.py,*migrations*"
+- coverage run --branch --source='.' manage.py test && coverage report -m --omit="*env*,*tests*,api/wsgi.py,fondo_api/apps.py,manage.py,*migrations*"
 before_deploy:
-  - gcloud version || true
-  - if [ ! -d "$HOME/google-cloud-sdk/bin" ]; then rm -rf $HOME/google-cloud-sdk; export CLOUDSDK_CORE_DISABLE_PROMPTS=1; curl https://sdk.cloud.google.com | bash; fi
-  # Add gcloud to $PATH
-  - source $HOME/google-cloud-sdk/path.bash.inc
-  - gcloud version
-  - echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
+- gcloud version || true
+- if [ ! -d "$HOME/google-cloud-sdk/bin" ]; then rm -rf $HOME/google-cloud-sdk; export
+  CLOUDSDK_CORE_DISABLE_PROMPTS=1; curl https://sdk.cloud.google.com | bash; fi
+- source $HOME/google-cloud-sdk/path.bash.inc
+- gcloud version
 deploy:
-  - provider: script
-    script: sh $TRAVIS_BUILD_DIR/scripts/trigger-deploy.sh $TRAVIS_COMMIT i-02fd1798f1ce6963a $TRAVIS_BRANCH
-    skip_cleanup: true
-    on:
-      branch: gcloud_migration
-  # - provider: script
-  #   script: sh $TRAVIS_BUILD_DIR/scripts/trigger-deploy.sh $TRAVIS_COMMIT i-02fd1798f1ce6963a $TRAVIS_BRANCH
-  #   skip_cleanup: true
-  #   on:
-  #     branch: master
-  # - provider: script
-  #   script: sh $TRAVIS_BUILD_DIR/scripts/trigger-deploy.sh $TRAVIS_COMMIT i-028018a7f5b27a704 $TRAVIS_BRANCH
-  #   skip_cleanup: true
-  #   on:
-  #     branch: develop
+- provider: script
+  script: sh $TRAVIS_BUILD_DIR/scripts/trigger-deploy.sh $TRAVIS_COMMIT i-02fd1798f1ce6963a
+    $TRAVIS_BRANCH
+  skip_cleanup: true
+  on:
+    branch: gcloud_migration
+# - provider: script
+#   script: sh $TRAVIS_BUILD_DIR/scripts/trigger-deploy.sh $TRAVIS_COMMIT i-02fd1798f1ce6963a $TRAVIS_BRANCH
+#   skip_cleanup: true
+#   on:
+#     branch: master
+# - provider: script
+#   script: sh $TRAVIS_BUILD_DIR/scripts/trigger-deploy.sh $TRAVIS_COMMIT i-028018a7f5b27a704 $TRAVIS_BRANCH
+#   skip_cleanup: true
+#   on:
+#     branch: develop
+before_install:
+- openssl aes-256-cbc -K $encrypted_bd00985858b8_key -iv $encrypted_bd00985858b8_iv
+  -in scripts/gcloud.json.enc -out ${HOME}/gcloud-service-key.json
+  -d
