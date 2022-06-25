@@ -27,7 +27,7 @@ echo 'Starting trigger'
 # 	--instance-ids "${INSTANCE}" \
 # 	--parameters commands="entrypoint_deploy ${COMMIT} api ${ENV}" \
 # 	--output text
-gcloud auth login $CLOUDSDK_ACCOUNT --cred-file=${HOME}/gcloud-service-key.json
+gcloud auth login --cred-file=${HOME}/gcloud-service-key.json
 gcloud compute ssh \
 	--zone 'us-central1-a' \
 	"${INSTANCE}" \
