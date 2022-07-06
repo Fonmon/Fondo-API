@@ -72,10 +72,10 @@ class AmazonAlexa:
         url = self.headers.get(AmazonAlexa.HEADER_SIGNATURE_URL, None)
         regex = re.compile(
             r'^https://'
-            r's3.amazonaws.com'
+            r's3\.amazonaws\.com'
             r'(:443)?'
-            r'/echo.api'
-            r'/[a-zA-Z0-9./-]+.pem'
+            r'/echo\.api'
+            r'/[a-zA-Z0-9./-]+\.pem'
         )
         if url is None or re.match(regex, url) is None:
             raise Exception(400, 'Header SignatureCertChainUrl is not as expected')
