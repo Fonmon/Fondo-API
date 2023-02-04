@@ -81,6 +81,13 @@ class UserService:
 		})
 		return (True, serializer.data)
 
+	def get_user_by_email(self, email):
+		try:
+			user = User.objects.get(email=email)
+			return user
+		except:
+			return None
+
 	def inactive_user(self, id):
 		try:
 			user = User.objects.get(id=id)

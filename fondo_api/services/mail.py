@@ -22,7 +22,7 @@ class MailService:
 			
 			mail = self.__get_email_from_template(template, params)
 
-			response = self.__ses_client.send_email(
+			self.__ses_client.send_email(
 				Destination={
 					'ToAddresses': recipients,
 					'BccAddresses': bcc
@@ -67,6 +67,9 @@ class MailService:
 		elif template == EmailTemplate.TEST:
 			mail['body'] = render_to_string('test/test_email.html')
 			mail['subject'] = render_to_string('test/test_subject.txt')
+		elif template == EmailTemplate.PASSWORD_RESET:
+			mail['body'] = render_to_string('registration/password_reset_email.html', params)
+			mail['subject'] = render_to_string('registration/password_reset_subject.txt')
 		return mail
 
 # def send_mail(subject, body, recipient_list, bcc_list = []):
