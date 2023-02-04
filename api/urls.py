@@ -16,9 +16,10 @@ Including another URLconf
 from django.conf.urls import include, url
 from django.contrib.auth import views as auth_views
 from rest_framework.authtoken import views
+from fondo_api.views.auth import PasswordResetView
 
 urlpatterns = [
-	url(r'^password_reset/$', auth_views.PasswordResetView.as_view(),name='password_reset'),
+	url(r'^password_reset/$', PasswordResetView.as_view(), name='password_reset'),
 	url(r'^password_reset/done/$', auth_views.PasswordResetDoneView.as_view(), name='password_reset_done'),
     url(r'^reset/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
         auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),

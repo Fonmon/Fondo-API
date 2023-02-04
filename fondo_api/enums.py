@@ -6,3 +6,4 @@ class EmailTemplate(Enum):
   CHANGE_STATE_LOAN_DENIED = 3
   POWER_APPROVED = 4
   TEST = 5
+  PASSWORD_RESET = 6

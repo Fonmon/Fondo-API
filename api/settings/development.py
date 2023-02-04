@@ -4,6 +4,8 @@ Django settings for development environment
 
 from .base import *
 
+ENVIRONMENT = 'development'
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/
 

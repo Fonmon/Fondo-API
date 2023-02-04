@@ -8,8 +8,43 @@ from django.template.response import TemplateResponse
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import authenticate
 from django.http import HttpResponseRedirect
+from django.contrib.auth.forms import PasswordResetForm
+from django.shortcuts import redirect
+from django.contrib.auth import views as auth_views
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.contrib.auth.tokens import default_token_generator
+from django.contrib.sites.shortcuts import get_current_site
+from django.conf import settings
 
+from fondo_api.services.user import UserService
+from fondo_api.services.notification import NotificationService
+from fondo_api.services.mail import MailService
+from fondo_api.enums import EmailTemplate
+
+notification_service = NotificationService()
+mail_service = MailService()
+user_service = UserService(notification_service, mail_service)
 logger = logging.getLogger(__name__)
+
+class PasswordResetView(auth_views.PasswordResetView):
+    def post(self, request):
+        password_reset_form = PasswordResetForm(request.POST)
+        if password_reset_form.is_valid():
+            data = password_reset_form.cleaned_data['email']
+            user = user_service.get_user_by_email(data)
+            if user != None:
+                current_site = get_current_site(request)
+                domain = current_site.domain
+                params = {
+                    'user': user,
+                    'protocol': 'https' if settings.ENVIRONMENT == 'production' else 'http',
+                    'domain': domain,
+                    'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+                    'token': default_token_generator.make_token(user)
+                }
+                mail_service.send_mail(EmailTemplate.PASSWORD_RESET, [user.email], params)
+        return redirect("/password_reset/done/")
 
 class AuthView(APIView):
     permission_classes = []
