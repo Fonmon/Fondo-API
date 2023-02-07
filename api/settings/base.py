@@ -164,3 +164,5 @@ TEST_RUNNER = 'fondo_api.tests.runner.TestRunner'
 # CELERY
 BROKER_URL = 'redis://{}:6379'.format(os.environ.get('REDIS_HOST'))
 CELERY_TIMEZONE = TIME_ZONE
+
+DATA_UPLOAD_MAX_MEMORY_SIZE=1024*1024*3
