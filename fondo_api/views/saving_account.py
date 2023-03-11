@@ -4,9 +4,11 @@ from rest_framework.response import Response
 
 from fondo_api.services.user import UserService
 from fondo_api.services.saving_account import SavingAccountService
+from fondo_api.services.notification import NotificationService
 
-saving_account_service = SavingAccountService()
 user_service = UserService()
+notification_service = NotificationService()
+saving_account_service = SavingAccountService(user_service, notification_service)
 
 class SavingAccountView(APIView):
 
@@ -36,3 +38,9 @@ class SavingAccountView(APIView):
             saving_account_service.get_accounts(user.id, page, state=state, paginate=paginate), 
             status=status.HTTP_200_OK
         )
+
+    def put(self, request):
+        result = saving_account_service.update_account(request.data)
+        if result:
+            return Response(status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_404_NOT_FOUND)

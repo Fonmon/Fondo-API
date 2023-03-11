@@ -55,6 +55,7 @@ list_permissions = {
     'SavingAccountView': {
         'GET': 3,
         'POST': 3,
+        'PUT': [0,2],
     },
 }
 
