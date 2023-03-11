@@ -19,14 +19,21 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 class UserFinanceSerializer(serializers.ModelSerializer):
 	last_modified = serializers.SerializerMethodField()
+	total_savingaccounts = serializers.SerializerMethodField()
 
 	class Meta:
 		model = UserFinance
 		fields = ('contributions','balance_contributions','total_quota','available_quota',
-				  'last_modified','utilized_quota')
+				  'last_modified','utilized_quota','total_savingaccounts')
 
 	def get_last_modified(self, obj):
 		return format_date(obj.last_modified,locale=settings.LANGUAGE_LOCALE)
+
+	def get_total_savingaccounts(self, obj):
+		accounts = SavingAccount.objects.filter(user_id=obj.user.id, state=0)
+		values = [acc.value for acc in accounts]
+		return sum(values)
+
 
 class UserPreferenceSerializer(serializers.ModelSerializer):
 	class Meta:
