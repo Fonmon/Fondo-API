@@ -1,0 +1,31 @@
+version: 0.2
+env:
+  parameter-store:
+    DOCKER_PASSWORD: /fonmon/DOCKER_PASSWORD
+  variables:
+    POSTGRES_DATABASE: "test_fondo_api"
+    POSTGRES_USER: "postgres"
+    POSTGRES_HOST: "localhost"
+    POSTGRES_PASSWORD: "pwd"
+    POSTGRES_PORT: "5432"
+    DJANGO_SETTINGS_MODULE: "api.settings.test"
+    DEFAULT_FROM_EMAIL: "Fondo Montanez <no-reply@fonmon.minagle.com>"
+    AWS_REGION: "aws-region"
+    HOST_URL_APP: "http://localhost:3000"
+phases:
+  install:
+    on-failure: ABORT
+    runtime-versions:
+      python: 3.9
+    commands:
+      - docker login -u minmiguelm -p $DOCKER_PASSWORD
+      - docker pull postgres
+      - docker run -d -p $POSTGRES_PORT:$POSTGRES_PORT --name fondo_db -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD -e POSTGRES_USER=$POSTGRES_USER -e POSTGRES_DB=$POSTGRES_DATABASE postgres
+      - pip install -r requirements.txt 
+  pre_build:
+    commands:
+      - docker exec -t fondo_db psql -c "CREATE EXTENSION hstore;" -U $POSTGRES_USER -d $POSTGRES_DATABASE
+      - python3 manage.py migrate
+  build:
+    commands:
+      - coverage run --branch --source='.' manage.py test && coverage report -m --omit="*env*,*tests*,api/wsgi.py,fondo_api/apps.py,manage.py,*migrations*"

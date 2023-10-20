@@ -1,6 +1,7 @@
 import logging
 import datetime
 from google.cloud import storage
+from django.conf import settings
 
 from fondo_api.models import File
 from fondo_api.serializers import FileSerializer
@@ -9,7 +10,10 @@ class FileService:
     
     def __init__(self):
         self.__logger = logging.getLogger(__name__)
-        self.client = storage.Client()
+        if settings.ENVIRONMENT == 'test':
+            self.client = storage.Client.create_anonymous_client()
+        else:
+            self.client = storage.Client()
 
     def save_file(self, obj):
         file = File(
