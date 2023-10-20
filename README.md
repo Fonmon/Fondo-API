@@ -1,4 +1,4 @@
-# Fondo-API [![](https://travis-ci.org/Fonmon/Fondo-Web.svg?branch=master)]()
+# Fondo-API [![](https://codebuild.us-east-2.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoiQlZtSUV0L1YwTEg4UDBkaHpvc0lCcE0yTkQ1blFMSFQxbGxJMUZ3R0xjOEY4T3dpcGVpMkNWUWtSSzk2VGYyZStVSlJsUC9VWkhTcXQvNHgwb3I0ckswPSIsIml2UGFyYW1ldGVyU3BlYyI6IjhqdXhESFJmTmZsQXk4QTkiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master)]()
 Django REST API. It provides access to fund's information
 
 ## Run tests:

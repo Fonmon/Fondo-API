@@ -2,26 +2,24 @@ import logging
 import requests
 import json
 import os
+import boto3
 from api.celery import app
 
 from fondo_api.models import NotificationSubscriptions
 
 logger = logging.getLogger(__name__)
+sqs_client = boto3.client('sqs', region_name=os.environ['AWS_REGION'])
 
 @app.task(name = "send_notification")
 def send_notification(message):
     logger.info("Sending request to MNS...")
-    mns_host = os.environ.get('MNS_HOST', 'localhost')
+    queue_url = os.environ.get('NOTIFICATIONS_QUEUE_URL', None)
     try:
-        request = requests.post('http://{}:9901/mns/send'.format(mns_host), \
-            data = json.dumps(message['content']), \
-            headers = { 'content-type': 'application/json' }, \
-            timeout = 120 \
+        response = sqs_client.send_message(
+            QueueUrl=queue_url,
+            MessageBody=json.dumps(message['content']),
         )
-        # remove invalid subscriptions
-        if request.status_code == requests.codes.ok:
-            invalid_subscriptions = request.json()['invalid']
-            __remove_invalid_subscriptions(invalid_subscriptions)
+        logger.info("Message sent, id: {}".format(response["MessageId"]))
     except Exception as ex:
         logger.error("Error trying to connect to MNS service: {}".format(ex))
 
