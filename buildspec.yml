@@ -1,5 +1,6 @@
 version: 0.2
 env:
+  shell: bash
   parameter-store:
     DOCKER_PASSWORD: /fonmon/DOCKER_PASSWORD
   variables:
@@ -18,7 +19,7 @@ phases:
     runtime-versions:
       python: 3.9
     commands:
-      - docker login -u minmiguelm -p $DOCKER_PASSWORD
+      # - docker login -u minmiguelm -p $DOCKER_PASSWORD
       - docker pull postgres
       - docker run -d -p $POSTGRES_PORT:$POSTGRES_PORT --name fondo_db -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD -e POSTGRES_USER=$POSTGRES_USER -e POSTGRES_DB=$POSTGRES_DATABASE postgres
       - pip install -r requirements.txt 
@@ -29,3 +30,6 @@ phases:
   build:
     commands:
       - coverage run --branch --source='.' manage.py test && coverage report -m --omit="*env*,*tests*,api/wsgi.py,fondo_api/apps.py,manage.py,*migrations*"
+  post_build:
+    commands:
+      - bash scripts/trigger-deploy.sh
