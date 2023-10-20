@@ -1,15 +1,17 @@
 version: 0.2
 env:
+  parameter-store:
+    DOCKER_PASSWORD: /fonmon/DOCKER_PASSWORD
   variables:
-    POSTGRES_DATABASE:test_fondo_api
-    POSTGRES_USER:postgres
-    POSTGRES_HOST:localhost
-    POSTGRES_PASSWORD:pwd
-    POSTGRES_PORT:5432
-    DJANGO_SETTINGS_MODULE:api.settings.development
-    DEFAULT_FROM_EMAIL:"Fondo Montanez <no-reply@fonmon.minagle.com>"
-    AWS_REGION:aws-region
-    HOST_URL_APP:http://localhost:3000
+    POSTGRES_DATABASE: "test_fondo_api"
+    POSTGRES_USER: "postgres"
+    POSTGRES_HOST: "localhost"
+    POSTGRES_PASSWORD: "pwd"
+    POSTGRES_PORT: "5432"
+    DJANGO_SETTINGS_MODULE: "api.settings.development"
+    DEFAULT_FROM_EMAIL: "Fondo Montanez <no-reply@fonmon.minagle.com>"
+    AWS_REGION: "aws-region"
+    HOST_URL_APP: "http://localhost:3000"
 phases:
   install:
     on-failure: ABORT
