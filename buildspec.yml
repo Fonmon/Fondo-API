@@ -8,7 +8,7 @@ env:
     POSTGRES_HOST: "localhost"
     POSTGRES_PASSWORD: "pwd"
     POSTGRES_PORT: "5432"
-    DJANGO_SETTINGS_MODULE: "api.settings.development"
+    DJANGO_SETTINGS_MODULE: "api.settings.test"
     DEFAULT_FROM_EMAIL: "Fondo Montanez <no-reply@fonmon.minagle.com>"
     AWS_REGION: "aws-region"
     HOST_URL_APP: "http://localhost:3000"

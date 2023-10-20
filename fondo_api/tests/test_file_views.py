@@ -1,6 +1,6 @@
 import json
 from django.urls import reverse
-from django.test.client import encode_multipart, BOUNDARY, MULTIPART_CONTENT
+from django.test.client import encode_multipart
 from mock import patch, MagicMock
 from rest_framework import status
 from google.cloud.storage import Client
@@ -50,7 +50,6 @@ class FileViewTest(AbstractTest):
   def test_post_file(self, bucket):
     blob = MagicMock()
     blob.exists.return_value = False
-    # blob.upload_from_file.side_effect = Exception('error uploading file')
     bucket.return_value.blob.return_value = blob
 
     self.assertEqual(len(File.objects.all()), 25)
