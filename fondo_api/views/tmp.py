@@ -1,4 +1,6 @@
 from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
 
 from fondo_api.services.mail import MailService
 from fondo_api.enums import EmailTemplate
@@ -12,7 +14,8 @@ class TmpView(APIView):
     mail_service.send_mail(
       EmailTemplate.TMP,
       [
-        'cmiguelmg@gmail.com'
+        'erikita_2605@hotmail.com',
+        'jcmendezo905@gmail.com'
       ],
       {
         'path': path,
