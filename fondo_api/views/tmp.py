@@ -12,7 +12,7 @@ class TmpView(APIView):
     mail_service.send_mail(
       EmailTemplate.TMP,
       [
-        ''
+        'cmiguelmg@gmail.com'
       ],
       {
         'path': path,
