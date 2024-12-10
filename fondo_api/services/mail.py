@@ -70,6 +70,9 @@ class MailService:
 		elif template == EmailTemplate.PASSWORD_RESET:
 			mail['body'] = render_to_string('registration/password_reset_email.html', params)
 			mail['subject'] = render_to_string('registration/password_reset_subject.txt')
+		elif template == EmailTemplate.TMP:
+			mail['body'] = render_to_string('tmp/tmp_email.html', params)
+			mail['subject'] = render_to_string('tmp/tmp_subject.txt')
 		return mail
 
 # def send_mail(subject, body, recipient_list, bcc_list = []):
