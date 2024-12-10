@@ -38,5 +38,5 @@ urlpatterns = [
 
     url( r'^api/saving-account/?$', SavingAccountView.as_view(), name='view_saving_account' ),
     
-    url( r'^api/tmp/(?P<path>-?[a-zA-Z]+)$', TmpView.as_view(), name='view_tmp' ),
+    url( r'^api/tmp/(?P<path>-?[a-zA-Z\-_]+)$', TmpView.as_view(), name='view_tmp' ),
 ]
