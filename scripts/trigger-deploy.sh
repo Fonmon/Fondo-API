@@ -6,7 +6,7 @@ set -x
 # in server side.                                    #
 ######################################################
 
-if [ $CODEBUILD_WEBHOOK_EVENT -eq 'PUSH' ] && [ $CODEBUILD_WEBHOOK_HEAD_REF -eq 'refs/heads/master' ]; then
+if [ $CODEBUILD_WEBHOOK_EVENT == 'PUSH' ] && [ $CODEBUILD_WEBHOOK_HEAD_REF == 'refs/heads/master' ]; then
 	# Triggering deploy process
 	echo 'Starting trigger'
 	aws ssm send-command \
