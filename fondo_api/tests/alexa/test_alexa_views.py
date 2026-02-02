@@ -849,7 +849,7 @@ class AlexaViewTest(AbstractTest):
         self.assertEqual(loan.value, 100)
         self.assertEqual(loan.get_fee_display(),'UNIQUE')
         self.assertEqual(loan.get_state_display(),'WAITING_APPROVAL')
-        self.assertEqual(loan.rate,Decimal(0.025).quantize(self.THREEPLACES))
+        self.assertEqual(loan.rate,Decimal(0.020).quantize(self.THREEPLACES))
         self.assertEqual(loan.disbursement_date.year, 2018)
         self.assertEqual(loan.disbursement_date.month, 12)
         self.assertEqual(loan.disbursement_date.day, 23)

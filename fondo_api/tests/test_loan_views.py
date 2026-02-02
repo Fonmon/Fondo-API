@@ -37,24 +37,6 @@ class LoanViewTest(AbstractTest):
 			'fee': 0,
 			'disbursement_value': 205
 		}
-		self.loan_with_quota_fee_20 = {
-			'value':300,
-			'timelimit': 20,
-			'disbursement_date': '2018-1-1',
-			'comments':'',
-			'payment':0,
-			'fee': 0,
-			'disbursement_value': 305
-		}
-		self.loan_with_quota_fee_30 = {
-			'value':300,
-			'timelimit': 30,
-			'disbursement_date': '2018-1-1',
-			'comments':'',
-			'payment':0,
-			'fee': 0,
-			'disbursement_value': 305
-		}
 		self.loan_with_not_quota = {
 			'value':600,
 			'timelimit': 8,
@@ -63,6 +45,17 @@ class LoanViewTest(AbstractTest):
 			'payment':0,
 			'fee': 0,
 			'disbursement_value': 605
+		}
+  
+  def __get_loan_with_quota_fee(sel, fee):
+    return {
+			'value':300,
+			'timelimit': fee,
+			'disbursement_date': '2018-1-1',
+			'comments':'',
+			'payment':0,
+			'fee': 0,
+			'disbursement_value': 305
 		}
 
 	def test_post_loan_1(self):
@@ -79,7 +72,7 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(loan.value,100)
 		self.assertEqual(loan.get_fee_display(),'MONTHLY')
 		self.assertEqual(loan.get_state_display(),'WAITING_APPROVAL')
-		self.assertEqual(loan.rate,Decimal(0.02).quantize(self.THREEPLACES))
+		self.assertEqual(loan.rate,Decimal(0.015).quantize(self.THREEPLACES))
 		self.assertEqual(loan.disbursement_date.year, 2017)
 		self.assertEqual(loan.disbursement_date.month, 12)
 		self.assertEqual(loan.disbursement_date.day, 9)
@@ -102,7 +95,7 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(loan.value,200)
 		self.assertEqual(loan.get_fee_display(),'MONTHLY')
 		self.assertEqual(loan.get_state_display(),'WAITING_APPROVAL')
-		self.assertEqual(loan.rate,Decimal(0.025).quantize(self.THREEPLACES))
+		self.assertEqual(loan.rate,Decimal(0.020).quantize(self.THREEPLACES))
 		self.assertEqual(loan.disbursement_date.year, 2017)
 		self.assertEqual(loan.disbursement_date.month, 11)
 		self.assertEqual(loan.disbursement_date.day, 9)
@@ -114,7 +107,7 @@ class LoanViewTest(AbstractTest):
 	def test_post_loan_3(self):
 		response = self.client.post(
 			reverse(view_loan),
-			data = json.dumps(self.loan_with_quota_fee_20),
+			data = json.dumps(self.__get_loan_with_quota_fee(20)),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
@@ -125,7 +118,7 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(loan.value,300)
 		self.assertEqual(loan.get_fee_display(),'MONTHLY')
 		self.assertEqual(loan.get_state_display(),'WAITING_APPROVAL')
-		self.assertEqual(loan.rate,Decimal(0.03).quantize(self.THREEPLACES))
+		self.assertEqual(loan.rate,Decimal(0.022).quantize(self.THREEPLACES))
 		self.assertEqual(loan.disbursement_date.year, 2018)
 		self.assertEqual(loan.disbursement_date.month, 1)
 		self.assertEqual(loan.disbursement_date.day, 1)
@@ -137,7 +130,7 @@ class LoanViewTest(AbstractTest):
 	def test_post_loan_4(self):
 		response = self.client.post(
 			reverse(view_loan),
-			data = json.dumps(self.loan_with_quota_fee_30),
+			data = json.dumps(self.__get_loan_with_quota_fee(30)),
 			content_type='application/json',
 			**self.get_auth_header(self.token)
 		)
@@ -148,14 +141,38 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(loan.value,300)
 		self.assertEqual(loan.get_fee_display(),'MONTHLY')
 		self.assertEqual(loan.get_state_display(),'WAITING_APPROVAL')
-		self.assertEqual(loan.rate,Decimal(0.03).quantize(self.THREEPLACES))
+		self.assertEqual(loan.rate,Decimal(0.025).quantize(self.THREEPLACES))
 		self.assertEqual(loan.disbursement_date.year, 2018)
 		self.assertEqual(loan.disbursement_date.month, 1)
 		self.assertEqual(loan.disbursement_date.day, 1)
 		self.assertEqual(loan.comments,'')
 		self.assertEqual(loan.payment,0)
 		self.assertEqual(loan.get_payment_display(),'CASH')
-		self.assertEqual(loan.timelimit, 24)
+		self.assertEqual(loan.timelimit, 30)
+		self.assertEqual(loan.disbursement_value, 305)
+  
+	def test_post_loan_5(self):
+		response = self.client.post(
+			reverse(view_loan),
+			data = json.dumps(self.__get_loan_with_quota_fee(37)),
+			content_type='application/json',
+			**self.get_auth_header(self.token)
+		)
+
+		self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+		loan = Loan.objects.get(user_id = 1)
+		self.assertEqual(response.data['id'],loan.id)
+		self.assertEqual(loan.value,300)
+		self.assertEqual(loan.get_fee_display(),'MONTHLY')
+		self.assertEqual(loan.get_state_display(),'WAITING_APPROVAL')
+		self.assertEqual(loan.rate,Decimal(0.025).quantize(self.THREEPLACES))
+		self.assertEqual(loan.disbursement_date.year, 2018)
+		self.assertEqual(loan.disbursement_date.month, 1)
+		self.assertEqual(loan.disbursement_date.day, 1)
+		self.assertEqual(loan.comments,'')
+		self.assertEqual(loan.payment,0)
+		self.assertEqual(loan.get_payment_display(),'CASH')
+		self.assertEqual(loan.timelimit, 36)
 		self.assertEqual(loan.disbursement_value, 305)
 
 	def test_post_loan_error(self):
@@ -261,7 +278,7 @@ class LoanViewTest(AbstractTest):
 		token = self.get_token('mail_for_tests_2@mail.com','password')
 		self.client.post(
 			reverse(view_loan),
-			data = json.dumps(self.loan_with_quota_fee_20),
+			data = json.dumps(self.__get_loan_with_quota_fee(20)),
 			content_type='application/json',
 			**self.get_auth_header(token)
 		)
@@ -419,7 +436,7 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(response.data['loan']['comments'],'')
 		self.assertEqual(response.data['loan']['state'],1)
 		self.assertEqual(response.data['loan']['user_full_name'],'Foo Name Foo Last Name')
-		self.assertEqual(Decimal(response.data['loan']['rate']).quantize(self.THREEPLACES),Decimal(0.025).quantize(self.THREEPLACES))
+		self.assertEqual(Decimal(response.data['loan']['rate']).quantize(self.THREEPLACES),Decimal(0.020).quantize(self.THREEPLACES))
 		self.assertIsNotNone(response.data['loan']['created_at'])
 
 		self.assertEqual(response.data['loan_detail']['total_payment'],228)
@@ -473,7 +490,7 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(response.data['loan']['comments'],'')
 		self.assertEqual(response.data['loan']['state'],1)
 		self.assertEqual(response.data['loan']['user_full_name'],'Foo Name Foo Last Name')
-		self.assertEqual(Decimal(response.data['loan']['rate']).quantize(self.THREEPLACES),Decimal(0.03).quantize(self.THREEPLACES))
+		self.assertEqual(Decimal(response.data['loan']['rate']).quantize(self.THREEPLACES),Decimal(0.022).quantize(self.THREEPLACES))
 		self.assertIsNotNone(response.data['loan']['created_at'])
 
 		self.assertEqual(response.data['loan_detail']['total_payment'],278)
@@ -683,7 +700,7 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(response.data['loan']['comments'],'')
 		self.assertEqual(response.data['loan']['state'],0)
 		self.assertEqual(response.data['loan']['user_full_name'],'Foo Name Foo Last Name')
-		self.assertEqual(Decimal(response.data['loan']['rate']).quantize(self.THREEPLACES),Decimal(0.025).quantize(self.THREEPLACES))
+		self.assertEqual(Decimal(response.data['loan']['rate']).quantize(self.THREEPLACES),Decimal(0.020).quantize(self.THREEPLACES))
 		self.assertIsNotNone(response.data['loan']['created_at'])
 		self.assertEqual(response.data['loan']['disbursement_value'], 205)
 
@@ -922,7 +939,7 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(new_loan.payment, 2)
 		self.assertEqual(new_loan.fee, 0)
 		self.assertEqual(new_loan.state, 0)
-		self.assertEqual(new_loan.rate, Decimal(0.025).quantize(self.THREEPLACES))
+		self.assertEqual(new_loan.rate, Decimal(0.020).quantize(self.THREEPLACES))
 		self.assertIsNone(new_loan.refinanced_loan)
 		self.assertIsNotNone(new_loan.prev_loan)
 		self.assertEqual(new_loan.prev_loan.id, loan.id)
@@ -974,7 +991,7 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(new_loan.payment, 2)
 		self.assertEqual(new_loan.fee, 0)
 		self.assertEqual(new_loan.state, 0)
-		self.assertEqual(new_loan.rate, Decimal(0.025).quantize(self.THREEPLACES))
+		self.assertEqual(new_loan.rate, Decimal(0.020).quantize(self.THREEPLACES))
 		self.assertIsNone(new_loan.refinanced_loan)
 		self.assertIsNotNone(new_loan.prev_loan)
 		self.assertEqual(new_loan.prev_loan.id, loan.id)
