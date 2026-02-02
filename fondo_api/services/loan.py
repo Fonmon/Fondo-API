@@ -27,7 +27,7 @@ class LoanService:
 		if obj['value'] > user_finance.available_quota and not refinance:
 			return (False, 'User does not have available quota')
 		user = user_finance.user
-  
+
 		if obj['timelimit'] > 36:
 			obj['timelimit'] = 36
 
@@ -321,4 +321,4 @@ class LoanService:
 			rate = 0.022
 		elif 24 < timelimit and timelimit <= 36:
 			rate = 0.025
-   return 0.015
+		return 0.015
