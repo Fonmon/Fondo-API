@@ -313,8 +313,8 @@ class LoanService:
 
 		self.__notification_service.schedule_notification(five_days_date, payload)
 		self.__notification_service.schedule_notification(before_date, payload)
-  
-  def __get_rate(self, timelimit):
+
+	def __get_rate(self, timelimit):
 		if 6 < timelimit and timelimit <= 12:
 			return 0.020
 		elif 12 < timelimit and timelimit <= 24:

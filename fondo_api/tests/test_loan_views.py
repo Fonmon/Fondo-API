@@ -46,9 +46,9 @@ class LoanViewTest(AbstractTest):
 			'fee': 0,
 			'disbursement_value': 605
 		}
-  
-  def __get_loan_with_quota_fee(sel, fee):
-    return {
+
+	def __get_loan_with_quota_fee(sel, fee):
+		return {
 			'value':300,
 			'timelimit': fee,
 			'disbursement_date': '2018-1-1',
