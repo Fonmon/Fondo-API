@@ -108,3 +108,5 @@ venv.bak/
 testfile.txt
 fonmon-storage-credentials.json
 .vscode/
+
+.DS_Store

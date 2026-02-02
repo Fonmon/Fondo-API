@@ -27,15 +27,11 @@ class LoanService:
 		if obj['value'] > user_finance.available_quota and not refinance:
 			return (False, 'User does not have available quota')
 		user = user_finance.user
-		# Calculate rate with timelimit
-		rate = 0.02
-		if 6 < obj['timelimit'] and obj['timelimit'] <= 12:
-			rate = 0.025
-		elif 12 < obj['timelimit'] and obj['timelimit'] <= 24:
-			rate = 0.03
-		elif obj['timelimit'] > 24:
-			rate = 0.03
-			obj['timelimit'] = 24
+
+		if int(obj['timelimit']) > 36:
+			obj['timelimit'] = 36
+
+		rate = self.__get_rate(int(obj['timelimit']))
 
 		new_loan = Loan.objects.create(
 			value = obj['value'],
@@ -317,3 +313,12 @@ class LoanService:
 
 		self.__notification_service.schedule_notification(five_days_date, payload)
 		self.__notification_service.schedule_notification(before_date, payload)
+
+	def __get_rate(self, timelimit):
+		if 6 < timelimit and timelimit <= 12:
+			return 0.020
+		elif 12 < timelimit and timelimit <= 24:
+			return 0.022
+		elif 24 < timelimit and timelimit <= 36:
+			return 0.025
+		return 0.015
