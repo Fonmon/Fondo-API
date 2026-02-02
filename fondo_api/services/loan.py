@@ -28,10 +28,10 @@ class LoanService:
 			return (False, 'User does not have available quota')
 		user = user_finance.user
 
-		if obj['timelimit'] > 36:
+		if int(obj['timelimit']) > 36:
 			obj['timelimit'] = 36
 
-		rate = self.__get_rate(obj['timelimit'])
+		rate = self.__get_rate(int(obj['timelimit']))
 
 		new_loan = Loan.objects.create(
 			value = obj['value'],
@@ -318,7 +318,7 @@ class LoanService:
 		if 6 < timelimit and timelimit <= 12:
 			return 0.020
 		elif 12 < timelimit and timelimit <= 24:
-			rate = 0.022
+			return 0.022
 		elif 24 < timelimit and timelimit <= 36:
-			rate = 0.025
+			return 0.025
 		return 0.015

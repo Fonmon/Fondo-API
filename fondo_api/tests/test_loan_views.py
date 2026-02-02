@@ -47,10 +47,10 @@ class LoanViewTest(AbstractTest):
 			'disbursement_value': 605
 		}
 
-	def __get_loan_with_quota_fee(sel, fee):
+	def __get_loan_with_quota_fee(self, timelimit):
 		return {
 			'value':300,
-			'timelimit': fee,
+			'timelimit': timelimit,
 			'disbursement_date': '2018-1-1',
 			'comments':'',
 			'payment':0,
@@ -409,13 +409,13 @@ class LoanViewTest(AbstractTest):
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code,status.HTTP_200_OK)
-		self.assertEqual(response.data['total_payment'],228)
-		self.assertEqual(response.data['minimum_payment'],25)
+		self.assertEqual(response.data['total_payment'],222)
+		self.assertEqual(response.data['minimum_payment'],24)
 		self.assertEqual(response.data['payday_limit'],'9 dic. 2017')
 		self.assertEqual(mock.called, True)
 		mock.assert_called_once_with(EmailTemplate.CHANGE_STATE_LOAN_APPROVED, ['mail_for_tests@mail.com'], {
 			'loan_id': loan.id,
-			'loan_table': '<table style="width:100%" border="1"><tr><th>Cuota</th><th>Saldo inicial</th><th>Fecha inicial</th><th>Intereses</th><th>Abono a capital</th><th>Fecha de pago</th><th>Valor pago</th><th>Saldo final</th></tr><tr><td>1</td><td>$200</td><td>9 nov. 2017</td><td>$5</td><td>$20</td><td>9 dic. 2017</td><td>$25</td><td>$180</td></tr><tr><td>2</td><td>$180</td><td>9 dic. 2017</td><td>$4</td><td>$20</td><td>9 ene. 2018</td><td>$24</td><td>$160</td></tr><tr><td>3</td><td>$160</td><td>9 ene. 2018</td><td>$4</td><td>$20</td><td>9 feb. 2018</td><td>$24</td><td>$140</td></tr><tr><td>4</td><td>$140</td><td>9 feb. 2018</td><td>$3</td><td>$20</td><td>9 mar. 2018</td><td>$23</td><td>$120</td></tr><tr><td>5</td><td>$120</td><td>9 mar. 2018</td><td>$3</td><td>$20</td><td>9 abr. 2018</td><td>$23</td><td>$100</td></tr><tr><td>6</td><td>$100</td><td>9 abr. 2018</td><td>$2</td><td>$20</td><td>9 may. 2018</td><td>$22</td><td>$80</td></tr><tr><td>7</td><td>$80</td><td>9 may. 2018</td><td>$2</td><td>$20</td><td>9 jun. 2018</td><td>$22</td><td>$60</td></tr><tr><td>8</td><td>$60</td><td>9 jun. 2018</td><td>$1</td><td>$20</td><td>9 jul. 2018</td><td>$21</td><td>$40</td></tr><tr><td>9</td><td>$40</td><td>9 jul. 2018</td><td>$1</td><td>$20</td><td>9 ago. 2018</td><td>$21</td><td>$20</td></tr><tr><td>10</td><td>$20</td><td>9 ago. 2018</td><td>$0</td><td>$20</td><td>9 sept. 2018</td><td>$20</td><td>$0</td></tr></table>'
+			'loan_table': '<table style="width:100%" border="1"><tr><th>Cuota</th><th>Saldo inicial</th><th>Fecha inicial</th><th>Intereses</th><th>Abono a capital</th><th>Fecha de pago</th><th>Valor pago</th><th>Saldo final</th></tr><tr><td>1</td><td>$200</td><td>9 nov. 2017</td><td>$4</td><td>$20</td><td>9 dic. 2017</td><td>$24</td><td>$180</td></tr><tr><td>2</td><td>$180</td><td>9 dic. 2017</td><td>$4</td><td>$20</td><td>9 ene. 2018</td><td>$24</td><td>$160</td></tr><tr><td>3</td><td>$160</td><td>9 ene. 2018</td><td>$3</td><td>$20</td><td>9 feb. 2018</td><td>$23</td><td>$140</td></tr><tr><td>4</td><td>$140</td><td>9 feb. 2018</td><td>$3</td><td>$20</td><td>9 mar. 2018</td><td>$23</td><td>$120</td></tr><tr><td>5</td><td>$120</td><td>9 mar. 2018</td><td>$2</td><td>$20</td><td>9 abr. 2018</td><td>$22</td><td>$100</td></tr><tr><td>6</td><td>$100</td><td>9 abr. 2018</td><td>$2</td><td>$20</td><td>9 may. 2018</td><td>$22</td><td>$80</td></tr><tr><td>7</td><td>$80</td><td>9 may. 2018</td><td>$2</td><td>$20</td><td>9 jun. 2018</td><td>$22</td><td>$60</td></tr><tr><td>8</td><td>$60</td><td>9 jun. 2018</td><td>$1</td><td>$20</td><td>9 jul. 2018</td><td>$21</td><td>$40</td></tr><tr><td>9</td><td>$40</td><td>9 jul. 2018</td><td>$1</td><td>$20</td><td>9 ago. 2018</td><td>$21</td><td>$20</td></tr><tr><td>10</td><td>$20</td><td>9 ago. 2018</td><td>$0</td><td>$20</td><td>9 sept. 2018</td><td>$20</td><td>$0</td></tr></table>'
 		}, ['mail_for_tests@mail.com'])
 
 		loan = Loan.objects.get(user_id = 1)
@@ -439,8 +439,8 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(Decimal(response.data['loan']['rate']).quantize(self.THREEPLACES),Decimal(0.020).quantize(self.THREEPLACES))
 		self.assertIsNotNone(response.data['loan']['created_at'])
 
-		self.assertEqual(response.data['loan_detail']['total_payment'],228)
-		self.assertEqual(response.data['loan_detail']['minimum_payment'],25)
+		self.assertEqual(response.data['loan_detail']['total_payment'],222)
+		self.assertEqual(response.data['loan_detail']['minimum_payment'],24)
 		self.assertEqual(response.data['loan_detail']['payday_limit'],'9 dic. 2017')
 		self.assertEqual(response.data['loan_detail']['from_date'],'9 nov. 2017')
 
@@ -463,13 +463,13 @@ class LoanViewTest(AbstractTest):
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code,status.HTTP_200_OK)
-		self.assertEqual(response.data['total_payment'],278)
-		self.assertEqual(response.data['minimum_payment'],278)
+		self.assertEqual(response.data['total_payment'],257)
+		self.assertEqual(response.data['minimum_payment'],257)
 		self.assertEqual(response.data['payday_limit'],'9 dic. 2018')
 		self.assertEqual(mock.called, True)
 		mock.assert_called_once_with(EmailTemplate.CHANGE_STATE_LOAN_APPROVED, ['mail_for_tests@mail.com'], {
 			'loan_id': loan.id,
-			'loan_table': '<table style="width:100%" border="1"><tr><th>Cuota</th><th>Saldo inicial</th><th>Fecha inicial</th><th>Intereses</th><th>Abono a capital</th><th>Fecha de pago</th><th>Valor pago</th><th>Saldo final</th></tr><tr><td>1</td><td>$200</td><td>9 nov. 2017</td><td>$78</td><td>$200</td><td>9 dic. 2018</td><td>$278</td><td>$0</td></tr></table>'
+			'loan_table': '<table style="width:100%" border="1"><tr><th>Cuota</th><th>Saldo inicial</th><th>Fecha inicial</th><th>Intereses</th><th>Abono a capital</th><th>Fecha de pago</th><th>Valor pago</th><th>Saldo final</th></tr><tr><td>1</td><td>$200</td><td>9 nov. 2017</td><td>$57</td><td>$200</td><td>9 dic. 2018</td><td>$257</td><td>$0</td></tr></table>'
 		}, ['mail_for_tests@mail.com'])
 
 		loan = Loan.objects.get(user_id = 1)
@@ -493,8 +493,8 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(Decimal(response.data['loan']['rate']).quantize(self.THREEPLACES),Decimal(0.022).quantize(self.THREEPLACES))
 		self.assertIsNotNone(response.data['loan']['created_at'])
 
-		self.assertEqual(response.data['loan_detail']['total_payment'],278)
-		self.assertEqual(response.data['loan_detail']['minimum_payment'],278)
+		self.assertEqual(response.data['loan_detail']['total_payment'],257)
+		self.assertEqual(response.data['loan_detail']['minimum_payment'],257)
 		self.assertEqual(response.data['loan_detail']['payday_limit'],'9 dic. 2018')
 		self.assertEqual(response.data['loan_detail']['from_date'],'9 nov. 2017')
 
@@ -536,13 +536,13 @@ class LoanViewTest(AbstractTest):
 			**self.get_auth_header(self.token)
 		)
 		self.assertEqual(response.status_code,status.HTTP_200_OK)
-		self.assertEqual(response.data['total_payment'],278)
-		self.assertEqual(response.data['minimum_payment'],278)
+		self.assertEqual(response.data['total_payment'],257)
+		self.assertEqual(response.data['minimum_payment'],257)
 		self.assertEqual(response.data['payday_limit'],'9 dic. 2018')
 		self.assertEqual(mock.called, True)
 		mock.assert_called_once_with(EmailTemplate.CHANGE_STATE_LOAN_APPROVED, ['mail_for_tests_2@mail.com'], {
 			'loan_id': loan.id,
-			'loan_table': '<table style="width:100%" border="1"><tr><th>Cuota</th><th>Saldo inicial</th><th>Fecha inicial</th><th>Intereses</th><th>Abono a capital</th><th>Fecha de pago</th><th>Valor pago</th><th>Saldo final</th></tr><tr><td>1</td><td>$200</td><td>9 nov. 2017</td><td>$78</td><td>$200</td><td>9 dic. 2018</td><td>$278</td><td>$0</td></tr></table>'
+			'loan_table': '<table style="width:100%" border="1"><tr><th>Cuota</th><th>Saldo inicial</th><th>Fecha inicial</th><th>Intereses</th><th>Abono a capital</th><th>Fecha de pago</th><th>Valor pago</th><th>Saldo final</th></tr><tr><td>1</td><td>$200</td><td>9 nov. 2017</td><td>$57</td><td>$200</td><td>9 dic. 2018</td><td>$257</td><td>$0</td></tr></table>'
 		}, ['mail_for_tests@mail.com'])
 
 		loan = Loan.objects.get(user_id = 2)
@@ -854,7 +854,7 @@ class LoanViewTest(AbstractTest):
 		)
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
 		self.assertEqual(response.data['capital_balance'],200)
-		self.assertEqual(response.data['interests'],5)
+		self.assertEqual(response.data['interests'],4)
 
 	def test_payment_projection_empty_date(self):
 		response = self.client.post(
@@ -986,7 +986,7 @@ class LoanViewTest(AbstractTest):
 		self.assertEqual(new_loan.disbursement_date.month, 12)
 		self.assertEqual(new_loan.disbursement_date.day, 9)
 		self.assertEqual(new_loan.comments, 'Refinanciación del crédito #{}, cuyo valor incluye intereses. Suite test'.format(loan.id))
-		self.assertEqual(new_loan.value, 205)
+		self.assertEqual(new_loan.value, 204)
 		self.assertEqual(new_loan.timelimit, 12)
 		self.assertEqual(new_loan.payment, 2)
 		self.assertEqual(new_loan.fee, 0)
