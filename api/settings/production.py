@@ -4,13 +4,20 @@ Django settings for production environment
 
 from .base import *
 import os
+import re
 
 ENVIRONMENT = 'production'
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
-ALLOWED_HOSTS = [os.environ.get('ALLOWED_HOST_DOMAIN'),'127.0.0.1']
+ALLOWED_HOSTS = [os.environ.get('ALLOWED_HOST_DOMAIN'),'127.0.0.1','.moodlabelmusic.com']
+
+CORS_ALLOWED_ORIGIN_REGEXES = [
+  r"^https?://([^/]*\.)?moodlabelmusic\.com$",
+]
+
+CSRF_TRUSTED_ORIGINS = ['https://*.moodlabelmusic.com', 'http://*.moodlabelmusic.com']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False

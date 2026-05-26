@@ -7,3 +7,4 @@ class EmailTemplate(Enum):
   POWER_APPROVED = 4
   TEST = 5
   PASSWORD_RESET = 6
+  TMP = 9999
